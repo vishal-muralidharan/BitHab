@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitHab</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <h1 class="logo">BitHab</h1>
+    <div>
+      <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+      <button id="logout-btn" class="hidden" aria-label="Logout">Logout</button>
+    </div>
+  </header>
+  <div id="auth-container">
+    <div class="auth-form-wrapper">
+        <h2 class="auth-title">Login</h2>
+        <form id="login-form">
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p class="auth-switch">Don't have an account? <a href="#" id="show-register">Register</a></p>
+    </div>
+    <div class="auth-form-wrapper hidden">
+        <h2 class="auth-title">Register</h2>
+        <form id="register-form">
+            <input type="email" id="register-email" placeholder="Email" required>
+            <input type="password" id="register-password" placeholder="Password (min. 6 characters)" required>
+            <button type="submit">Register</button>
+        </form>
+        <p class="auth-switch">Already have an account? <a href="#" id="show-login">Login</a></p>
+    </div>
+  </div>
+  <main class="main-layout hidden">
+    <aside class="sidebar left">
+        <h2>Activities</h2>
+        <input type="text" id="add-activity-input" class="add-input" placeholder="Add new activity & press Enter">
+        <ul id="activity-list" class="activity-list"></ul>
+    </aside>
+    <section class="calendar-view" id="calendar-view">
+      <!-- Calendar will be rendered here by script.js -->
+    </section>
+    <aside class="sidebar right">
+        <h2>Goals</h2>
+        <input type="text" id="add-goal-input" class="add-input" placeholder="Add new goal & press Enter">
+        <ul id="goal-list" class="goal-list"></ul>
+    </aside>
+  </main>
+  <div id="logging-modal" class="modal hidden">
+    <!-- Modal content will be rendered here by script.js -->
+  </div>
+  <div id="loading-indicator" class="loading hidden">Saving...</div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <!-- Your web app's Firebase configuration -->
+  <script src="firebase-config.js"></script>
+
+  <script src="script.js"></script>
+</body>
+</html>
