@@ -10,7 +10,7 @@ const firebaseConfig = {
   appId: process.env.FIREBASE_APP_ID
 };
 
-const configString = `const firebaseConfig = ${JSON.stringify(firebaseConfig, null, 2)};\nfirebase.initializeApp(firebaseConfig);\n// var db = firebase.firestore();\n`;
+const configString = `const firebaseConfig = ${JSON.stringify(firebaseConfig, null, 2)};\nfirebase.initializeApp(firebaseConfig);\nvar db = firebase.firestore();\n`;
 
 fs.writeFileSync('firebase-config.js', configString);
 console.log('firebase-config.js generated!');
