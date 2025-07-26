@@ -422,53 +422,23 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.classList.remove('hidden');
     }
 
+    // Only handle logout and auth state for main app
     const setupAuth = () => {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const showRegister = document.getElementById('show-register');
-        const showLogin = document.getElementById('show-login');
-
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .catch(error => alert(error.message));
-        });
-
-        registerForm.addEventListener('submit', e => {
-            e.preventDefault();
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .catch(error => alert(error.message));
-        });
-
         logoutBtn.addEventListener('click', () => {
             firebase.auth().signOut();
-        });
-
-        showRegister.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.parentElement.classList.add('hidden');
-            registerForm.parentElement.classList.remove('hidden');
-        });
-
-        showLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerForm.parentElement.classList.add('hidden');
-            loginForm.parentElement.classList.remove('hidden');
         });
 
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 userId = user.uid;
+                authContainer.classList.add('hidden');
+                mainLayout.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
                 initApp();
             } else {
                 userId = null;
-                authContainer.classList.remove('hidden');
-                mainLayout.classList.add('hidden');
-                logoutBtn.classList.add('hidden');
+                // Redirect to login if not authenticated
+                window.location.href = 'login.html';
             }
         });
     };

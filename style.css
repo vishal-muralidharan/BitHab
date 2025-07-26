@@ -405,20 +405,21 @@ input[type="color"] {
   border-color: var(--pill-color, var(--accent-primary));
 }
 
-.loading {
-  position: fixed;
-  top: 1.5rem;
-  right: 2rem;
-  background: var(--accent-primary);
-  color: var(--bg-secondary);
-  padding: 0.7rem 1.5rem;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  z-index: 2000;
-  font-weight: 500;
-  opacity: 1;
-  transition: opacity var(--transition);
-}
+  .loading {
+    position: fixed;
+    left: 50%;
+    bottom: 2rem;
+    transform: translateX(-50%);
+    background: var(--accent-primary);
+    color: var(--bg-secondary);
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    z-index: 2000;
+    font-weight: 500;
+    opacity: 1;
+    transition: opacity var(--transition);
+  }
 
 .loading.hidden {
   opacity: 0;
