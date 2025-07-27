@@ -25,10 +25,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
     const mainLayout = document.querySelector('.main-layout');
     const logoutBtn = document.getElementById('logout-btn');
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const confirmationMessage = document.getElementById('confirmation-message');
+    const confirmYes = document.getElementById('confirm-yes');
+    const confirmNo = document.getElementById('confirm-no');
+    const addActivityBtn = document.getElementById('add-activity-btn');
+    const addGoalBtn = document.getElementById('add-goal-btn');
 
     let userId = null;
+    let confirmationAction = null;
 
-    // --- Firebase State Management ---
+    const showConfirmation = (message, onConfirm) => {
+        confirmationMessage.textContent = message;
+        confirmationAction = onConfirm;
+        confirmationModal.classList.remove('hidden');
+    };
+    
+        // --- Firebase State Management ---
     const saveState = async () => {
         if (!userId) return;
         showLoadingIndicator('Saving...');
@@ -104,6 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
+            let subAddRowHtml = '';
+            if (isExpanded) {
+                subAddRowHtml = `
+                <div class="sub-add-row">
+                    <input type="color" class="sub-activity-color-picker" value="#3B82F6">
+                    <input type="text" class="add-input sub-activity-input" placeholder="Add sub-activity...">
+                    <button class="add-btn sub-add-btn" aria-label="Add sub-activity">&#10148;</button>
+                </div>`;
+            }
+
             activityItem.innerHTML = `
                 <div class="activity-main">
                     <span>${isExpanded ? '▼' : '►'}</span>
@@ -111,10 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="remove-btn" data-id="${activity.id}">&times;</button>
                 </div>
                 ${subActivitiesHtml}
-                <div class="sub-add-row">
-                    <input type="color" class="sub-activity-color-picker" value="#3B82F6">
-                    <input type="text" class="add-input sub-activity-input" placeholder="Add sub-activity...">
-                </div>
+                ${subAddRowHtml}
             `;
             activityList.appendChild(activityItem);
         });
@@ -153,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const month = date.getMonth();
         const monthName = date.toLocaleString('default', { month: 'long' });
 
+        // A single grid for headers and days ensures alignment.
         calendarView.innerHTML = `
             <div class="calendar-header">
                 <button id="prev-month" class="calendar-nav-btn">‹</button>
@@ -162,67 +183,86 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <button id="next-month" class="calendar-nav-btn">›</button>
             </div>
-            <div class="calendar-grid weekdays">
-                ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => `<div class="weekday">${day}</div>`).join('')}
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- Weekdays and days will be injected here -->
             </div>
-            <div class="calendar-grid" id="calendar-days"></div>
         `;
 
-        const calendarDays = document.getElementById('calendar-days');
+        const calendarGrid = document.getElementById('calendar-grid');
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        calendarDays.innerHTML = '';
+        
+        let gridHTML = '';
 
-        const totalCells = 42; // 6 weeks * 7 days for a consistent height
+        // Add weekday headers
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            gridHTML += `<div class="weekday">${day}</div>`;
+        });
 
+        // Add empty cells for days before the 1st
         for (let i = 0; i < firstDay; i++) {
-            calendarDays.innerHTML += '<div class="calendar-day empty"></div>';
+            gridHTML += '<div class="calendar-day empty"></div>';
         }
 
+        // Add day cells
         for (let day = 1; day <= daysInMonth; day++) {
-            const dayEl = document.createElement('div');
             const dateStr = `${year}-${month + 1}-${day}`;
-            dayEl.className = 'calendar-day';
-            dayEl.dataset.date = dateStr;
+            const logs = state.logs[dateStr] || [];
+            const dotsContainerClass = logs.length > 4 ? 'calendar-dots small-dots' : 'calendar-dots';
+            let dotsHTML = '';
 
-            dayEl.innerHTML = `<span class="calendar-date-num">${day}</span>`;
-
-            const dotsContainer = document.createElement('div');
-            dotsContainer.className = 'calendar-dots';
-
-            if (state.logs[dateStr]) {
-                activity.subActivities.forEach(sub => {
-                    if (state.logs[dateStr].includes(sub.id)) {
-                        const dot = document.createElement('span');
-                        dot.className = 'calendar-dot';
-                        dot.style.backgroundColor = sub.color;
-                        dotsContainer.appendChild(dot);
-                    }
-                });
+            if (activity.subActivities && activity.subActivities.length > 0) {
+                dotsHTML = logs
+                    .map(subId => {
+                        const sub = activity.subActivities.find(s => s.id === subId);
+                        return sub ? `<div class="calendar-dot" style="background-color: ${sub.color};"></div>` : '';
+                    })
+                    .join('');
+            } else if (logs.includes(activity.id)) {
+                // For activities without sub-activities, use the primary text color.
+                dotsHTML = `<div class="calendar-dot" style="background-color: var(--text-primary);"></div>`;
             }
-            dayEl.appendChild(dotsContainer);
-            calendarDays.appendChild(dayEl);
-        }
 
-        const renderedCells = firstDay + daysInMonth;
-        const remainingCells = totalCells - renderedCells;
-        for (let i = 0; i < remainingCells; i++) {
-            calendarDays.innerHTML += '<div class="calendar-day empty"></div>';
+            gridHTML += `
+                <div class="calendar-day" data-date="${dateStr}">
+                    <span class="calendar-date-num">${day}</span>
+                    <div class="${dotsContainerClass}">${dotsHTML}</div>
+                </div>
+            `;
         }
+        
+        calendarGrid.innerHTML = gridHTML;
     };
 
     const openLoggingModal = (dateStr) => {
         const activityId = state.ui.selectedActivityId;
         const activity = state.activities.find(a => a.id === activityId);
         if (!activity || !activity.subActivities || activity.subActivities.length === 0) {
-            alert("This activity has no sub-activities to log. Add one from the left panel.");
             return;
         }
+
+        const formatDateForModal = (ds) => {
+            const [year, month, day] = ds.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            let dayWithSuffix;
+            if (day > 3 && day < 21) {
+                dayWithSuffix = `${day}th`;
+            } else {
+                switch (day % 10) {
+                    case 1: dayWithSuffix = `${day}st`; break;
+                    case 2: dayWithSuffix = `${day}nd`; break;
+                    case 3: dayWithSuffix = `${day}rd`; break;
+                    default: dayWithSuffix = `${day}th`; break;
+                }
+            }
+            return `${dayWithSuffix} ${monthName}`;
+        };
 
         loggingModal.innerHTML = `
             <div class="modal-content">
                 <span class="close">&times;</span>
-                <h3>Log for ${dateStr}</h3>
+                <h3>${formatDateForModal(dateStr)}</h3>
                 <p>Activity: <strong>${activity.name}</strong></p>
                 <div id="pill-container">
                     ${activity.subActivities.map(sub => `
@@ -252,10 +292,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!activityItem) return;
         const activityId = activityItem.dataset.id;
 
-        if (target.closest('.activity-main')) {
+        if (target.closest('.activity-main') && !target.classList.contains('remove-btn')) {
+            // If it's a new selection
             if (state.ui.selectedActivityId !== activityId) {
                 state.ui.selectedActivityId = activityId;
-            } else {
+                // Also expand it and collapse others
+                state.ui.expandedActivities.clear();
+                state.ui.expandedActivities.add(activityId);
+            } else { // If it's the same activity, just toggle expansion
                 if (state.ui.expandedActivities.has(activityId)) {
                     state.ui.expandedActivities.delete(activityId);
                 } else {
@@ -268,9 +312,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (target.classList.contains('sub-activity-input') && e.key === 'Enter' && target.value.trim()) {
-            const name = target.value.trim();
-            const colorPicker = target.previousElementSibling;
+        const subActivityInput = target.closest('.sub-add-row')?.querySelector('.sub-activity-input');
+        if ((target.classList.contains('sub-add-btn') || (target === subActivityInput && e.key === 'Enter')) && subActivityInput && subActivityInput.value.trim()) {
+            const name = subActivityInput.value.trim();
+            const colorPicker = subActivityInput.previousElementSibling;
             const color = colorPicker.value;
             const newSubActivity = { id: `sub_${Date.now()}`, name, color };
 
@@ -278,32 +323,35 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activity) {
                 if (!activity.subActivities) activity.subActivities = [];
                 activity.subActivities.push(newSubActivity);
-                target.value = '';
+                subActivityInput.value = '';
                 saveState();
                 renderActivities();
                 if (state.ui.selectedActivityId === activityId) renderCalendar();
             }
+            return;
         }
 
         if (target.classList.contains('remove-btn') && target.closest('.activity-main')) {
             e.stopPropagation();
-            if (confirm(`Delete "${state.activities.find(a=>a.id===activityId).name}" and all its data?`)) {
-                const activityToDelete = state.activities.find(a => a.id === activityId);
-                const subIdsToDelete = new Set(activityToDelete.subActivities.map(s => s.id));
-                
-                state.activities = state.activities.filter(a => a.id !== activityId);
-                
-                Object.keys(state.logs).forEach(date => {
-                    state.logs[date] = state.logs[date].filter(logId => !subIdsToDelete.has(logId));
-                    if (state.logs[date].length === 0) delete state.logs[date];
-                });
+            const activityToDelete = state.activities.find(a => a.id === activityId);
+            if (activityToDelete) {
+                showConfirmation(`Are you sure you want to delete "${activityToDelete.name}" and all its data?`, () => {
+                    const subIdsToDelete = new Set((activityToDelete.subActivities || []).map(s => s.id));
+                    
+                    state.activities = state.activities.filter(a => a.id !== activityId);
+                    
+                    Object.keys(state.logs).forEach(date => {
+                        state.logs[date] = state.logs[date].filter(logId => !subIdsToDelete.has(logId));
+                        if (state.logs[date].length === 0) delete state.logs[date];
+                    });
 
-                if (state.ui.selectedActivityId === activityId) {
-                    state.ui.selectedActivityId = state.activities.length > 0 ? state.activities[0].id : null;
-                }
-                saveState();
-                renderActivities();
-                renderCalendar();
+                    if (state.ui.selectedActivityId === activityId) {
+                        state.ui.selectedActivityId = state.activities.length > 0 ? state.activities[0].id : null;
+                    }
+                    saveState();
+                    renderActivities();
+                    renderCalendar();
+                });
             }
         }
 
@@ -312,15 +360,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const subId = target.dataset.id;
             const parentId = activityId;
             const activity = state.activities.find(a => a.id === parentId);
-            if (activity) {
-                activity.subActivities = activity.subActivities.filter(s => s.id !== subId);
-                Object.keys(state.logs).forEach(date => {
-                    state.logs[date] = state.logs[date].filter(logId => logId !== subId);
-                    if (state.logs[date].length === 0) delete state.logs[date];
+            const subActivity = activity ? activity.subActivities.find(s => s.id === subId) : null;
+            
+            if (activity && subActivity) {
+                showConfirmation(`Are you sure you want to delete sub-activity "${subActivity.name}"?`, () => {
+                    activity.subActivities = activity.subActivities.filter(s => s.id !== subId);
+                    Object.keys(state.logs).forEach(date => {
+                        state.logs[date] = state.logs[date].filter(logId => logId !== subId);
+                        if (state.logs[date].length === 0) delete state.logs[date];
+                    });
+                    saveState();
+                    renderActivities();
+                    if (state.ui.selectedActivityId === parentId) renderCalendar();
                 });
-                saveState();
-                renderActivities();
-                if (state.ui.selectedActivityId === parentId) renderCalendar();
             }
         }
     };
@@ -334,12 +386,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (goal) {
                 if (target.classList.contains('remove-btn')) {
                     e.stopPropagation();
-                    state.goals = state.goals.filter(g => g.id !== goalId);
+                    showConfirmation(`Are you sure you want to delete goal "${goal.name}"?`, () => {
+                        state.goals = state.goals.filter(g => g.id !== goalId);
+                        saveState();
+                        renderGoals();
+                    });
                 } else {
                     goal.completed = !goal.completed;
+                    saveState();
+                    renderGoals();
                 }
-                saveState();
-                renderGoals();
             }
         }
     };
@@ -348,15 +404,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         const navButton = target.closest('.calendar-nav-btn');
         if (navButton) {
-            if (navButton.id === 'prev-month') state.ui.currentDate.setMonth(state.ui.currentDate.getMonth() - 1);
-            if (navButton.id === 'next-month') state.ui.currentDate.setMonth(state.ui.currentDate.getMonth() + 1);
+            const direction = navButton.id === 'prev-month' ? -1 : 1;
+            state.ui.currentDate.setMonth(state.ui.currentDate.getMonth() + direction);
+            saveState(); // Save the new month
             renderCalendar();
             return;
         }
 
         const dayCell = target.closest('.calendar-day:not(.empty)');
         if (dayCell) {
-            openLoggingModal(dayCell.dataset.date);
+            const dateStr = dayCell.dataset.date;
+            const activityId = state.ui.selectedActivityId;
+            const activity = state.activities.find(a => a.id === activityId);
+
+            if (activity) {
+                // If the activity has sub-activities, open the modal for selection.
+                if (activity.subActivities && activity.subActivities.length > 0) {
+                    openLoggingModal(dateStr);
+                } else {
+                    // Otherwise, directly toggle the log for the main activity.
+                    if (!state.logs[dateStr]) {
+                        state.logs[dateStr] = [];
+                    }
+                    const logIndex = state.logs[dateStr].indexOf(activity.id);
+                    if (logIndex > -1) {
+                        // Already logged, so remove it (un-log).
+                        state.logs[dateStr].splice(logIndex, 1);
+                        if (state.logs[dateStr].length === 0) {
+                            delete state.logs[dateStr];
+                        }
+                    } else {
+                        // Not logged, so add it.
+                        state.logs[dateStr].push(activity.id);
+                    }
+                    saveState();
+                    renderCalendar(); // Re-render calendar to show/hide the dot.
+                    renderActivities(); // Re-render activities to update streak.
+                }
+            }
         }
     };
 
@@ -382,11 +467,21 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 state.logs[dateStr].push(subId);
             }
+            // Toggle selection class on the pill itself
+            pill.classList.toggle('selected');
             saveState();
-            loggingModal.classList.add('hidden');
-            renderCalendar();
+            // No need to hide modal immediately, let user select multiple
         }
     };
+
+    const handleModalClose = (e) => {
+        const target = e.target;
+         if (target.classList.contains('close') || target.id === 'logging-modal') {
+            loggingModal.classList.add('hidden');
+            renderCalendar(); // Update calendar dots
+            renderActivities(); // Update streaks
+        }
+    }
 
     // --- Utility Functions ---
     const showLoadingIndicator = (message, isError = false) => {
@@ -425,7 +520,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only handle logout and auth state for main app
     const setupAuth = () => {
         logoutBtn.addEventListener('click', () => {
-            firebase.auth().signOut();
+            showConfirmation('Are you sure you want to logout?', () => {
+                firebase.auth().signOut();
+            });
         });
 
         firebase.auth().onAuthStateChanged(user => {
@@ -450,45 +547,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setupAuth();
 
-        addActivityInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter' && addActivityInput.value.trim()) {
+        const addActivity = () => {
+            const name = addActivityInput.value.trim();
+            if (name) {
                 const newActivity = {
                     id: `act_${Date.now()}`,
-                    name: addActivityInput.value.trim(),
-                    subActivities: []
+                    name,
+                    subActivities: [],
                 };
                 state.activities.push(newActivity);
                 addActivityInput.value = '';
-                
-                state.ui.selectedActivityId = newActivity.id;
-                state.ui.expandedActivities.add(newActivity.id);
-                
                 saveState();
                 renderActivities();
-                renderCalendar();
             }
-        });
+        };
 
-        addGoalInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter' && addGoalInput.value.trim()) {
-                const newGoal = {
-                    id: `goal_${Date.now()}`,
-                    name: addGoalInput.value.trim(),
-                    completed: false
-                };
+        const addGoal = () => {
+            const name = addGoalInput.value.trim();
+            if (name) {
+                const newGoal = { id: `goal_${Date.now()}`, name, completed: false };
                 state.goals.push(newGoal);
                 addGoalInput.value = '';
                 saveState();
                 renderGoals();
             }
+        };
+
+        addActivityInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') addActivity();
         });
+        addActivityBtn.addEventListener('click', addActivity);
+
+        addGoalInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') addGoal();
+        });
+        addGoalBtn.addEventListener('click', addGoal);
 
         activityList.addEventListener('click', handleActivityActions);
         activityList.addEventListener('keyup', handleActivityActions);
         goalList.addEventListener('click', handleGoalActions);
         calendarView.addEventListener('click', handleCalendarActions);
         loggingModal.addEventListener('click', handleModalActions);
+        loggingModal.addEventListener('click', handleModalClose);
         themeToggle.addEventListener('click', toggleTheme);
+
+        confirmNo.addEventListener('click', () => {
+            confirmationModal.classList.add('hidden');
+            confirmationAction = null;
+        });
+
+        confirmYes.addEventListener('click', () => {
+            if (confirmationAction) {
+                confirmationAction();
+            }
+            confirmationModal.classList.add('hidden');
+            confirmationAction = null;
+        });
     };
 
     init();
