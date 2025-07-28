@@ -4,13 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BitHab</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="logo.png">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="header">
-    <h1 class="logo">BitHab</h1>
+    <h1 class="logo">
+      <img src="logo-transparent.png" alt="BitHab Logo">
+    </h1>
     <div>
       <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
       <button id="logout-btn" class="hidden" aria-label="Logout">Logout</button>
@@ -21,7 +25,10 @@
   <main class="main-layout hidden">
     <aside class="sidebar left">
         <h2>Activities</h2>
-        <input type="text" id="add-activity-input" class="add-input" placeholder="Add new activity & press Enter">
+        <div class="add-item-form">
+            <input type="text" id="add-activity-input" class="add-input" placeholder="Add new activity...">
+            <button id="add-activity-btn" class="add-btn" aria-label="Add activity">&#10148;</button>
+        </div>
         <ul id="activity-list" class="activity-list"></ul>
     </aside>
     <section class="calendar-view" id="calendar-view">
@@ -29,7 +36,10 @@
     </section>
     <aside class="sidebar right">
         <h2>Goals</h2>
-        <input type="text" id="add-goal-input" class="add-input" placeholder="Add new goal & press Enter">
+        <div class="add-item-form">
+            <input type="text" id="add-goal-input" class="add-input" placeholder="Add new goal...">
+            <button id="add-goal-btn" class="add-btn" aria-label="Add goal">&#10148;</button>
+        </div>
         <ul id="goal-list" class="goal-list"></ul>
     </aside>
   </main>
@@ -37,6 +47,16 @@
     <!-- Modal content will be rendered here by script.js -->
   </div>
   <div id="loading-indicator" class="loading hidden">Saving...</div>
+
+  <div id="confirmation-modal" class="modal hidden">
+    <div class="modal-content">
+        <p id="confirmation-message">Are you sure?</p>
+        <div class="confirmation-buttons">
+            <button id="confirm-yes" class="btn-confirm">Yes</button>
+            <button id="confirm-no" class="btn-cancel">No</button>
+        </div>
+    </div>
+  </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
