@@ -11,7 +11,7 @@
   font-size: 16px;
 }
 
-body.dark {
+html[data-theme="dark"] {
   --bg-primary: #0D1117;
   --bg-secondary: #161B22;
   --header-bg: #1A2029;
@@ -25,7 +25,6 @@ body {
   font-family: 'Inter', Arial, sans-serif;
   margin: 0;
   min-height: 100vh;
-  transition: background var(--transition), color var(--transition);
 }
 
 .header {
@@ -49,6 +48,18 @@ body {
   gap: 0.5rem;
 }
 
+.logo .logo-dark {
+  display: none;
+}
+
+html[data-theme="dark"] .logo .logo-light {
+  display: none;
+}
+
+html[data-theme="dark"] .logo .logo-dark {
+  display: block;
+}
+
 .logo img {
   height: 40px; /* Adjust as needed */
 }
@@ -70,55 +81,116 @@ body {
   opacity: 1;
 }
 
+#sidebar-toggle {
+    background: transparent;
+    color: var(--text-primary);
+    opacity: 0.8;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color var(--transition), transform var(--transition);
+}
+
+#sidebar-toggle:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.page-container {
+    display: flex;
+    min-height: calc(100vh - 85px); /* Full height minus header */
+}
+
+.sidebar {
+    width: 250px;
+    background: var(--bg-secondary);
+    padding: 2rem 0.5rem;
+    border-right: 1px solid var(--bg-primary);
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+    transition: margin-left 0.3s ease-in-out;
+    margin-left: 0;
+}
+
+.sidebar.hidden {
+    margin-left: -250px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+
+.sidebar-nav .nav-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: background var(--transition), color var(--transition);
+    white-space: nowrap;
+}
+
+.sidebar-nav .nav-link:hover,
+.sidebar-nav .nav-link.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
 .main-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 320px) 1fr minmax(280px, 320px); /* Symmetrical sidebars */
+  grid-template-columns: minmax(280px, 320px) 1fr minmax(280px, 320px);
   grid-template-areas: "activities calendar goals";
   gap: 2rem;
-  padding: 2rem;
-  max-width: 1600px;
-  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 }
 
-.sidebar.left {
+.activities-column, .goals-column, .management-column {
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activities-column {
     grid-area: activities;
+}
+
+.goals-column {
+    grid-area: goals;
 }
 
 .calendar-view {
     grid-area: calendar;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
 }
 
-.sidebar.right {
-    grid-area: goals;
-}
-
-.sidebar {
-  background: var(--bg-secondary);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem; /* Symmetrical padding */
-  min-height: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.sidebar h2 {
+.activities-column h2, .goals-column h2, .management-column h2 {
   text-align: center;
   margin-top: 0;
-  padding: 0 1rem; /* Maintain some horizontal space */
-}
-
-.calendar-view {
-  background: var(--bg-secondary);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  min-height: 600px;
-  display: flex;
-  flex-direction: column;
+  padding: 0 1rem;
+  white-space: nowrap;
 }
 
 input, button, textarea {
@@ -281,7 +353,7 @@ input[type="color"] {
     font-weight: 600;
     opacity: 0.7;
     font-size: 0.9em;
-    padding-bottom: 0.5rem; /* Space between header and dates */
+    padding-bottom: 2rem; /* Space between header and dates */
 }
 
 .calendar-day {
@@ -305,6 +377,10 @@ input[type="color"] {
 
 .calendar-day:not(.empty):hover {
   background: var(--accent-primary)22;
+}
+
+.calendar-day.other-month .calendar-date-num {
+    opacity: 0.4;
 }
 
 .calendar-date-num {
@@ -482,18 +558,19 @@ input[type="color"] {
 }
 
 .color-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 0.5em;
-    flex-shrink: 0;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5em;
 }
 
 .remove-btn {
-    background: none;
-    border: none;
+    background: transparent;
     color: var(--text-primary);
+    border: none;
     opacity: 0.5;
+    font-size: 1.2rem;
     cursor: pointer;
     padding: 0.2em;
     margin-left: auto;
@@ -511,18 +588,24 @@ input[type="color"] {
 }
 
 #logout-btn {
-    background: #e53935;
+    background-color: #EF4444; /* A nice red */
+    color: white;
+    border: none;
     padding: 0.5rem 1rem;
-    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color var(--transition);
+}
+
+#logout-btn:hover {
+    background-color: #DC2626; /* A darker red for hover */
 }
 
 #auth-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    padding: 2rem;
-    min-height: 80vh;
+    align-items: center;
+    min-height: calc(100vh - 85px);
 }
 
 .auth-form-wrapper {
@@ -532,6 +615,7 @@ input[type="color"] {
     box-shadow: var(--shadow);
     width: 100%;
     max-width: 400px;
+    text-align: center;
 }
 
 .auth-form-wrapper.hidden {
@@ -545,20 +629,18 @@ input[type="color"] {
 }
 
 .auth-title {
-    text-align: center;
-    margin-top: 0;
+    font-size: 1.8rem;
     margin-bottom: 1.5rem;
 }
 
 .auth-switch {
-    text-align: center;
     margin-top: 1.5rem;
 }
 
 .auth-switch a {
     color: var(--accent-primary);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .main-layout.hidden, #auth-container.hidden {
@@ -569,62 +651,77 @@ input[type="color"] {
     display: flex;
     justify-content: center;
     gap: 1rem;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
 }
 
 .btn-confirm, .btn-cancel {
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
+    padding: 0.5rem 1.5rem;
     border-radius: var(--radius);
-    cursor: pointer;
     border: none;
+    cursor: pointer;
+    font-weight: 500;
 }
 
 .btn-confirm {
-    background-color: #e53935;
+    background-color: #4CAF50;
     color: white;
 }
 
 .btn-cancel {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    background-color: #f44336;
+    color: white;
 }
 
 @media (max-width: 1100px) {
-  .main-layout {
-    grid-template-columns: minmax(0, 1fr) 300px;
-    grid-template-areas:
-      "calendar activities"
-      "goals goals";
-    padding: 1.5rem;
-    gap: 1.5rem;
-  }
-
-  .sidebar.right {
-    min-height: unset;
-  }
+    .main-layout {
+        grid-template-columns: 1.5fr 1fr;
+        grid-template-areas:
+            "calendar activities"
+            "goals goals";
+        gap: 1.5rem;
+    }
+    .activities-column, .goals-column, .calendar-view {
+        min-height: auto;
+    }
 }
 
 @media (max-width: 768px) {
-  .main-layout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "calendar"
-      "activities"
-      "goals";
-    padding: 1rem;
-    gap: 1rem;
-  }
+    .header {
+        flex-direction: row; /* Ensure horizontal layout */
+        justify-content: space-between; /* Space out items */
+        padding: 1rem;
+    }
 
-  .sidebar, .calendar-view {
-    min-height: unset;
-  }
+    .header .logo {
+        font-size: 1.5rem; /* Smaller logo on mobile */
+    }
 
-  .header {
-    padding: 1rem;
-  }
+    .header .logo img {
+        height: 30px;
+    }
 
-  .logo {
-    font-size: 1.8rem;
-  }
+    .header div {
+        gap: 0.5rem; /* Reduce gap between buttons */
+    }
+
+    .content {
+        padding: 1rem;
+    }
+
+    .main-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "calendar"
+            "activities"
+            "goals";
+        gap: 1rem;
+    }
+    .sidebar, .calendar-view, .activities-column, .goals-column {
+        padding: 1rem;
+    }
+
+    .sidebar:not(.hidden) + .content .management-column h2,
+    .sidebar:not(.hidden) + .content .add-item-form {
+        display: none;
+    }
 }

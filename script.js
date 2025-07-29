@@ -44,103 +44,85 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Firebase State Management ---
     const saveState = async () => {
         if (!userId) return;
-        showLoadingIndicator('Saving...');
         try {
-            const serializableState = {
-                ...state,
-                ui: {
-                    ...state.ui,
-                    currentDate: state.ui.currentDate.toISOString(),
-                    expandedActivities: Array.from(state.ui.expandedActivities),
-                },
+            const uiStateToSave = {
+                currentDate: state.ui.currentDate.toISOString(),
+                selectedActivityId: state.ui.selectedActivityId,
             };
-            await db.collection('users').doc(userId).set(serializableState);
+            // Use set with merge to only update the ui field and not overwrite other root fields.
+            await db.collection('users').doc(userId).set({ ui: uiStateToSave }, { merge: true });
         } catch (e) {
-            console.error("Error saving state to Firebase:", e);
-            showLoadingIndicator('Error saving!', true);
+            console.error("Error saving UI state to Firebase:", e);
         }
     };
 
     const loadState = async () => {
         if (!userId) return;
         try {
-            const doc = await db.collection('users').doc(userId).get();
-            if (doc.exists) {
-                const loadedState = doc.data();
-                if (loadedState.activities && loadedState.logs) {
-                    Object.assign(state, loadedState);
-                    state.ui.currentDate = new Date(loadedState.ui.currentDate);
-                    state.ui.expandedActivities = new Set(loadedState.ui.expandedActivities);
-                    state.goals = loadedState.goals || [];
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                state.activities = data.activities || [];
+                state.goals = data.goals || [];
+                if (data.ui) {
+                    state.ui.selectedActivityId = data.ui.selectedActivityId || null;
+                    // This check prevents the "Invalid Date" error.
+                    if (data.ui.currentDate && !isNaN(new Date(data.ui.currentDate))) {
+                        state.ui.currentDate = new Date(data.ui.currentDate);
+                    } else {
+                        state.ui.currentDate = new Date();
+                    }
                 }
-            } else {
-                console.log("No data found for this user, starting fresh.");
-                // Reset state for new user
-                state.activities = [];
-                state.goals = [];
-                state.logs = {};
-                state.ui.selectedActivityId = null;
             }
+
+            // Select the first activity by default if none is selected
+            if (!state.ui.selectedActivityId && state.activities.length > 0) {
+                state.ui.selectedActivityId = state.activities[0].id;
+            }
+
+            // Load logs separately as they are in a sub-collection
+            const logsSnapshot = await db.collection('users').doc(userId).collection('logs').get();
+            state.logs = {}; // Reset logs before loading
+            logsSnapshot.forEach(doc => {
+                state.logs[doc.id] = doc.data().loggedSubActivityIds;
+            });
+
         } catch (e) {
             console.error("Error loading state from Firebase:", e);
         }
     };
 
     // --- UI Rendering ---
-    const renderActivities = () => {
+    const renderActivities = (isLoading = false) => {
+        if (isLoading) {
+            activityList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">Loading activities...</p>';
+            return;
+        }
         activityList.innerHTML = '';
         if (state.activities.length === 0) {
-            activityList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">Add a main activity to begin.</p>';
+            activityList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">No activities found. Add some in the "Manage Activities" page.</p>';
             return;
         }
 
         state.activities.forEach(activity => {
-            const isExpanded = state.ui.expandedActivities.has(activity.id);
             const isSelected = state.ui.selectedActivityId === activity.id;
-
             const activityItem = document.createElement('li');
-            activityItem.className = `activity-item ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`;
+            activityItem.className = `activity-item ${isSelected ? 'selected' : ''}`;
             activityItem.dataset.id = activity.id;
-
-            let subActivitiesHtml = '';
-            if (activity.subActivities && activity.subActivities.length > 0) {
-                subActivitiesHtml = `
-                    <ul class="sub-activity-list">
-                        ${activity.subActivities.map(sub => `
-                            <li class="sub-activity-item" data-id="${sub.id}">
-                                <span class="color-dot" style="background-color: ${sub.color || '#888'}"></span>
-                                <span>${sub.name}</span>
-                                <button class="remove-btn" data-id="${sub.id}" data-parent-id="${activity.id}">&times;</button>
-                            </li>
-                        `).join('')}
-                    </ul>
-                `;
-            }
-
-            let subAddRowHtml = '';
-            if (isExpanded) {
-                subAddRowHtml = `
-                <div class="sub-add-row">
-                    <input type="color" class="sub-activity-color-picker" value="#3B82F6">
-                    <input type="text" class="add-input sub-activity-input" placeholder="Add sub-activity...">
-                    <button class="add-btn sub-add-btn" aria-label="Add sub-activity">&#10148;</button>
-                </div>`;
-            }
-
             activityItem.innerHTML = `
                 <div class="activity-main">
-                    <span>${isExpanded ? '▼' : '►'}</span>
                     <span>${activity.name}</span>
-                    <button class="remove-btn" data-id="${activity.id}">&times;</button>
                 </div>
-                ${subActivitiesHtml}
-                ${subAddRowHtml}
             `;
             activityList.appendChild(activityItem);
         });
     };
 
-    const renderGoals = () => {
+    const renderGoals = (isLoading = false) => {
+        if (isLoading) {
+            goalList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">Loading goals...</p>';
+            return;
+        }
         goalList.innerHTML = '';
         if (state.goals.length === 0) {
             goalList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">Add a goal to get started.</p>';
@@ -158,7 +140,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderCalendar = () => {
+    const getDotsForDate = (activity, dateStr) => {
+        if (!activity) return '';
+        const loggedIds = new Set(state.logs[dateStr] || []);
+        if (activity.subActivities && activity.subActivities.length > 0) {
+            return activity.subActivities
+                .filter(sub => loggedIds.has(sub.id))
+                .map(sub => `<span class="calendar-dot" style="background-color: ${sub.color};"></span>`)
+                .join('');
+        } else if (loggedIds.has(activity.id)) {
+            return `<span class="calendar-dot" style="background-color: var(--text-primary);"></span>`;
+        }
+        return '';
+    };
+
+    const renderCalendar = (isLoading = false) => {
+        if (isLoading) {
+            calendarView.innerHTML = '<div style="text-align: center; opacity: 0.7; padding-top: 2rem;">Loading calendar...</div>';
+            return;
+        }
         const activityId = state.ui.selectedActivityId;
         if (!activityId) {
             calendarView.innerHTML = '<div style="text-align: center; opacity: 0.7; padding-top: 2rem;">Select an activity to see its calendar.</div>';
@@ -191,7 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const calendarGrid = document.getElementById('calendar-grid');
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+        const prevMonthLastDate = new Date(year, month, 0);
+        const prevMonthDays = prevMonthLastDate.getDate();
+
         let gridHTML = '';
 
         // Add weekday headers
@@ -199,36 +201,44 @@ document.addEventListener('DOMContentLoaded', () => {
             gridHTML += `<div class="weekday">${day}</div>`;
         });
 
-        // Add empty cells for days before the 1st
-        for (let i = 0; i < firstDay; i++) {
-            gridHTML += '<div class="calendar-day empty"></div>';
+        // Days from previous month
+        for (let i = firstDay; i > 0; i--) {
+            const day = prevMonthDays - i + 1;
+            const dateStr = `${prevMonthLastDate.getFullYear()}-${String(prevMonthLastDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dots = getDotsForDate(activity, dateStr);
+            gridHTML += `
+                <div class="calendar-day other-month" data-date="${dateStr}">
+                    <span class="calendar-date-num">${day}</span>
+                    <div class="calendar-dots">${dots}</div>
+                </div>`;
         }
 
-        // Add day cells
+        // Days from current month
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${month + 1}-${day}`;
-            const logs = state.logs[dateStr] || [];
-            const dotsContainerClass = logs.length > 4 ? 'calendar-dots small-dots' : 'calendar-dots';
-            let dotsHTML = '';
-
-            if (activity.subActivities && activity.subActivities.length > 0) {
-                dotsHTML = logs
-                    .map(subId => {
-                        const sub = activity.subActivities.find(s => s.id === subId);
-                        return sub ? `<div class="calendar-dot" style="background-color: ${sub.color};"></div>` : '';
-                    })
-                    .join('');
-            } else if (logs.includes(activity.id)) {
-                // For activities without sub-activities, use the primary text color.
-                dotsHTML = `<div class="calendar-dot" style="background-color: var(--text-primary);"></div>`;
-            }
-
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dots = getDotsForDate(activity, dateStr);
             gridHTML += `
                 <div class="calendar-day" data-date="${dateStr}">
                     <span class="calendar-date-num">${day}</span>
-                    <div class="${dotsContainerClass}">${dotsHTML}</div>
-                </div>
-            `;
+                    <div class="calendar-dots">${dots}</div>
+                </div>`;
+        }
+
+        // Days from next month
+        const totalCells = 42; // 6 rows * 7 days
+        const renderedCells = firstDay + daysInMonth;
+        const remainingCells = totalCells - renderedCells;
+        const nextMonthFirstDate = new Date(year, month + 1, 1);
+
+        for (let i = 1; i <= remainingCells; i++) {
+            const day = i;
+            const dateStr = `${nextMonthFirstDate.getFullYear()}-${String(nextMonthFirstDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dots = getDotsForDate(activity, dateStr);
+            gridHTML += `
+                <div class="calendar-day other-month" data-date="${dateStr}">
+                    <span class="calendar-date-num">${day}</span>
+                    <div class="calendar-dots">${dots}</div>
+                </div>`;
         }
         
         calendarGrid.innerHTML = gridHTML;
@@ -292,88 +302,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!activityItem) return;
         const activityId = activityItem.dataset.id;
 
-        if (target.closest('.activity-main') && !target.classList.contains('remove-btn')) {
-            // If it's a new selection
-            if (state.ui.selectedActivityId !== activityId) {
-                state.ui.selectedActivityId = activityId;
-                // Also expand it and collapse others
-                state.ui.expandedActivities.clear();
-                state.ui.expandedActivities.add(activityId);
-            } else { // If it's the same activity, just toggle expansion
-                if (state.ui.expandedActivities.has(activityId)) {
-                    state.ui.expandedActivities.delete(activityId);
-                } else {
-                    state.ui.expandedActivities.add(activityId);
-                }
-            }
+        if (target.closest('.activity-main')) {
+            state.ui.selectedActivityId = activityId;
             saveState();
             renderActivities();
             renderCalendar();
-            return;
-        }
-
-        const subActivityInput = target.closest('.sub-add-row')?.querySelector('.sub-activity-input');
-        if ((target.classList.contains('sub-add-btn') || (target === subActivityInput && e.key === 'Enter')) && subActivityInput && subActivityInput.value.trim()) {
-            const name = subActivityInput.value.trim();
-            const colorPicker = subActivityInput.previousElementSibling;
-            const color = colorPicker.value;
-            const newSubActivity = { id: `sub_${Date.now()}`, name, color };
-
-            const activity = state.activities.find(a => a.id === activityId);
-            if (activity) {
-                if (!activity.subActivities) activity.subActivities = [];
-                activity.subActivities.push(newSubActivity);
-                subActivityInput.value = '';
-                saveState();
-                renderActivities();
-                if (state.ui.selectedActivityId === activityId) renderCalendar();
-            }
-            return;
-        }
-
-        if (target.classList.contains('remove-btn') && target.closest('.activity-main')) {
-            e.stopPropagation();
-            const activityToDelete = state.activities.find(a => a.id === activityId);
-            if (activityToDelete) {
-                showConfirmation(`Are you sure you want to delete "${activityToDelete.name}" and all its data?`, () => {
-                    const subIdsToDelete = new Set((activityToDelete.subActivities || []).map(s => s.id));
-                    
-                    state.activities = state.activities.filter(a => a.id !== activityId);
-                    
-                    Object.keys(state.logs).forEach(date => {
-                        state.logs[date] = state.logs[date].filter(logId => !subIdsToDelete.has(logId));
-                        if (state.logs[date].length === 0) delete state.logs[date];
-                    });
-
-                    if (state.ui.selectedActivityId === activityId) {
-                        state.ui.selectedActivityId = state.activities.length > 0 ? state.activities[0].id : null;
-                    }
-                    saveState();
-                    renderActivities();
-                    renderCalendar();
-                });
-            }
-        }
-
-        if (target.classList.contains('remove-btn') && target.closest('.sub-activity-item')) {
-            e.stopPropagation();
-            const subId = target.dataset.id;
-            const parentId = activityId;
-            const activity = state.activities.find(a => a.id === parentId);
-            const subActivity = activity ? activity.subActivities.find(s => s.id === subId) : null;
-            
-            if (activity && subActivity) {
-                showConfirmation(`Are you sure you want to delete sub-activity "${subActivity.name}"?`, () => {
-                    activity.subActivities = activity.subActivities.filter(s => s.id !== subId);
-                    Object.keys(state.logs).forEach(date => {
-                        state.logs[date] = state.logs[date].filter(logId => logId !== subId);
-                        if (state.logs[date].length === 0) delete state.logs[date];
-                    });
-                    saveState();
-                    renderActivities();
-                    if (state.ui.selectedActivityId === parentId) renderCalendar();
-                });
-            }
         }
     };
 
@@ -449,39 +382,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         const dateStr = loggingModal.dataset.date;
 
+        // Close button or clicking outside the modal content
         if (target.classList.contains('close') || target.id === 'logging-modal') {
             loggingModal.classList.add('hidden');
             renderCalendar();
+            renderActivities();
             return;
         }
 
         const pill = target.closest('.pill');
         if (pill) {
             const subId = pill.dataset.id;
-            if (!state.logs[dateStr]) state.logs[dateStr] = [];
+            
+            // Use a Set for easier and more robust toggling
+            const loggedIds = new Set(state.logs[dateStr] || []);
 
-            const logIndex = state.logs[dateStr].indexOf(subId);
-            if (logIndex > -1) {
-                state.logs[dateStr].splice(logIndex, 1);
-                if (state.logs[dateStr].length === 0) delete state.logs[dateStr];
+            if (loggedIds.has(subId)) {
+                loggedIds.delete(subId);
             } else {
-                state.logs[dateStr].push(subId);
+                loggedIds.add(subId);
             }
-            // Toggle selection class on the pill itself
-            pill.classList.toggle('selected');
+
+            if (loggedIds.size === 0) {
+                delete state.logs[dateStr];
+            } else {
+                state.logs[dateStr] = Array.from(loggedIds);
+            }
+            
             saveState();
-            // No need to hide modal immediately, let user select multiple
+            
+            // Autosave and close
+            loggingModal.classList.add('hidden');
+            renderCalendar();
+            renderActivities();
         }
     };
-
-    const handleModalClose = (e) => {
-        const target = e.target;
-         if (target.classList.contains('close') || target.id === 'logging-modal') {
-            loggingModal.classList.add('hidden');
-            renderCalendar(); // Update calendar dots
-            renderActivities(); // Update streaks
-        }
-    }
 
     // --- Utility Functions ---
     const showLoadingIndicator = (message, isError = false) => {
@@ -499,21 +434,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Setup ---
     const initApp = async () => {
+        // Render initial loading states
+        renderActivities(true);
+        renderGoals(true);
+        renderCalendar(true);
+
         await loadState();
 
         if (!state.ui.selectedActivityId && state.activities.length > 0) {
             state.ui.selectedActivityId = state.activities[0].id;
         }
-        if (state.ui.selectedActivityId && !state.ui.expandedActivities.has(state.ui.selectedActivityId)) {
-             state.ui.expandedActivities.add(state.ui.selectedActivityId);
+        if (state.ui.selectedActivityId && !state.activities.find(a => a.id === state.ui.selectedActivityId)) {
+            state.ui.selectedActivityId = state.activities.length > 0 ? state.activities[0].id : null;
         }
-
+        
         renderActivities();
         renderGoals();
         renderCalendar();
 
-        authContainer.classList.add('hidden');
-        mainLayout.classList.remove('hidden');
+        // Show main layout after everything is ready
+        document.querySelector('.main-layout').classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
     }
 
@@ -528,14 +468,14 @@ document.addEventListener('DOMContentLoaded', () => {
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 userId = user.uid;
-                authContainer.classList.add('hidden');
-                mainLayout.classList.remove('hidden');
-                logoutBtn.classList.remove('hidden');
+                db = firebase.firestore();
                 initApp();
             } else {
                 userId = null;
                 // Redirect to login if not authenticated
-                window.location.href = 'login.html';
+                if (!window.location.pathname.endsWith('login.html') && !window.location.pathname.endsWith('register.html')) {
+                    window.location.href = 'login.html';
+                }
             }
         });
     };
@@ -573,22 +513,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        addActivityInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') addActivity();
-        });
-        addActivityBtn.addEventListener('click', addActivity);
-
-        addGoalInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') addGoal();
-        });
-        addGoalBtn.addEventListener('click', addGoal);
-
         activityList.addEventListener('click', handleActivityActions);
-        activityList.addEventListener('keyup', handleActivityActions);
         goalList.addEventListener('click', handleGoalActions);
         calendarView.addEventListener('click', handleCalendarActions);
         loggingModal.addEventListener('click', handleModalActions);
-        loggingModal.addEventListener('click', handleModalClose);
         themeToggle.addEventListener('click', toggleTheme);
 
         confirmNo.addEventListener('click', () => {

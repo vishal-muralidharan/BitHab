@@ -1,16 +1,16 @@
-// Theme toggle logic for login/register pages
+// Theme toggle logic
 function setThemeFromStorage() {
-  const savedTheme = localStorage.getItem('bitHabTheme');
-  if (savedTheme) {
-    document.body.className = savedTheme;
-  }
-  document.getElementById('theme-toggle').innerHTML = document.body.classList.contains('dark') ? '☀️' : '🌙';
+  const savedTheme = localStorage.getItem('bitHabTheme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.getElementById('theme-toggle').innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
 }
 
 function toggleTheme() {
-  document.body.classList.toggle('dark');
-  document.getElementById('theme-toggle').innerHTML = document.body.classList.contains('dark') ? '☀️' : '🌙';
-  localStorage.setItem('bitHabTheme', document.body.className);
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('bitHabTheme', newTheme);
+  document.getElementById('theme-toggle').innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
