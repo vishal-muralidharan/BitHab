@@ -3,15 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../assets/js/theme-preload-inline.js"></script>
   <title>BitHab</title>
   <link rel="icon" href="../assets/images/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="../assets/images/logo.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
   <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
   <link rel="stylesheet" href="../assets/css/notes.css" />
 </head>
 <body>
+  <!-- Mobile/Tablet Topbar -->
+  <div class="mobile-topbar">
+    <a href="../index.html" class="logo-link">
+      <h1 class="logo">
+        <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
+        <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
+      </h1>
+    </a>
+    <button id="mobile-theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
   <header class="header">
     <a href="../index.html" class="logo-link">
       <h1 class="logo">
@@ -19,34 +35,44 @@
         <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
       </h1>
     </a>
-    <div>
-      <button id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+    <nav class="header-nav">
+      <a href="activities.html" class="nav-item">Activities</a>
+      <a href="goals.html" class="nav-item">Goals</a>
+      <a href="notes.html" class="nav-item active">Notes</a>
+      <a href="reminders.html" class="nav-item">Reminders</a>
+      <a href="focus.html" class="nav-item">Focus</a>
+      <div class="more-dropdown">
+        <button class="more-btn nav-item" aria-label="More options">More</button>
+        <div class="more-dropdown-content">
+          <a href="themes.html">Themes</a>
+        </div>
+      </div>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button id="logout-btn" class="header-btn" aria-label="Logout">Logout</button>
     </div>
   </header>
   <div class="page-container">
-    <aside class="sidebar">
-        <nav class="sidebar-nav">
-            <a href="../index.html" class="nav-link">🏠 Home</a>
-            <a href="activities.html" class="nav-link">📝 Activities</a>
-            <a href="goals.html" class="nav-link">🎯 Goals</a>
-            <a href="notes.html" class="nav-link active">📔 Notes</a>
-        </nav>
-        <div class="sidebar-footer">
-            <button id="theme-toggle-sidebar" aria-label="Toggle theme">🌙</button>
-            <button id="logout-btn-sidebar" aria-label="Logout">Logout</button>
-        </div>
-    </aside>
     <main class="content">
         <div class="notes-container">
             <div class="page-header">
-                <h1>📔 Notes</h1>
+                <h1>Notes</h1>
                 <p class="page-subtitle">Organize your thoughts with daily notes and general notes</p>
             </div>
             
             <!-- Note Type Toggle -->
-            <div class="note-type-toggle">
-                <button class="note-type-btn active" data-type="daily">📅 Daily</button>
-                <button class="note-type-btn" data-type="general">📝 General</button>
+      <div class="note-type-toggle">
+        <button class="note-type-btn active" data-type="daily">
+          <i class="fas fa-calendar-day icon-prefix" aria-hidden="true"></i>
+          <span>Daily</span>
+        </button>
+        <button class="note-type-btn" data-type="general">
+          <i class="fas fa-note-sticky icon-prefix" aria-hidden="true"></i>
+          <span>General</span>
+        </button>
             </div>
             
             <div class="notes-stats">
@@ -73,12 +99,17 @@
                             <button class="filter-btn" data-filter="recent">Recent</button>
                             <button class="filter-btn" data-filter="older">Older</button>
                         </div>
-                        <button id="add-new-note-btn" class="btn-primary">➕ Add Daily Note</button>
+            <button id="add-new-note-btn" class="btn-primary">
+              <i class="fas fa-plus icon-prefix" aria-hidden="true"></i>
+              <span>Add Daily Note</span>
+            </button>
                     </div>
 
                     <div class="notes-list" id="notes-list">
                         <div class="empty-state hidden" id="empty-state">
-                            <div class="empty-icon">📝</div>
+              <div class="empty-icon">
+                <i class="fas fa-note-sticky" aria-hidden="true"></i>
+              </div>
                             <h3>No daily notes yet</h3>
                             <p>Start adding notes to your daily activities from the calendar to see them here.</p>
                         </div>
@@ -94,12 +125,17 @@
                             <button class="filter-btn active" data-filter="all">All General Notes</button>
                             <button class="filter-btn" data-filter="recent">Recent</button>
                         </div>
-                        <button id="add-new-general-note-btn" class="btn-primary">➕ Add General Note</button>
+            <button id="add-new-general-note-btn" class="btn-primary">
+              <i class="fas fa-plus icon-prefix" aria-hidden="true"></i>
+              <span>Add General Note</span>
+            </button>
                     </div>
 
                     <div class="notes-list" id="general-notes-list">
                         <div class="empty-state hidden" id="general-empty-state">
-                            <div class="empty-icon">📝</div>
+              <div class="empty-icon">
+                <i class="fas fa-note-sticky" aria-hidden="true"></i>
+              </div>
                             <h3>No general notes yet</h3>
                             <p>Create your first general note to get started organizing your thoughts.</p>
                         </div>
@@ -112,10 +148,15 @@
 
   <div id="edit-note-modal" class="modal hidden">
     <div class="modal-content note-modal">
-        <div class="modal-header">
-            <h3 id="edit-modal-title">Add New Note</h3>
-            <button class="modal-close" id="close-edit-modal">&times;</button>
+      <div class="modal-header">
+        <div class="modal-title-stack">
+          <h3 id="edit-modal-title">Add Daily Note</h3>
+          <p id="edit-modal-date" class="modal-subtitle"></p>
         </div>
+        <button class="modal-close" id="close-edit-modal" aria-label="Close note editor">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
         <div class="modal-body">
             <!-- Daily Note Fields -->
             <div id="daily-note-fields">
@@ -166,19 +207,66 @@
   <script src="../config/firebase-config.js"></script>
   <script src="../assets/js/error-handler.js"></script>
   <script src="../assets/js/auth-manager.js"></script>
-  <script src="../assets/js/theme-toggle.js"></script>
+  <script src="../assets/js/database-migration.js"></script>
+  <script src="../assets/js/database-service.js"></script>
+  <script src="../assets/js/data-sync.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
+  <script src="../assets/js/mobile-nav.js"></script>
   <script src="../assets/js/notes.js"></script>
   <script>
-    document.getElementById('sidebar-toggle').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.querySelector('.sidebar').classList.toggle('hidden');
-    });
-    document.querySelector('.content').addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.add('hidden');
-    });
-    document.querySelector('.sidebar').addEventListener('click', (e) => {
-        e.stopPropagation();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile theme toggle
+        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+        if (mobileThemeToggle && window.themeSystem) {
+            mobileThemeToggle.addEventListener('click', () => {
+                window.themeSystem.toggleDarkMode();
+            });
+        }
     });
   </script>
+  
+  <!-- Bottom Navigation for Mobile/Tablet -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-content">
+      <a href="../index.html" class="bottom-nav-item">
+        <i class="fas fa-home bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Home</span>
+      </a>
+      <a href="activities.html" class="bottom-nav-item">
+        <i class="fas fa-chart-line bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Activities</span>
+      </a>
+      <a href="goals.html" class="bottom-nav-item">
+        <i class="fas fa-bullseye bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Goals</span>
+      </a>
+      <a href="reminders.html" class="bottom-nav-item">
+        <i class="fas fa-bell bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Reminders</span>
+      </a>
+      <div class="bottom-nav-item more-bottom-nav active">
+        <i class="fas fa-ellipsis-h bottom-nav-icon"></i>
+        <span class="bottom-nav-label">More</span>
+        <div class="more-bottom-dropdown">
+          <a href="notes.html" class="more-dropdown-item">
+            <i class="fas fa-sticky-note"></i>
+            <span>Notes</span>
+          </a>
+          <a href="focus.html" class="more-dropdown-item">
+            <i class="fas fa-clock"></i>
+            <span>Focus</span>
+          </a>
+          <a href="themes.html" class="more-dropdown-item">
+            <i class="fas fa-palette"></i>
+            <span>Themes</span>
+          </a>
+          <button class="more-dropdown-item logout-item" id="logout-bottom-nav">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
 </body>
 </html>

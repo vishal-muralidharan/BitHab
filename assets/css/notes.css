@@ -155,10 +155,21 @@
 }
 
 @media (max-width: 768px) {
+    body {
+        padding-bottom: 80px; /* Space for bottom navigation */
+    }
+    
     #general-notes-list,
     #notes-list {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+    
+    /* Touch-friendly buttons */
+    .note-actions button,
+    .folder-actions button {
+        min-height: 44px;
+        padding: 0.75rem;
     }
 }
 
@@ -296,6 +307,11 @@
     justify-content: center;
     transition: background 0.2s ease;
     font-size: 0.9rem;
+}
+
+.note-action-btn i {
+    color: currentColor;
+    pointer-events: none;
 }
 
 .note-action-btn:hover {
@@ -545,11 +561,23 @@
     color: var(--text-primary);
     font-size: 1rem;
     line-height: 1.6;
-    resize: vertical;
-    min-height: 120px;
+    resize: none;
+    min-height: 140px;
+    max-height: 320px;
+    overflow-y: auto;
     transition: all 0.2s ease;
     outline: none;
     font-family: inherit;
+    scrollbar-width: thin;
+}
+
+.note-textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.note-textarea::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 6px;
 }
 
 .note-textarea:focus {
@@ -600,11 +628,6 @@
 
 #general-note-fields.hidden,
 #daily-note-fields.hidden {
-    display: none;
-}
-
-/* Hide date input when editing existing daily notes */
-.modal.editing-existing-note .date-input-group {
     display: none;
 }
 
@@ -681,6 +704,11 @@
 .modal-close:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
+}
+
+.modal-close i {
+    color: currentColor;
+    pointer-events: none;
 }
 
 .modal-body {
@@ -765,39 +793,68 @@
 
 /* Minimalistic Note Modal Styles */
 .note-modal {
-    max-width: 480px;
-    border-radius: 16px;
+    max-width: 520px;
+    max-height: min(85vh, 760px);
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
 }
 
 .note-modal .modal-header {
-    background: var(--accent-primary);
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
     color: white;
-    padding: 1rem 1.5rem;
+    padding: 1.75rem 2rem 1.25rem;
     border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-title-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+    align-items: flex-start;
 }
 
 .note-modal .modal-header h3 {
     color: white;
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 600;
+    margin: 0;
+}
+
+.modal-subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .note-modal .modal-close {
     color: white;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .note-modal .modal-close:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.22);
     color: white;
 }
 
 .note-modal .modal-body {
-    padding: 1.5rem;
+    padding: 2rem;
     background: var(--bg-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
 }
 
 .date-input-group {
@@ -856,15 +913,27 @@
     width: 100%;
     padding: 1rem;
     border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-family: inherit;
     font-size: 1rem;
     line-height: 1.5;
-    resize: vertical;
-    min-height: 100px;
+    resize: none;
+    min-height: 140px;
+    max-height: 320px;
+    overflow-y: auto;
     transition: all 0.2s ease;
+    scrollbar-width: thin;
+}
+
+.note-textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.note-textarea::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 6px;
 }
 
 .note-textarea:focus {
@@ -883,6 +952,7 @@
     background: var(--bg-primary);
     border-top: 1px solid var(--border-color);
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .btn-save {
@@ -1045,11 +1115,16 @@
     
     /* Additional responsive styles for note modal */
     .note-modal .modal-header {
-        padding: 0.75rem 1rem;
+        padding: 1rem 1.25rem;
+        gap: 1rem;
     }
     
     .note-modal .modal-body {
         padding: 1rem;
+    }
+
+    .note-modal .modal-header {
+        align-items: center;
     }
     
     .date-shortcuts {

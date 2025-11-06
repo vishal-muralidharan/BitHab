@@ -3,15 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="assets/js/theme-preload-inline.js"></script>
   <title>BitHab</title>
   <link rel="icon" href="assets/images/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="assets/images/logo.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/dashboard.css" />
 </head>
-<body>
+<body class="index-page">
+  <!-- Mobile/Tablet Topbar -->
+  <div class="mobile-topbar">
+    <a href="index.html" class="logo-link">
+      <h1 class="logo">
+        <img src="assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
+        <img src="assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
+      </h1>
+    </a>
+    <button id="mobile-theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
   <header class="header">
     <a href="index.html" class="logo-link">
       <h1 class="logo">
@@ -19,38 +34,138 @@
         <img src="assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
       </h1>
     </a>
-    <div>
-      <button id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+    <nav class="header-nav">
+      <a href="pages/activities.html" class="nav-item">Activities</a>
+      <a href="pages/goals.html" class="nav-item">Goals</a>
+      <a href="pages/notes.html" class="nav-item">Notes</a>
+      <a href="pages/reminders.html" class="nav-item">Reminders</a>
+      <a href="pages/focus.html" class="nav-item">Focus</a>
+      <div class="more-dropdown">
+        <button class="more-btn nav-item" aria-label="More options">More</button>
+        <div class="more-dropdown-content">
+          <a href="pages/themes.html">Themes</a>
+        </div>
+      </div>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button id="logout-btn" class="header-btn" aria-label="Logout">Logout</button>
     </div>
   </header>
   <div class="page-container">
-    <aside class="sidebar">
-        <nav class="sidebar-nav">
-            <a href="index.html" class="nav-link active">🏠 Home</a>
-            <a href="pages/activities.html" class="nav-link">📝 Activities</a>
-            <a href="pages/goals.html" class="nav-link">🎯 Goals</a>
-            <a href="pages/notes.html" class="nav-link">📔 Notes</a>
-        </nav>
-        <div class="sidebar-footer">
-            <button id="theme-toggle-sidebar" aria-label="Toggle theme">🌙</button>
-            <button id="logout-btn-sidebar" aria-label="Logout">Logout</button>
-        </div>
-    </aside>
     <main class="content">
-        <div class="main-layout">
-            <div class="activities-column">
-                <h2><a href="pages/activities.html" class="section-title-link">📝 Activities</a></h2>
-                <ul id="activity-list" class="activity-list"></ul>
+        <div class="main-layout hidden">
+            <!-- Left Column: Activities and Notes -->
+            <div class="left-column">
+                <div class="activities-component" data-page="pages/activities.html">
+                    <div class="section-header">
+                        <h2>Activities</h2>
+                        <button class="show-all-btn" id="activities-show-all" title="Show all">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <ul id="activity-list" class="activity-list"></ul>
+                </div>
+                
+                <div class="notes-component" data-page="pages/notes.html">
+                    <div class="section-header">
+                        <h2>Notes</h2>
+                        <button class="show-all-btn" id="notes-show-all" title="Show all">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="notes-preview" class="notes-preview">
+                        <!-- Notes preview will be rendered here -->
+                    </div>
+                </div>
             </div>
-            <section class="calendar-view" id="calendar-view">
-              <!-- Calendar will be rendered here by script.js -->
-            </section>
-            <div class="goals-column">
-                <h2><a href="pages/goals.html" class="section-title-link">🎯 Goals</a></h2>
-                <ul id="goal-list" class="goal-list"></ul>
+
+            <!-- Center Column: Date and Calendar -->
+            <div class="center-column">
+                <div class="date-display">
+                    <div class="current-date-colored" id="current-date">
+                        Today
+                    </div>
+                </div>
+                <section class="calendar-view" id="calendar-view">
+                  <!-- Calendar will be rendered here by script.js -->
+                </section>
+                
+                <!-- Activity Logging Section (appears when date is clicked) -->
+                <div class="activity-logging-section hidden" id="activity-logging-section">
+                    <div class="logging-header">
+                        <h3>Log Activities for <span id="selected-date-text">Today</span></h3>
+                        <button class="close-logging-btn" id="close-logging-btn" aria-label="Close activity logging">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div class="logging-content">
+                        <!-- Activity logging interface will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Goals and Reminders -->
+            <div class="right-column">
+                <div class="goals-component" data-page="pages/goals.html">
+                    <div class="section-header">
+                        <h2>Goals</h2>
+                        <button class="show-all-btn" id="goals-show-all" title="Show all">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <ul id="goal-list" class="goal-list"></ul>
+                </div>
+                
+                <div class="reminders-component" data-page="pages/reminders.html">
+                    <div class="section-header">
+                        <h2>Reminders</h2>
+                        <button class="show-all-btn" id="reminders-show-all" title="Show all">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="reminders-preview" class="reminders-preview">
+                        <!-- Reminders preview will be rendered here -->
+                    </div>
+                </div>
             </div>
         </div>
     </main>
+  </div>
+  
+  <!-- Date Picker Popup Modal -->
+  <div id="date-picker-modal" class="modal hidden">
+    <div class="date-picker-content">
+        <div class="date-picker-header">
+            <button class="date-nav-btn" id="prev-month">‹</button>
+            <h3 id="picker-month-year">October 2025</h3>
+            <button class="date-nav-btn" id="next-month">›</button>
+        </div>
+        <div class="date-picker-grid">
+            <div class="day-labels">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+            </div>
+            <div class="date-grid" id="date-picker-grid">
+                <!-- Dates will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
   </div>
   <div id="logging-modal" class="modal hidden">
     <!-- Modal content will be rendered here by script.js -->
@@ -67,6 +182,61 @@
     </div>
   </div>
 
+  <!-- Activity Selection Modal -->
+  <div id="activity-selection-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Select Activities to Log</h3>
+        <div class="activity-selection-list">
+            <!-- Activities will be populated by JavaScript -->
+        </div>
+        <div class="modal-actions">
+            <button id="cancel-activity-selection" class="btn-cancel">Cancel</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- Year/Month/Activity Picker Modal -->
+  <div id="year-month-picker-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Select Year, Month, and Activity</h3>
+        <div class="year-month-picker">
+            <div class="year-picker-section">
+                <label for="year-select">Year:</label>
+                <select id="year-select" class="picker-select">
+                    <!-- Years will be populated by JavaScript -->
+                </select>
+            </div>
+            <div class="month-picker-section">
+                <label for="month-select">Month:</label>
+                <select id="month-select" class="picker-select">
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    <option value="2">March</option>
+                    <option value="3">April</option>
+                    <option value="4">May</option>
+                    <option value="5">June</option>
+                    <option value="6">July</option>
+                    <option value="7">August</option>
+                    <option value="8">September</option>
+                    <option value="9">October</option>
+                    <option value="10">November</option>
+                    <option value="11">December</option>
+                </select>
+            </div>
+            <div class="activity-picker-section">
+                <label for="activity-select">Activity:</label>
+                <select id="activity-select" class="picker-select">
+                    <!-- Activities will be populated by JavaScript -->
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button id="apply-year-month" class="btn-confirm">Apply</button>
+            <button id="cancel-year-month" class="btn-cancel">Cancel</button>
+        </div>
+    </div>
+  </div>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -74,19 +244,237 @@
   <script src="config/firebase-config.js"></script>
   <script src="assets/js/error-handler.js"></script>
   <script src="assets/js/auth-manager.js"></script>
-  <script src="assets/js/theme-toggle.js"></script>
+  <script src="assets/js/database-migration.js"></script>
+  <script src="assets/js/database-service.js"></script>
+  <script src="assets/js/data-sync.js"></script>
+  <script src="assets/js/unified-theme-system.js"></script>
   <script src="assets/js/script.js"></script>
+  <script src="assets/js/mobile-nav.js"></script>
   <script>
-    document.getElementById('sidebar-toggle').addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent content click from firing immediately
-        document.querySelector('.sidebar').classList.toggle('hidden');
-    });
-    document.querySelector('.content').addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.add('hidden');
-    });
-    document.querySelector('.sidebar').addEventListener('click', (e) => {
-        e.stopPropagation();
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainLayout = document.querySelector('.main-layout');
+        if (mainLayout) {
+            mainLayout.classList.remove('hidden');
+            console.log('Main layout is now visible');
+        }
+
+        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+        if (mobileThemeToggle && window.themeSystem) {
+            mobileThemeToggle.addEventListener('click', () => {
+                window.themeSystem.toggleDarkMode();
+            });
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const dateString = now.toLocaleDateString('en-US', options);
+            const currentDateElement = document.getElementById('current-date');
+            if (currentDateElement) {
+                currentDateElement.textContent = dateString;
+            }
+        }
+
+        updateCurrentDate();
+        setInterval(updateCurrentDate, 60000);
+
+        const dateHeader = document.getElementById('date-header');
+        const datePickerModal = document.getElementById('date-picker-modal');
+        const prevMonthBtn = document.getElementById('prev-month');
+        const nextMonthBtn = document.getElementById('next-month');
+        const pickerMonthYear = document.getElementById('picker-month-year');
+        const datePickerGrid = document.getElementById('date-picker-grid');
+
+        let currentPickerDate = new Date();
+
+        function showActivityLogging(date) {
+            const loggingSection = document.getElementById('activity-logging-section');
+            const selectedDateText = document.getElementById('selected-date-text');
+
+            if (loggingSection && selectedDateText) {
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                selectedDateText.textContent = formattedDate;
+                loggingSection.classList.remove('hidden');
+            }
+        }
+
+        function generateDatePicker() {
+            const month = currentPickerDate.getMonth();
+            const year = currentPickerDate.getFullYear();
+            const today = new Date();
+
+            pickerMonthYear.textContent = currentPickerDate.toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+            });
+
+            const firstDay = new Date(year, month, 1);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
+
+            datePickerGrid.innerHTML = '';
+
+            for (let i = 0; i < 42; i += 1) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+
+                const dayElement = document.createElement('div');
+                dayElement.className = 'date-grid-day';
+                dayElement.textContent = date.getDate();
+
+                if (date.getMonth() !== month) {
+                    dayElement.classList.add('other-month');
+                }
+
+                if (date.toDateString() === today.toDateString()) {
+                    dayElement.classList.add('today');
+                }
+
+                dayElement.addEventListener('click', () => {
+                    datePickerModal.classList.add('hidden');
+                    const selectedDateText = date.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    const currentDateElement = document.getElementById('current-date');
+                    if (currentDateElement) {
+                        currentDateElement.textContent = selectedDateText;
+                    }
+                    showActivityLogging(date);
+                });
+
+                datePickerGrid.appendChild(dayElement);
+            }
+        }
+
+        if (dateHeader) {
+            dateHeader.addEventListener('click', () => {
+                datePickerModal.classList.remove('hidden');
+                generateDatePicker();
+            });
+        }
+
+        if (datePickerModal) {
+            datePickerModal.addEventListener('click', (event) => {
+                if (event.target === datePickerModal) {
+                    datePickerModal.classList.add('hidden');
+                }
+            });
+        }
+
+        if (prevMonthBtn) {
+            prevMonthBtn.addEventListener('click', () => {
+                currentPickerDate.setMonth(currentPickerDate.getMonth() - 1);
+                generateDatePicker();
+            });
+        }
+
+        if (nextMonthBtn) {
+            nextMonthBtn.addEventListener('click', () => {
+                currentPickerDate.setMonth(currentPickerDate.getMonth() + 1);
+                generateDatePicker();
+            });
+        }
+
+        const closeLoggingBtn = document.getElementById('close-logging-btn');
+        if (closeLoggingBtn) {
+            closeLoggingBtn.addEventListener('click', () => {
+                const section = document.getElementById('activity-logging-section');
+                if (section) {
+                    section.classList.add('hidden');
+                }
+            });
+        }
+
+        setTimeout(() => {
+            if (typeof window.renderGoals === 'function') {
+                window.renderGoals();
+            }
+            if (typeof window.renderReminders === 'function') {
+                window.renderReminders();
+            }
+            if (typeof window.renderActivities === 'function') {
+                window.renderActivities();
+            }
+        }, 500);
+
+        const components = document.querySelectorAll('[data-page]');
+        components.forEach((component) => {
+            component.addEventListener('click', (event) => {
+                if (event.target.closest('.show-all-btn, .notes-editor, .activity-item, .goal-item, .reminder-preview-item, .note-preview-item, .inline-logging-interface, .pill')) {
+                    return;
+                }
+                const page = component.getAttribute('data-page');
+                if (page) {
+                    window.location.href = page;
+                }
+            });
+        });
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                console.log('Logout clicked');
+            });
+        }
     });
   </script>
+  
+  <!-- Bottom Navigation for Mobile/Tablet -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-content">
+      <a href="index.html" class="bottom-nav-item active">
+        <i class="fas fa-home bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Home</span>
+      </a>
+      <a href="pages/activities.html" class="bottom-nav-item">
+        <i class="fas fa-chart-line bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Activities</span>
+      </a>
+      <a href="pages/goals.html" class="bottom-nav-item">
+        <i class="fas fa-bullseye bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Goals</span>
+      </a>
+      <a href="pages/reminders.html" class="bottom-nav-item">
+        <i class="fas fa-bell bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Reminders</span>
+      </a>
+      <div class="bottom-nav-item more-bottom-nav">
+        <i class="fas fa-ellipsis-h bottom-nav-icon"></i>
+        <span class="bottom-nav-label">More</span>
+        <div class="more-bottom-dropdown">
+          <a href="pages/notes.html" class="more-dropdown-item">
+            <i class="fas fa-sticky-note"></i>
+            <span>Notes</span>
+          </a>
+          <a href="pages/focus.html" class="more-dropdown-item">
+            <i class="fas fa-clock"></i>
+            <span>Focus</span>
+          </a>
+          <a href="pages/themes.html" class="more-dropdown-item">
+            <i class="fas fa-palette"></i>
+            <span>Themes</span>
+          </a>
+          <button class="more-dropdown-item logout-item" id="logout-bottom-nav">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
 </body>
 </html>
+

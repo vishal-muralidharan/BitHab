@@ -3,31 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BitHab</title>
+    <title>BitHab</title>
   <link rel="icon" href="../assets/images/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="../assets/images/logo.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../assets/css/style.css" />
   <link rel="stylesheet" href="../assets/css/auth.css" />
 </head>
-<body>
+<body class="auth-page">
   <header class="header">
     <h1 class="logo">
       <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
       <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
     </h1>
-    <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+    <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
+      <i class="fas fa-moon"></i>
+    </button>
   </header>
   <div id="auth-container">
     <div class="auth-form-wrapper">
-        <h2 class="auth-title">👤 Register</h2>
+        <h2 class="auth-title">
+          <i class="fas fa-user icon-prefix" aria-hidden="true"></i>
+          <span>Register</span>
+        </h2>
         <div id="error-message" class="error-message" style="display: none;"></div>
+        <!-- Google Sign-In Button -->
+        <button id="google-signin-btn" class="google-signin-btn">
+            <img src="../assets/images/google-logo.svg" alt="Google" class="google-logo">
+            Continue with Google
+        </button>
+        
+        <div class="auth-divider">
+            <span>or</span>
+        </div>
+        
         <form id="register-form">
-            <input type="email" id="register-email" placeholder="📧 Email" required autocomplete="username">
-            <input type="password" id="register-password" placeholder="🔒 Password" required autocomplete="new-password">
-            <input type="password" id="register-confirm-password" placeholder="🔒 Confirm Password" required autocomplete="new-password">
-            <button type="submit">👤 Register</button>
+            <input type="email" id="register-email" placeholder="Email" required autocomplete="username">
+            <input type="password" id="register-password" placeholder="Password" required autocomplete="new-password">
+                        <ul class="password-requirements" id="register-password-requirements">
+                                <li data-rule="length">At least 8 characters</li>
+                                <li data-rule="uppercase">Contains an uppercase letter</li>
+                                <li data-rule="lowercase">Contains a lowercase letter</li>
+                                <li data-rule="number">Contains a number</li>
+                        </ul>
+            <input type="password" id="register-confirm-password" placeholder="Confirm Password" required autocomplete="new-password">
+            <button type="submit">
+              <i class="fas fa-user icon-prefix" aria-hidden="true"></i>
+              <span>Register</span>
+            </button>
         </form>
         <p class="auth-switch">Already have an account? <a href="login.html" id="show-login">Login</a></p>
     </div>
@@ -38,45 +63,121 @@
   <script src="../config/firebase-config.js"></script>
   <script src="../assets/js/error-handler.js"></script>
   <script src="../assets/js/auth-manager.js"></script>
-  <script src="../assets/js/theme-toggle.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
   <script>
-    document.getElementById('register-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const email = document.getElementById('register-email').value;
-      const password = document.getElementById('register-password').value;
-      const confirmPassword = document.getElementById('register-confirm-password').value;
-      
-      if (password !== confirmPassword) {
-        errorHandler.showError('Passwords do not match. Please try again.');
-        return;
-      }
-      
-      if (password.length < 6) {
-        errorHandler.showError('Password should be at least 6 characters long.');
-        return;
-      }
-      
-      // Show loading state
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Creating account...';
-      submitBtn.disabled = true;
-      
-      firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then(() => { 
-          errorHandler.showSuccess('Account created successfully!');
-          setTimeout(() => {
-            window.location.href = '../index.html';
-          }, 1000);
-        })
-        .catch(err => {
-          errorHandler.handleFirebaseError(err);
-          // Reset button state
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
+    const googleSignInBtn = document.getElementById('google-signin-btn');
+    const registerForm = document.getElementById('register-form');
+    const registerEmailInput = document.getElementById('register-email');
+    const registerPasswordInput = document.getElementById('register-password');
+    const registerConfirmPasswordInput = document.getElementById('register-confirm-password');
+    const registerPasswordRequirements = document.getElementById('register-password-requirements');
+
+    const setPasswordRequirementsState = (listElement, password) => {
+        const rules = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password)
+        };
+
+        if (listElement) {
+            listElement.querySelectorAll('li').forEach((item) => {
+                const rule = item.getAttribute('data-rule');
+                if (rule && Object.prototype.hasOwnProperty.call(rules, rule)) {
+                    item.classList.toggle('valid', Boolean(rules[rule]));
+                }
+            });
+        }
+
+        return Object.values(rules).every(Boolean);
+    };
+
+    if (registerPasswordInput && registerPasswordRequirements) {
+        registerPasswordInput.addEventListener('input', (event) => {
+            setPasswordRequirementsState(registerPasswordRequirements, event.target.value || '');
         });
-    });
+    }
+
+    if (googleSignInBtn) {
+        googleSignInBtn.addEventListener('click', async function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = 'Signing in...';
+
+                const result = await window.authManager.signInWithGoogle();
+                if (result && result.redirect) {
+                    return;
+                }
+            } catch (error) {
+                console.error('Google sign-in failed:', error);
+
+                if (error.code === 'auth/popup-blocked') {
+                    errorHandler.showError('Popup was blocked. Please enable popups for this site.');
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    errorHandler.showError('Sign-in was cancelled.');
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorHandler.showError('Network error. Please check your connection.');
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    errorHandler.handleFirebaseError(error);
+                } else {
+                    errorHandler.handleFirebaseError(error);
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        });
+    }
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const email = registerEmailInput ? registerEmailInput.value : '';
+            const password = registerPasswordInput ? registerPasswordInput.value : '';
+            const confirmPassword = registerConfirmPasswordInput ? registerConfirmPasswordInput.value : '';
+
+            if (password !== confirmPassword) {
+                errorHandler.showError('Passwords do not match. Please try again.');
+                return;
+            }
+
+            const meetsRequirements = setPasswordRequirementsState(registerPasswordRequirements, password);
+            if (!meetsRequirements) {
+                errorHandler.showError('Password must meet all requirements.');
+                return;
+            }
+
+            const submitBtn = registerForm.querySelector('button[type="submit"]');
+            const originalContent = submitBtn ? submitBtn.innerHTML : '';
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Creating account...';
+            }
+
+            try {
+                await window.authManager.createUserWithEmailAndPassword(email, password);
+                if (window.errorHandler && typeof window.errorHandler.showSuccess === 'function') {
+                    window.errorHandler.showSuccess('Account created successfully!');
+                }
+                if (registerForm) {
+                    registerForm.reset();
+                }
+                setPasswordRequirementsState(registerPasswordRequirements, '');
+            } catch (error) {
+                errorHandler.handleFirebaseError(error);
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalContent || '<span>Register</span>';
+                }
+            }
+        });
+    }
   </script>
 </body>
 </html>

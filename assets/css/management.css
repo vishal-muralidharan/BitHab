@@ -3,17 +3,62 @@
     background: var(--bg-secondary);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: clamp(0.75rem, 2vw, 1.5rem);
-    min-height: clamp(300px, 60vh, 600px);
-    display: flex;
-    flex-direction: column;
-    gap: clamp(0.5rem, 1vw, 1rem);
+    padding: clamp(1rem, 2vw, 2rem);
+    /* Remove all height constraints and flexbox */
+    width: 95%; /* Increased from 100% to utilize more screen width */
+    max-width: 1600px; /* Increased from 1200px for wider screens */
+    margin: 0 auto; /* Center the column */
 }
 
 .management-column h2 {
   text-align: center;
   margin-top: 0;
+  margin-bottom: 1rem; /* Add spacing since we removed flexbox gap */
   padding: 0 1rem;
+}
+
+.goal-list, 
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0; /* Add top/bottom margin for spacing */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* Override any global constraints */
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    flex: none !important;
+}
+
+/* Override any global constraints - more specific selector */
+.management-column .activity-list,
+.management-column .goal-list {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    flex: none !important;
+}
+
+/* Goal items with color-coded borders */
+.goal-item {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid #ef4444; /* Red for pending (default) */
+    box-shadow: var(--shadow);
+    cursor: pointer;
+}
+
+.goal-item:hover {
+    background: var(--bg-hover);
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 .add-item-form {
@@ -30,6 +75,13 @@
   border: 1px solid var(--bg-primary);
   color: var(--text-primary);
   padding: 0.8em 1em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.add-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 .add-input::placeholder {
@@ -48,6 +100,44 @@
     line-height: 1;
     cursor: pointer;
     flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+    opacity: 0.7;
+}
+
+.add-btn:hover {
+    transform: scale(1.1);
+    opacity: 1;
+    background: var(--bg-hover);
+}
+
+/* Streak information styles */
+.streak-info {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: calc(var(--radius) / 2);
+    font-size: 0.85rem;
+}
+
+.current-streak, .longest-streak {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.current-streak {
+    color: var(--accent-primary);
+}
+
+.longest-streak {
+    color: var(--text-muted);
+}
+
+.add-btn {
     padding: 0;
     display: flex;
     align-items: center;
@@ -71,16 +161,21 @@
 /* Tablet optimization */
 @media (max-width: 1024px) and (min-width: 769px) {
     .management-column {
-        padding: clamp(0.5rem, 1.5vw, 1.25rem);
-        min-height: clamp(250px, 40vh, 400px);
+        padding: clamp(0.75rem, 1.5vw, 1.5rem);
+        width: 92%;
     }
 }
 
 /* Mobile optimization */
 @media (max-width: 768px) {
+    body {
+        padding-bottom: 80px; /* Space for bottom navigation */
+    }
+    
     .management-column {
-        padding: clamp(0.5rem, 2vw, 1rem);
-        min-height: clamp(200px, 30vh, 300px);
+        padding: clamp(0.75rem, 2vw, 1.25rem);
+        width: 94%;
+        margin-bottom: 2rem; /* Extra space at bottom */
     }
     
     .management-column h2 {
@@ -95,27 +190,19 @@
     
     .add-input {
         padding: clamp(0.4em, 1.5vw, 0.6em) clamp(0.6em, 2vw, 0.8em);
+        min-height: 44px; /* Touch-friendly input */
+    }
+    
+    /* Touch-friendly buttons */
+    .add-btn,
+    .goal-item button,
+    .activity-item button {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
     }
 }
 
 /* Edit buttons and modals */
-.edit-btn {
-    background: transparent;
-    color: var(--text-secondary);
-    border: none;
-    cursor: pointer;
-    padding: 0.2rem;
-    font-size: 0.9rem;
-    opacity: 0.6;
-    transition: opacity var(--transition), color var(--transition);
-    margin-right: 0.3rem;
-}
-
-.edit-btn:hover {
-    opacity: 1;
-    color: var(--accent-primary);
-}
-
 .edit-form {
     display: flex;
     flex-direction: column;
@@ -181,4 +268,257 @@
     display: flex;
     align-items: center;
     gap: 0.2rem;
+}
+
+/* Reminder-specific styles */
+.reminder-form {
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reminder-form .add-input {
+    margin-bottom: 0;
+}
+
+.reminder-datetime {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.datetime-btn {
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    padding: 0.8em 1em;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color var(--transition);
+}
+
+.datetime-btn:hover {
+    background: var(--accent-hover);
+}
+
+.selected-datetime {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.datetime-picker-content {
+    min-width: 350px;
+    max-width: 400px;
+}
+
+.reminder-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.reminder-form-section label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.datetime-picker-content .modal-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius);
+    width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.datetime-picker-content .modal-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.22);
+}
+
+.datetime-picker-content .modal-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.75;
+}
+
+.add-reminder-main-btn {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.3s ease;
+    width: 100%;
+    margin-bottom: 1rem;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+}
+
+.add-reminder-main-btn:hover,
+.add-reminder-main-btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+    filter: brightness(1.08);
+}
+
+.add-reminder-main-btn:focus-visible {
+    outline: 2px solid rgba(var(--accent-primary-rgb), 0.35);
+    outline-offset: 3px;
+}
+
+.datetime-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.date-section,
+.time-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.date-section label,
+.time-section label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.quick-date-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-btn {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--bg-hover);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+}
+
+.quick-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.quick-btn.selected {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.datetime-input {
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-primary);
+    color: var(--text-primary);
+    padding: 0.8em 1em;
+    border-radius: var(--radius);
+    width: 100%;
+}
+
+.datetime-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* Goal completion styles for management pages */
+.goal-item.completed {
+    border-left-color: #22c55e; /* Green for completed */
+    opacity: 0.8;
+}
+
+.goal-item.completed span {
+    text-decoration: line-through;
+}
+
+.goal-item.in-progress {
+    border-left-color: #f59e0b; /* Orange for in-progress */
+}
+
+.goal-item.pending {
+    border-left-color: #ef4444; /* Red for pending */
+}
+
+.reminder-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reminder-item {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition);
+    border-left: 4px solid #22c55e; /* Green for upcoming reminders */
+    box-shadow: var(--shadow);
+}
+
+.reminder-item.expired {
+    opacity: 0.9;
+    border-left-color: #ef4444; /* Red for expired */
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.reminder-item.expired .reminder-text {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.reminder-item.expired .reminder-datetime {
+    color: #ef4444;
+    opacity: 0.8;
+}
+
+.reminder-item:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.12);
+}
+
+body.dark .reminder-item:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.reminder-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.reminder-text {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.reminder-datetime {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.reminder-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }

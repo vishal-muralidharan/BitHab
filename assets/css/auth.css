@@ -1,35 +1,16 @@
-/* Google Login Tile Styling */
-.google-login-tile {
-    margin-top: 2rem;
-    display: flex;
-    justify-content: center;
-}
-
-.google-login-btn {
-    display: flex;
-    align-items: center;
-    background: #fff;
-    color: #444;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-family: inherit;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: box-shadow 0.2s, border 0.2s;
-}
-.google-login-btn:hover {
-    box-shadow: 0 4px 16px rgba(66,133,244,0.10);
-    border-color: #4285f4;
-}
 /* Styles for login and register pages */
 #auth-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 85px);
+    min-height: calc(100vh - 90px);
+    margin-top: 70px;
+    padding: 0 1.5rem 2rem;
+    box-sizing: border-box;
+}
+
+.auth-page header.header {
+    position: fixed;
 }
 
 .auth-form-wrapper {
@@ -55,6 +36,15 @@
 .auth-title {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-form-wrapper form button[type="submit"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .auth-switch {
@@ -65,6 +55,63 @@
     color: var(--accent-primary);
     text-decoration: none;
     font-weight: 500;
+}
+
+.auth-helper {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.auth-helper a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-helper a:hover {
+    text-decoration: underline;
+}
+
+#forgot-password-view {
+    margin-top: 1.5rem;
+}
+
+#forgot-password-view form + .auth-helper {
+    margin-top: 1rem;
+}
+
+.password-requirements {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.password-requirements li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1.4;
+}
+
+.password-requirements li::before {
+    content: '\2022';
+    color: var(--text-secondary);
+    font-size: 1rem;
+    display: inline-block;
+    width: 1rem;
+    text-align: center;
+}
+
+.password-requirements li.valid {
+    color: #16a34a;
+}
+
+.password-requirements li.valid::before {
+    content: '\2713';
 }
 
 .error-message {
@@ -82,4 +129,78 @@
     background-color: rgba(254, 178, 178, 0.1);
     color: #fc8181;
     border-color: rgba(254, 178, 178, 0.3);
+}
+
+/* Google Sign-In Button */
+.google-signin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: #ffffff;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.google-signin-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.google-signin-btn:active {
+    background: #f1f3f4;
+}
+
+.google-signin-btn:disabled {
+    background: #f8f9fa;
+    color: #9aa0a6;
+    cursor: not-allowed;
+}
+
+.google-logo {
+    width: 18px;
+    height: 18px;
+}
+
+/* Auth Divider */
+.auth-divider {
+    position: relative;
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.auth-divider span {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0 1rem;
+    font-size: 0.9rem;
+}
+
+/* Dark theme adjustments for Google button */
+[data-theme="dark"] .google-signin-btn {
+    background: #ffffff;
+    color: #3c4043;
+    border-color: #dadce0;
+}
+
+[data-theme="dark"] .google-signin-btn:hover {
+    background: #f8f9fa;
 }

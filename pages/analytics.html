@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitHab</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/focus.css" />
+  <link rel="icon" type="image/png" href="../assets/images/logo.png" />
+</head>
+<body class="focus-mode">
+  <div class="focus-header">
+    <a href="../index.html" class="focus-logo">
+      <img src="../assets/images/logo-transparent-light.png" alt="BitHab" class="logo-img" />
+    </a>
+    <div>
+      <a class="deep-work-btn" href="focus.html" title="Back to Focus">
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="focus-container" style="padding-top: 90px">
+    <div class="analytics-bar" style="max-width: 900px; margin: 0 auto;">
+      <div class="analytics-header">
+        <h3>Focus Analytics</h3>
+      </div>
+      <div class="analytics-content" style="background: transparent; border: none; padding: 0; max-height: none;">
+        <div class="analytics-section">
+          <h4>This Week</h4>
+          <div class="week-chart" id="week-chart">
+            <div class="chart-bars">
+              <div class="chart-day" data-day="Mon"><span class="day-label">M</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+              <div class="chart-day" data-day="Tue"><span class="day-label">T</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+              <div class="chart-day" data-day="Wed"><span class="day-label">W</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+              <div class="chart-day" data-day="Thu"><span class="day-label">T</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+              <div class="chart-day" data-day="Fri"><span class="day-label">F</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+              <div class="chart-day" data-day="Sat"><span class="day-label">S</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+              <div class="chart-day" data-day="Sun"><span class="day-label">S</span><div class="bar" style="height: 0%"></div><span class="time-label">0m</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-section">
+          <h4>Subject Breakdown</h4>
+          <div class="subject-stats" id="subject-stats"><div class="no-data">No data available</div></div>
+        </div>
+
+        <div class="analytics-section">
+          <h4>Goal Progress</h4>
+          <div class="goal-progress" id="goal-progress"><div class="no-data">No active goals</div></div>
+        </div>
+
+        <div class="analytics-section">
+          <h4>Productivity Metrics</h4>
+          <div class="metrics-grid">
+            <div class="metric-card"><span class="metric-label">Longest Session</span><span class="metric-value" id="longest-session">0m</span></div>
+            <div class="metric-card"><span class="metric-label">Focus Streak</span><span class="metric-value" id="focus-streak">0 days</span></div>
+            <div class="metric-card"><span class="metric-label">Total This Month</span><span class="metric-value" id="month-total">0h</span></div>
+            <div class="metric-card"><span class="metric-label">Completion Rate</span><span class="metric-value" id="completion-rate">0%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../config/firebase-config.js"></script>
+  <script src="../assets/js/auth-manager.js"></script>
+  <script src="../assets/js/error-handler.js"></script>
+  <script src="../assets/js/focus.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
+  <script>
+    // On analytics page load, reuse the single FocusMode instance and render charts
+    document.addEventListener('DOMContentLoaded', async () => {
+      const fm = window.focusMode;
+      // Hide non-analytics UI if any stray elements are present
+      const container = document.querySelector('.three-column-layout');
+      if (container) container.style.display = 'none';
+      const analyticsBtn = document.getElementById('view-analytics');
+      if (analyticsBtn) analyticsBtn.style.display = 'none';
+
+      try {
+        await fm?.loadWeeklyStats?.();
+        await fm?.loadTodayStats?.();
+        fm?.updateAnalyticsDashboard?.();
+      } catch (e) {
+        console.warn('Analytics render warning:', e);
+      }
+    });
+  </script>
+</body>
+</html>

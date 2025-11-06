@@ -6,35 +6,64 @@
   <title>BitHab</title>
   <link rel="icon" href="../assets/images/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="../assets/images/logo.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../assets/css/style.css" />
   <link rel="stylesheet" href="../assets/css/auth.css" />
 </head>
-<body>
+<body class="auth-page">
   <header class="header">
     <h1 class="logo">
       <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
       <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
     </h1>
-    <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+    <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
+      <i class="fas fa-moon"></i>
+    </button>
   </header>
   <div id="auth-container">
     <div class="auth-form-wrapper">
-        <h2 class="auth-title">🔐 Login</h2>
+        <h2 class="auth-title">
+          <i id="auth-title-icon" class="fas fa-lock icon-prefix" aria-hidden="true"></i>
+          <span id="auth-title-text">Login</span>
+        </h2>
         <div id="error-message" class="error-message" style="display: none;"></div>
-        <form id="login-form">
-            <input type="email" id="login-email" placeholder="📧 Email" required autocomplete="username">
-            <input type="password" id="login-password" placeholder="🔒 Password" required autocomplete="current-password">
-            <button type="submit">🔐 Login</button>
-        </form>
-    <!-- Google Login Tile -->
-    <div class="google-login-tile">
-      <button id="google-login-btn" type="button" class="google-login-btn">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" style="width: 22px; height: 22px; vertical-align: middle; margin-right: 10px;">Login with Google
-      </button>
-    </div>
-        <p class="auth-switch">Don't have an account? <a href="register.html" id="show-register">Register</a></p>
+
+        <div id="login-view">
+          <!-- Google Sign-In Button -->
+          <button id="google-signin-btn" class="google-signin-btn">
+              <img src="../assets/images/google-logo.svg" alt="Google" class="google-logo">
+              Continue with Google
+          </button>
+          
+          <div class="auth-divider">
+              <span>or</span>
+          </div>
+          
+          <form id="login-form">
+              <input type="email" id="login-email" placeholder="Email" required autocomplete="username">
+              <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+              <button type="submit">
+                <i class="fas fa-lock icon-prefix" aria-hidden="true"></i>
+                <span>Login</span>
+              </button>
+          </form>
+          <p class="auth-helper"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
+          <p class="auth-switch">Don't have an account? <a href="register.html" id="show-register">Register</a></p>
+        </div>
+
+        <div id="forgot-password-view" hidden>
+          <p class="auth-helper">Enter your email address and we'll send you a reset link.</p>
+          <form id="forgot-password-form">
+              <input type="email" id="forgot-email" placeholder="Email" required autocomplete="email">
+              <button type="submit">
+                <i class="fas fa-paper-plane icon-prefix" aria-hidden="true"></i>
+                <span>Send reset link</span>
+              </button>
+          </form>
+          <p class="auth-helper"><a href="#" id="back-to-login-link">Back to login</a></p>
+        </div>
     </div>
   </div>
   <!-- Firebase SDK -->
@@ -43,31 +72,195 @@
   <script src="../config/firebase-config.js"></script>
   <script src="../assets/js/error-handler.js"></script>
   <script src="../assets/js/auth-manager.js"></script>
-  <script src="../assets/js/theme-toggle.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
   <script>
-    document.getElementById('login-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      
-      // Show loading state
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Logging in...';
-      submitBtn.disabled = true;
-      
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => { 
-          window.location.href = '../index.html'; 
-        })
-        .catch(err => {
-          errorHandler.handleFirebaseError(err);
-          // Reset button state
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
-        });
+  const googleSignInBtn = document.getElementById('google-signin-btn');
+  const loginForm = document.getElementById('login-form');
+  const authTitleIcon = document.getElementById('auth-title-icon');
+  const authTitleText = document.getElementById('auth-title-text');
+  const loginView = document.getElementById('login-view');
+  const forgotPasswordView = document.getElementById('forgot-password-view');
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
+  const backToLoginLink = document.getElementById('back-to-login-link');
+  const forgotPasswordForm = document.getElementById('forgot-password-form');
+  const forgotEmailInput = document.getElementById('forgot-email');
+  const loginEmailInput = document.getElementById('login-email');
+  const loginPasswordInput = document.getElementById('login-password');
+
+  const passwordResetConfirmationMessage = 'If an account exists for that email, you will receive a reset link shortly.';
+
+  const updateAuthTitle = (mode) => {
+    if (!authTitleIcon || !authTitleText) {
+      return;
+    }
+
+    if (mode === 'forgot') {
+      authTitleIcon.className = 'fas fa-unlock icon-prefix';
+      authTitleText.textContent = 'Reset Password';
+    } else {
+      authTitleIcon.className = 'fas fa-lock icon-prefix';
+      authTitleText.textContent = 'Login';
+    }
+  };
+
+  const setAuthView = (mode) => {
+    const showForgot = mode === 'forgot';
+
+    if (loginView) {
+      loginView.hidden = showForgot;
+    }
+
+    if (forgotPasswordView) {
+      forgotPasswordView.hidden = !showForgot;
+    }
+
+    updateAuthTitle(showForgot ? 'forgot' : 'login');
+
+    if (showForgot && loginEmailInput && forgotEmailInput && loginEmailInput.value && !forgotEmailInput.value) {
+      forgotEmailInput.value = loginEmailInput.value;
+    }
+
+    window.requestAnimationFrame(() => {
+      if (showForgot && forgotEmailInput) {
+        forgotEmailInput.focus({ preventScroll: true });
+      } else if (loginEmailInput) {
+        loginEmailInput.focus({ preventScroll: true });
+      }
     });
+  };
+
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      setAuthView('forgot');
+    });
+  }
+
+  if (backToLoginLink) {
+    backToLoginLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      setAuthView('login');
+    });
+  }
+
+  if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!forgotEmailInput) {
+        return;
+      }
+
+      const email = forgotEmailInput.value.trim();
+      if (!email) {
+        errorHandler.showError('Please enter your email address.');
+        return;
+      }
+
+      const submitBtn = forgotPasswordForm.querySelector('button[type="submit"]');
+      const originalContent = submitBtn ? submitBtn.innerHTML : '';
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Sending...';
+      }
+
+      try {
+        await window.authManager.sendPasswordResetEmail(email);
+
+        if (window.errorHandler && typeof window.errorHandler.showSuccess === 'function') {
+          window.errorHandler.showSuccess(passwordResetConfirmationMessage);
+        }
+
+        if (loginEmailInput) {
+          loginEmailInput.value = email;
+        }
+
+        forgotPasswordForm.reset();
+        setAuthView('login');
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          if (window.errorHandler && typeof window.errorHandler.showSuccess === 'function') {
+            window.errorHandler.showSuccess(passwordResetConfirmationMessage);
+          }
+          forgotPasswordForm.reset();
+          setAuthView('login');
+        } else {
+          errorHandler.handleFirebaseError(error);
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalContent || '<span>Send reset link</span>';
+        }
+      }
+    });
+  }
+
+  if (googleSignInBtn) {
+    googleSignInBtn.addEventListener('click', async function() {
+      const btn = this;
+      const originalContent = btn.innerHTML;
+
+      try {
+        btn.innerHTML = 'Signing in...';
+        btn.disabled = true;
+
+        const result = await window.authManager.signInWithGoogle();
+
+        if (result && result.redirect) {
+          return;
+        }
+      } catch (error) {
+        console.error('Google sign-in failed:', error);
+
+        if (error.code === 'auth/popup-blocked') {
+          errorHandler.showError('Popup was blocked. Please enable popups for this site.');
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          errorHandler.showError('Sign-in was cancelled.');
+        } else if (error.code === 'auth/network-request-failed') {
+          errorHandler.showError('Network error. Please check your connection.');
+        } else if (error.code === 'auth/unauthorized-domain') {
+          errorHandler.showError('Google sign-in is not allowed for this domain. Please contact support.');
+        } else {
+          errorHandler.handleFirebaseError(error);
+        }
+
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+      }
+    });
+  }
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const email = loginEmailInput ? loginEmailInput.value : '';
+      const password = loginPasswordInput ? loginPasswordInput.value : '';
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalContent = submitBtn ? submitBtn.innerHTML : '';
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Logging in...';
+      }
+
+      try {
+        await window.authManager.signInWithEmailAndPassword(email, password);
+      } catch (error) {
+        errorHandler.handleFirebaseError(error);
+
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalContent || '<span>Login</span>';
+        }
+      }
+    });
+  }
+
+  setAuthView('login');
   </script>
 </body>
 </html>

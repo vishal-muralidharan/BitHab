@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../assets/js/theme-preload-inline.js"></script>
+  <title>BitHab</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/deep-focus.css" />
+  <link rel="icon" type="image/png" href="../assets/images/logo.png" />
+  <style>
+    /* Hide any analytics elements in deep focus mode */
+    [id*="analytics"], 
+    [class*="analytics"], 
+    [href*="analytics"], 
+    .analytics-btn, 
+    #analytics-link,
+    a[title*="Analytics"],
+    button[title*="Analytics"] {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    
+    /* Hide emoji analytics buttons specifically */
+    a:contains("📊"), 
+    button:contains("📊") {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="focus-mode">
+  <!-- Deep Work Mode Overlay Structure -->
+  <div class="deep-work-mode" id="deep-work-mode">
+    <!-- Header with title and close button -->
+    <div class="deep-work-header">
+      <div class="deep-work-goal">
+        <i class="fas fa-bullseye" aria-hidden="true"></i>
+        <span>Deep Work Session</span>
+      </div>
+      <div class="deep-work-header-right">
+        <a class="exit-deep-work" href="focus.html" title="Back to Focus" id="exit-deep-work" aria-label="Exit deep focus">
+          <i class="fas fa-xmark" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Main content area -->
+    <div class="deep-work-content">
+      <!-- Current Time Display -->
+      <div class="deep-work-current-time">
+        <div class="current-time-display">
+          <span class="current-hours" id="current-hours">00</span>
+          <span class="current-separator">:</span>
+          <span class="current-minutes" id="current-minutes">00</span>
+          <span class="current-ampm" id="current-ampm">PM</span>
+        </div>
+      </div>
+      
+      <!-- Session Timer -->
+      <div class="deep-work-timer" id="deep-timer">25:00</div>
+      
+      <!-- Progress Bar with Percentage -->
+      <div class="deep-work-progress-container">
+        <div class="progress-bar-wrapper">
+          <div class="progress-bar">
+            <div class="progress-fill" id="deep-progress-fill"></div>
+          </div>
+          <div class="progress-percentage" id="deep-percentage">0%</div>
+        </div>
+      </div>
+      
+      <!-- Timer Controls -->
+      <div class="deep-work-timer-controls">
+        <button class="deep-work-control-btn primary-btn" id="deep-primary-btn">
+          <span class="btn-icon">▶</span>
+          <span class="btn-text">START</span>
+        </button>
+        <button class="deep-work-control-btn secondary-btn" id="deep-secondary-btn">
+          <span class="btn-icon">↻</span>
+          <span class="btn-text">RESET</span>
+        </button>
+      </div>
+      
+      <!-- Target Duration Settings -->
+      <div class="deep-work-target">
+        <div class="target-selector">
+          <div class="target-label">Set Target Duration:</div>
+          <div class="time-inputs">
+            <input type="number" id="target-hours" class="time-input" min="0" max="23" value="0" />
+            <span class="time-separator">h</span>
+            <input type="number" id="target-minutes" class="time-input" min="0" max="59" value="25" />
+            <span class="time-separator">m</span>
+          </div>
+          <button class="save-target-btn" id="save-target">SAVE</button>
+        </div>
+      </div>
+      
+      <!-- Minimalistic Subjects and Tasks Display -->
+      <div class="deep-work-subjects-tasks">
+        <div class="deep-work-section subjects">
+          <h4>Subjects</h4>
+          <ul class="deep-work-list" id="deep-subjects-list">
+          </ul>
+        </div>
+        <div class="deep-work-section tasks">
+          <h4>Tasks</h4>
+          <ul class="deep-work-list" id="deep-tasks-list">
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase and Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../config/firebase-config.js"></script>
+  <script src="../assets/js/auth-manager.js"></script>
+  <script src="../assets/js/error-handler.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
+  <script src="../assets/js/focus.js"></script>
+  
+  <script>
+    // Enhanced Deep Focus functionality
+    document.addEventListener('DOMContentLoaded', async () => {
+      const fm = window.focusMode;
+      const el = id => document.getElementById(id);
+      
+      // Timer variables
+      let sessionStart = null;
+      let pausedAt = null;
+      let timerId = null;
+      let currentTimeId = null;
+      let targetDurationMinutes = 25;
+      
+      function getFocusDataSnapshot() {
+        if (fm?.focusData) {
+          return {
+            tasks: Array.isArray(fm.focusData.tasks) ? fm.focusData.tasks : [],
+            subjects: Array.isArray(fm.focusData.subjects) ? fm.focusData.subjects : [],
+            completedTasks: fm.focusData.completedTasks && typeof fm.focusData.completedTasks === 'object'
+              ? fm.focusData.completedTasks
+              : {},
+            targetDuration: Number.isFinite(fm.focusData.targetDuration) ? fm.focusData.targetDuration : 25
+          };
+        }
+        return { tasks: [], subjects: [], completedTasks: {}, targetDuration: 25 };
+      }
+
+      function populateSubjectsAndTasks() {
+        const subjectsList = el('deep-subjects-list');
+        const tasksList = el('deep-tasks-list');
+
+        if (!subjectsList || !tasksList) {
+          console.error('Deep focus lists not found');
+          return;
+        }
+
+        subjectsList.innerHTML = '';
+        tasksList.innerHTML = '';
+
+        try {
+          const { subjects, tasks, completedTasks } = getFocusDataSnapshot();
+
+          const displaySubjects = subjects.slice(0, 5);
+          if (displaySubjects.length > 0) {
+            displaySubjects.forEach(subject => {
+              const li = document.createElement('li');
+              li.textContent = subject;
+              li.style.color = '#ffffff';
+              li.style.fontSize = '12px';
+              li.style.marginBottom = '4px';
+              subjectsList.appendChild(li);
+            });
+          } else {
+            const li = document.createElement('li');
+            li.textContent = 'Add subjects in focus mode';
+            li.style.opacity = '0.6';
+            li.style.fontStyle = 'italic';
+            li.style.fontSize = '11px';
+            li.style.color = '#cccccc';
+            subjectsList.appendChild(li);
+          }
+
+          const incompleteTasks = tasks.filter(task => !completedTasks?.[task]);
+          const displayTasks = incompleteTasks.slice(0, 5);
+          if (displayTasks.length > 0) {
+            displayTasks.forEach(task => {
+              const li = document.createElement('li');
+              li.textContent = task;
+              li.style.color = '#ffffff';
+              li.style.fontSize = '12px';
+              li.style.marginBottom = '4px';
+              tasksList.appendChild(li);
+            });
+          } else {
+            const li = document.createElement('li');
+            li.textContent = 'Add tasks in focus mode';
+            li.style.opacity = '0.6';
+            li.style.fontStyle = 'italic';
+            li.style.fontSize = '11px';
+            li.style.color = '#cccccc';
+            tasksList.appendChild(li);
+          }
+        } catch (error) {
+          console.error('Error rendering deep focus lists:', error);
+          subjectsList.innerHTML = '<li style="color: #ff6b6b; font-style: italic; font-size: 11px;">Failed to load subjects</li>';
+          tasksList.innerHTML = '<li style="color: #ff6b6b; font-style: italic; font-size: 11px;">Failed to load tasks</li>';
+        }
+      }
+      
+      // Format milliseconds to timer display
+      const formatTime = (ms) => {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      };
+      
+      // Update current time display
+      const updateCurrentTime = () => {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        
+        el('current-hours').textContent = hours.toString().padStart(2, '0');
+        el('current-minutes').textContent = minutes.toString().padStart(2, '0');
+        el('current-ampm').textContent = ampm;
+      };
+      
+      // Update timer and progress
+      const updateDisplay = () => {
+        if (!sessionStart) return;
+        
+        const now = Date.now();
+        const elapsed = pausedAt ? pausedAt - sessionStart : now - sessionStart;
+        
+        // Check if timer has reached the target duration
+        const targetMs = targetDurationMinutes * 60 * 1000;
+        if (elapsed >= targetMs && targetMs > 0) {
+          // Timer completed - stop session
+          stopSession();
+          return;
+        }
+        
+        // Update timer display (countdown from target)
+        if (targetMs > 0) {
+          const remaining = Math.max(0, targetMs - elapsed);
+          el('deep-timer').textContent = formatTime(remaining);
+        } else {
+          el('deep-timer').textContent = formatTime(elapsed);
+        }
+        
+        // Update progress bar and percentage
+        if (targetDurationMinutes > 0) {
+          const progress = Math.min((elapsed / targetMs) * 100, 100);
+          
+          el('deep-progress-fill').style.width = progress + '%';
+          el('deep-percentage').textContent = Math.round(progress) + '%';
+        } else {
+          el('deep-progress-fill').style.width = '0%';
+          el('deep-percentage').textContent = '0%';
+        }
+      };
+      
+      // Timer control functions
+      const startSession = () => {
+        if (timerId) clearInterval(timerId);
+        
+        if (!sessionStart) {
+          // Starting fresh
+          sessionStart = Date.now();
+        } else if (pausedAt) {
+          // Resuming from pause
+          const pauseDuration = Date.now() - pausedAt;
+          sessionStart += pauseDuration; // Adjust start time to account for pause
+        }
+        
+        pausedAt = null;
+        timerId = setInterval(updateDisplay, 250);
+        updateButtonStates('running');
+      };
+      
+      const pauseSession = () => {
+        if (!sessionStart || pausedAt) return;
+        
+        pausedAt = Date.now();
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+        updateButtonStates('paused');
+      };
+      
+      const stopSession = () => {
+        if (!sessionStart) return;
+        
+        let duration;
+        if (pausedAt) {
+          duration = pausedAt - sessionStart;
+        } else {
+          duration = Date.now() - sessionStart;
+        }
+        
+        // Record session if FocusMode is available
+        try {
+          const { subjects, tasks, completedTasks } = getFocusDataSnapshot();
+          const primarySubject = subjects[0] || '';
+          const primaryTask = tasks.find(task => !completedTasks?.[task]) || tasks[0] || '';
+          fm?.recordDeepSession?.(duration, primarySubject, primaryTask);
+        } catch (error) {
+          console.warn('Failed to record deep focus session context:', error);
+        }
+        
+        // Show completion notification if timer reached target
+        const targetMs = targetDurationMinutes * 60 * 1000;
+        if (duration >= targetMs && targetMs > 0) {
+          setTimeout(() => {
+            showCompletionDialog();
+          }, 100);
+        }
+        
+        resetSession();
+      };
+      
+      const resetSession = () => {
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+        
+        sessionStart = null;
+        pausedAt = null;
+        
+        // Reset timer to show target duration (countdown format)
+        const targetMs = targetDurationMinutes * 60 * 1000;
+        el('deep-timer').textContent = formatTime(targetMs);
+        el('deep-progress-fill').style.width = '0%';
+        el('deep-percentage').textContent = '0%';
+        
+        updateButtonStates('idle');
+      };
+      
+      // Update button states for 2-button design
+      const updateButtonStates = (state) => {
+        const primaryBtn = el('deep-primary-btn');
+        const secondaryBtn = el('deep-secondary-btn');
+        const primaryIcon = primaryBtn.querySelector('.btn-icon');
+        const primaryText = primaryBtn.querySelector('.btn-text');
+        const secondaryIcon = secondaryBtn.querySelector('.btn-icon');
+        const secondaryText = secondaryBtn.querySelector('.btn-text');
+        
+        // Remove all state classes
+        primaryBtn.className = 'deep-work-control-btn primary-btn';
+        secondaryBtn.className = 'deep-work-control-btn secondary-btn';
+        
+        switch (state) {
+          case 'idle':
+            // State 1: Initial/Reset
+            primaryBtn.classList.add('start-state');
+            secondaryBtn.classList.add('reset-state');
+            secondaryBtn.disabled = true;
+            primaryIcon.textContent = '▶';
+            primaryText.textContent = 'START';
+            secondaryIcon.textContent = '↻';
+            secondaryText.textContent = 'RESET';
+            break;
+            
+          case 'running':
+            // State 2: Running
+            primaryBtn.classList.add('pause-state');
+            secondaryBtn.classList.add('stop-state');
+            secondaryBtn.disabled = false;
+            primaryIcon.textContent = '⏸';
+            primaryText.textContent = 'PAUSE';
+            secondaryIcon.textContent = '⏹';
+            secondaryText.textContent = 'STOP';
+            break;
+            
+          case 'paused':
+            // State 3: Paused
+            primaryBtn.classList.add('start-state');
+            secondaryBtn.classList.add('reset-state');
+            secondaryBtn.disabled = false;
+            primaryIcon.textContent = '▶';
+            primaryText.textContent = 'RESUME';
+            secondaryIcon.textContent = '↻';
+            secondaryText.textContent = 'RESET';
+            break;
+            
+          case 'stopped':
+            // State 4: Stopped (with recorded time)
+            primaryBtn.classList.add('start-state');
+            secondaryBtn.classList.add('reset-state');
+            secondaryBtn.disabled = false;
+            primaryIcon.textContent = '▶';
+            primaryText.textContent = 'START';
+            secondaryIcon.textContent = '↻';
+            secondaryText.textContent = 'RESET';
+            break;
+        }
+      };
+      
+      // Handle primary button click
+      const handlePrimaryAction = () => {
+        if (!sessionStart && !pausedAt) {
+          // Start from beginning
+          startSession();
+        } else if (sessionStart && !pausedAt) {
+          // Pause
+          pauseSession();
+        } else if (pausedAt) {
+          // Resume
+          startSession();
+        }
+      };
+      
+      // Handle secondary button click
+      const handleSecondaryAction = () => {
+        if (sessionStart && !pausedAt) {
+          // Stop
+          stopSession();
+        } else {
+          // Reset
+          resetSession();
+        }
+      };
+      
+      // Save target duration
+  const saveTarget = () => {
+        const hours = parseInt(el('target-hours').value) || 0;
+        const minutes = parseInt(el('target-minutes').value) || 0;
+        targetDurationMinutes = (hours * 60) + minutes;
+        if (!Number.isFinite(targetDurationMinutes) || targetDurationMinutes < 0) {
+          targetDurationMinutes = 25;
+        }
+        
+        if (targetDurationMinutes === 0) {
+          targetDurationMinutes = 25; // Default to 25 minutes
+          el('target-hours').value = 0;
+          el('target-minutes').value = 25;
+        }
+        
+        // Reset timer display to show new target (countdown format)
+        if (!sessionStart) {
+          const targetMs = targetDurationMinutes * 60 * 1000;
+          el('deep-timer').textContent = formatTime(targetMs);
+        }
+
+        if (fm) {
+          if (typeof fm.setTargetDuration === 'function') {
+            fm.setTargetDuration(targetDurationMinutes);
+            targetDurationMinutes = fm.targetDuration || targetDurationMinutes;
+          } else if (fm.focusData) {
+            fm.focusData.targetDuration = targetDurationMinutes;
+          }
+        }
+      };
+      
+      // Load saved target duration
+      const loadTarget = () => {
+        const snapshot = getFocusDataSnapshot();
+        targetDurationMinutes = snapshot.targetDuration;
+        const hours = Math.floor(targetDurationMinutes / 60);
+        const minutes = targetDurationMinutes % 60;
+        el('target-hours').value = hours;
+        el('target-minutes').value = minutes;
+        if (fm && typeof fm.setTargetDuration === 'function') {
+          fm.setTargetDuration(targetDurationMinutes, { persist: false });
+        }
+        // Set timer to show target duration (countdown format)
+        const targetMs = targetDurationMinutes * 60 * 1000;
+        el('deep-timer').textContent = formatTime(targetMs);
+      };
+      
+      // Fullscreen functionality for auto-entry
+      const enterFullscreen = async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+            return true;
+          }
+        } catch (err) {
+          console.log('Fullscreen failed:', err);
+          return false;
+        }
+        return true;
+      };
+      
+      // Listen for fullscreen changes (cross-browser support)
+      const handleFullscreenExit = () => {
+        // Check if fullscreen is exited using cross-browser methods
+        const isFullscreen = document.fullscreenElement || 
+                            document.webkitFullscreenElement || 
+                            document.mozFullScreenElement || 
+                            document.msFullscreenElement;
+        
+        if (!isFullscreen) {
+          // If timer is running, pause it first
+          if (sessionStart && !pausedAt) {
+            pauseSession();
+          }
+          // Return to focus page after a short delay
+          setTimeout(() => {
+            const returnUrl = sessionStorage.getItem('focusReturnUrl') || 'focus.html';
+            window.location.href = returnUrl;
+          }, 100);
+        }
+      };
+      
+      // Add event listeners for different browsers
+      document.addEventListener('fullscreenchange', handleFullscreenExit);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenExit);
+      document.addEventListener('mozfullscreenchange', handleFullscreenExit);
+      document.addEventListener('MSFullscreenChange', handleFullscreenExit);
+      
+      // Handle Escape key to exit deep focus
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          // If in fullscreen, exit fullscreen (which will trigger return to focus)
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {
+              // If exitFullscreen fails, directly return to focus
+              handleFullscreenExit();
+            });
+          } else {
+            // If not in fullscreen, directly return to focus
+            handleFullscreenExit();
+          }
+        }
+      });
+      
+      // Event listeners
+      el('deep-primary-btn').addEventListener('click', handlePrimaryAction);
+      el('deep-secondary-btn').addEventListener('click', handleSecondaryAction);
+      el('save-target').addEventListener('click', () => {
+        try {
+          saveTarget();
+        } catch (error) {
+          console.error('Failed to persist deep focus target:', error);
+        }
+      });
+      
+      // Exit button handler
+      el('exit-deep-work').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (document.fullscreenElement) {
+          document.exitFullscreen().then(() => {
+            window.location.href = 'focus.html';
+          }).catch(() => {
+            window.location.href = 'focus.html';
+          });
+        } else {
+          window.location.href = 'focus.html';
+        }
+      });
+      
+      if (fm?.loadUserData) {
+        try {
+          await fm.loadUserData();
+        } catch (error) {
+          console.warn('Deep focus page could not refresh focus data:', error);
+        }
+      }
+
+      // Initialize
+      updateCurrentTime();
+      currentTimeId = setInterval(updateCurrentTime, 1000);
+      loadTarget();
+      updateButtonStates('idle');
+      
+      // Hide any analytics elements that might be visible
+      const hideAnalyticsElements = () => {
+        // Hide any analytics buttons or overlays
+        const analyticsElements = document.querySelectorAll('[id*="analytics"], [class*="analytics"], [href*="analytics"], .analytics-btn, #analytics-link');
+        analyticsElements.forEach(element => {
+          element.style.display = 'none';
+          element.style.visibility = 'hidden';
+        });
+        
+        // Hide emoji analytics buttons
+        const emojiButtons = document.querySelectorAll('a[title*="Analytics"], button[title*="Analytics"]');
+        emojiButtons.forEach(element => {
+          if (element.textContent.includes('📊')) {
+            element.style.display = 'none';
+          }
+        });
+      };
+      
+      // Hide analytics elements immediately and periodically
+      hideAnalyticsElements();
+      setInterval(hideAnalyticsElements, 1000);
+      
+      // Load data immediately
+      populateSubjectsAndTasks();
+      
+      // Auto-enter fullscreen when page loads (if requested)
+      const autoEnterFullscreen = async () => {
+        const shouldEnterFullscreen = sessionStorage.getItem('shouldEnterFullscreen');
+        if (shouldEnterFullscreen === 'true') {
+          sessionStorage.removeItem('shouldEnterFullscreen'); // Clear flag
+          
+          // Try to enter fullscreen immediately
+          try {
+            await document.documentElement.requestFullscreen();
+          } catch (err) {
+            console.log('Initial fullscreen attempt failed:', err);
+            // If immediate attempt fails, show a user-friendly prompt
+            showFullscreenPrompt();
+          }
+        }
+      };
+      
+      // Show prompt for manual fullscreen entry
+      const showFullscreenPrompt = () => {
+        const promptDiv = document.createElement('div');
+        promptDiv.id = 'fullscreen-prompt';
+        promptDiv.style.cssText = `
+          position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+          background: #000000; color: #ffffff; padding: 40px;
+          border-radius: 12px; z-index: 4000; text-align: center;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+          border: 2px solid #28a745; max-width: 420px; width: 90%;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+        promptDiv.innerHTML = `
+          <div style="font-size: 32px; margin-bottom: 20px; line-height: 1;">
+            <i class="fas fa-bullseye" aria-hidden="true"></i>
+          </div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #ffffff;">Enter Deep Focus Mode</div>
+          <div style="font-size: 15px; margin-bottom: 32px; color: #ffffff; line-height: 1.4;">
+            For the best deep work experience, please enter fullscreen mode.
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px; align-items: center;">
+            <button id="enter-fullscreen-btn" style="
+              padding: 14px 28px; border: none; border-radius: 8px; 
+              background: #28a745; color: #ffffff; cursor: pointer; 
+              font-size: 16px; font-weight: 600; width: 240px;
+              transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            ">Enter Fullscreen</button>
+            <button id="skip-fullscreen-btn" style="
+              padding: 14px 28px; border: 1px solid #555555; border-radius: 8px; 
+              background: transparent; color: #cccccc; cursor: pointer; 
+              font-size: 14px; transition: all 0.2s ease; width: 240px;
+            ">Continue to Focus</button>
+          </div>
+        `;
+        
+        document.body.appendChild(promptDiv);
+        
+        // Add hover effects
+        const enterBtn = document.getElementById('enter-fullscreen-btn');
+        const skipBtn = document.getElementById('skip-fullscreen-btn');
+        
+        enterBtn.addEventListener('mouseenter', () => {
+          enterBtn.style.background = '#218838';
+          enterBtn.style.transform = 'translateY(-1px)';
+        });
+        enterBtn.addEventListener('mouseleave', () => {
+          enterBtn.style.background = '#28a745';
+          enterBtn.style.transform = 'translateY(0)';
+        });
+        
+        skipBtn.addEventListener('mouseenter', () => {
+          skipBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+          skipBtn.style.borderColor = '#888888';
+        });
+        skipBtn.addEventListener('mouseleave', () => {
+          skipBtn.style.background = 'transparent';
+          skipBtn.style.borderColor = '#555555';
+        });
+        
+        // Add event listeners to the buttons
+        enterBtn.addEventListener('click', async () => {
+          const success = await enterFullscreen();
+          if (success || document.fullscreenElement) {
+            promptDiv.remove();
+          }
+        });
+        
+        skipBtn.addEventListener('click', () => {
+          promptDiv.remove();
+          // Redirect to focus page
+          window.location.href = 'focus.html';
+        });
+        
+        // Remove prompt when fullscreen is entered
+        const fullscreenHandler = () => {
+          if (document.fullscreenElement && promptDiv.parentElement) {
+            promptDiv.remove();
+            document.removeEventListener('fullscreenchange', fullscreenHandler);
+          }
+        };
+        document.addEventListener('fullscreenchange', fullscreenHandler);
+      };
+      
+      // Show completion dialog when timer finishes
+      const showCompletionDialog = () => {
+        const dialogDiv = document.createElement('div');
+        dialogDiv.id = 'completion-dialog';
+        dialogDiv.style.cssText = `
+          position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+          background: #000000; color: #ffffff; padding: 40px;
+          border-radius: 12px; z-index: 5000; text-align: center;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+          border: 2px solid #28a745; max-width: 420px; width: 90%;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+        dialogDiv.innerHTML = `
+          <div style="font-size: 48px; margin-bottom: 20px; line-height: 1;">🎉</div>
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #ffffff;">Deep Work Session Completed!</div>
+          <div style="font-size: 15px; margin-bottom: 32px; color: #ffffff; line-height: 1.4;">
+            Great job staying focused.
+          </div>
+          <button id="completion-ok-btn" style="
+            padding: 14px 28px; border: none; border-radius: 8px; 
+            background: #28a745; color: #ffffff; cursor: pointer; 
+            font-size: 16px; font-weight: 600; width: 120px;
+            transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+          ">OK</button>
+        `;
+        
+        document.body.appendChild(dialogDiv);
+        
+        // Add hover effect
+        const okBtn = document.getElementById('completion-ok-btn');
+        okBtn.addEventListener('mouseenter', () => {
+          okBtn.style.background = '#218838';
+          okBtn.style.transform = 'translateY(-1px)';
+        });
+        okBtn.addEventListener('mouseleave', () => {
+          okBtn.style.background = '#28a745';
+          okBtn.style.transform = 'translateY(0)';
+        });
+        
+        // Add click handler
+        okBtn.addEventListener('click', () => {
+          dialogDiv.remove();
+        });
+        
+        // Auto-focus the OK button for keyboard accessibility
+        setTimeout(() => okBtn.focus(), 100);
+        
+        // Allow Enter key to close dialog
+        const keyHandler = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            dialogDiv.remove();
+            document.removeEventListener('keydown', keyHandler);
+          }
+        };
+        document.addEventListener('keydown', keyHandler);
+      };
+      
+      // Enter fullscreen automatically with proper timing
+      setTimeout(() => {
+        // Try immediate fullscreen first
+        autoEnterFullscreen();
+      }, 200); // Shorter delay for more immediate response
+      
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        if (timerId) clearInterval(timerId);
+        if (currentTimeId) clearInterval(currentTimeId);
+      });
+      
+      // Add keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        switch(e.key) {
+          case ' ': // Spacebar
+            if (e.target.tagName !== 'INPUT') {
+              e.preventDefault();
+              if (!sessionStart || pausedAt) {
+                startSession();
+              } else {
+                pauseSession();
+              }
+            }
+            break;
+          case 'Escape':
+            if (document.fullscreenElement) {
+              pauseSession(); // Pause when exiting fullscreen with ESC
+            }
+            break;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

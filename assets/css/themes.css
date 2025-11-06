@@ -1,0 +1,445 @@
+/* Themes Page Styles */
+.themes-page .page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.themes-page .page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.themes-page .page-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.themes-page .page-header p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Current Theme Section */
+.themes-page .current-theme-section {
+  background: var(--surface-color);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  margin-bottom: 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.themes-page .current-theme-section h2 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.themes-page .current-theme-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.themes-page .themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.65rem;
+  margin-bottom: 2.5rem;
+}
+
+.themes-page .theme-card {
+  background: var(--surface-color);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.themes-page .theme-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.themes-page .theme-preview-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  height: 140px;
+}
+
+.themes-page .theme-preview {
+  height: 100%;
+  padding: 0.75rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.themes-page .preview-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.themes-page .preview-surface {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.themes-page .preview-bar {
+  height: 24px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.themes-page .theme-info {
+  padding: 1.1rem 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.themes-page .theme-info h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.themes-page .theme-select-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.themes-page .theme-select-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.themes-page .theme-card.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.themes-page .theme-card.active .theme-info h3 {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.themes-page .theme-card.active .theme-select-btn {
+  background: var(--success-color);
+}
+
+.themes-page .theme-card.active::after {
+  content: "\f00c";
+  font-family: "Font Awesome 6 Free", "Font Awesome 5 Free";
+  font-weight: 900;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--success-color);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.themes-page .current-theme-info {
+  background: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.themes-page .current-theme-info h2 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.themes-page .current-theme-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 0.5rem;
+}
+
+.themes-page .current-theme-description {
+  color: var(--text-secondary);
+}
+
+/* Theme Previews - Showing actual theme-specific backgrounds and text colors */
+
+/* Oceanic Depths */
+.oceanic-depths-preview.dark-preview {
+  background: #0A0E14;
+  color: #B8D4F1;
+}
+.oceanic-depths-preview.dark-preview .preview-label {
+  color: #7A99B8;
+}
+.oceanic-depths-preview.dark-preview .preview-bar.primary {
+  background: #58A6FF;
+}
+.oceanic-depths-preview.dark-preview .preview-bar.secondary {
+  background: #1F6FEB;
+}
+.oceanic-depths-preview.dark-preview .preview-bar.surface {
+  background: #131920;
+}
+
+.oceanic-depths-preview.light-preview {
+  background: #F0F6FC;
+  color: #0D3A5F;
+}
+.oceanic-depths-preview.light-preview .preview-label {
+  color: #4E7BA3;
+}
+.oceanic-depths-preview.light-preview .preview-bar.primary {
+  background: #0969DA;
+}
+.oceanic-depths-preview.light-preview .preview-bar.secondary {
+  background: #218BFF;
+}
+.oceanic-depths-preview.light-preview .preview-bar.surface {
+  background: #E6F0FA;
+}
+
+/* Evergreen Forest */
+.evergreen-forest-preview.dark-preview {
+  background: #0C140E;
+  color: #B8E6C5;
+}
+.evergreen-forest-preview.dark-preview .preview-label {
+  color: #7AB88F;
+}
+.evergreen-forest-preview.dark-preview .preview-bar.primary {
+  background: #4AC26B;
+}
+.evergreen-forest-preview.dark-preview .preview-bar.secondary {
+  background: #2DA44E;
+}
+.evergreen-forest-preview.dark-preview .preview-bar.surface {
+  background: #141F17;
+}
+
+.evergreen-forest-preview.light-preview {
+  background: #F0FAF3;
+  color: #0F4C23;
+}
+.evergreen-forest-preview.light-preview .preview-label {
+  color: #3D8555;
+}
+.evergreen-forest-preview.light-preview .preview-bar.primary {
+  background: #1A7F37;
+}
+.evergreen-forest-preview.light-preview .preview-bar.secondary {
+  background: #2DA44E;
+}
+.evergreen-forest-preview.light-preview .preview-bar.surface {
+  background: #E6F5EA;
+}
+
+/* Cyberpunk Neon */
+.cyberpunk-neon-preview.dark-preview {
+  background: #0E0A14;
+  color: #E0D4F7;
+}
+.cyberpunk-neon-preview.dark-preview .preview-label {
+  color: #A68FD1;
+}
+.cyberpunk-neon-preview.dark-preview .preview-bar.primary {
+  background: #B083F0;
+}
+.cyberpunk-neon-preview.dark-preview .preview-bar.secondary {
+  background: #8957E5;
+}
+.cyberpunk-neon-preview.dark-preview .preview-bar.surface {
+  background: #1A1320;
+}
+
+.cyberpunk-neon-preview.light-preview {
+  background: #F8F4FC;
+  color: #3B1E6B;
+}
+.cyberpunk-neon-preview.light-preview .preview-label {
+  color: #6D47A1;
+}
+.cyberpunk-neon-preview.light-preview .preview-bar.primary {
+  background: #8250DF;
+}
+.cyberpunk-neon-preview.light-preview .preview-bar.secondary {
+  background: #A371F7;
+}
+.cyberpunk-neon-preview.light-preview .preview-bar.surface {
+  background: #F0E8FA;
+}
+
+/* Monochrome */
+.monochrome-minimalist-preview.dark-preview {
+  background: #0F0F0F;
+  color: #D4D4D4;
+}
+.monochrome-minimalist-preview.dark-preview .preview-label {
+  color: #9A9A9A;
+}
+.monochrome-minimalist-preview.dark-preview .preview-bar.primary {
+  background: #A0A0A0;
+}
+.monochrome-minimalist-preview.dark-preview .preview-bar.secondary {
+  background: #6E7681;
+}
+.monochrome-minimalist-preview.dark-preview .preview-bar.surface {
+  background: #1A1A1A;
+}
+
+.monochrome-minimalist-preview.light-preview {
+  background: #FAFAFA;
+  color: #2B2B2B;
+}
+.monochrome-minimalist-preview.light-preview .preview-label {
+  color: #5A5A5A;
+}
+.monochrome-minimalist-preview.light-preview .preview-bar.primary {
+  background: #6E7681;
+}
+.monochrome-minimalist-preview.light-preview .preview-bar.secondary {
+  background: #8B949E;
+}
+.monochrome-minimalist-preview.light-preview .preview-bar.surface {
+  background: #F0F0F0;
+}
+
+/* Sunrise Coral */
+.sunrise-coral-preview.dark-preview {
+  background: #140A0A;
+  color: #F7D4CC;
+}
+.sunrise-coral-preview.dark-preview .preview-label {
+  color: #D1918A;
+}
+.sunrise-coral-preview.dark-preview .preview-bar.primary {
+  background: #F78166;
+}
+.sunrise-coral-preview.dark-preview .preview-bar.secondary {
+  background: #DA3633;
+}
+.sunrise-coral-preview.dark-preview .preview-bar.surface {
+  background: #1F1313;
+}
+
+.sunrise-coral-preview.light-preview {
+  background: #FDF5F4;
+  color: #6B1418;
+}
+.sunrise-coral-preview.light-preview .preview-label {
+  color: #A14249;
+}
+.sunrise-coral-preview.light-preview .preview-bar.primary {
+  background: #CF222E;
+}
+.sunrise-coral-preview.light-preview .preview-bar.secondary {
+  background: #F78166;
+}
+.sunrise-coral-preview.light-preview .preview-bar.surface {
+  background: #FAEBE8;
+}
+
+/* Cherry Blossom */
+.cherry-blossom-preview.dark-preview {
+  background: #140A0F;
+  color: #FFD6E8;
+}
+.cherry-blossom-preview.dark-preview .preview-label {
+  color: #E89BBB;
+}
+.cherry-blossom-preview.dark-preview .preview-bar.primary {
+  background: #FF6B9D;
+}
+.cherry-blossom-preview.dark-preview .preview-bar.secondary {
+  background: #E91E63;
+}
+.cherry-blossom-preview.dark-preview .preview-bar.surface {
+  background: #1F1318;
+}
+
+.cherry-blossom-preview.light-preview {
+  background: #FFF0F5;
+  color: #6B1437;
+}
+.cherry-blossom-preview.light-preview .preview-label {
+  color: #9C4D6B;
+}
+.cherry-blossom-preview.light-preview .preview-bar.primary {
+  background: #D81B60;
+}
+.cherry-blossom-preview.light-preview .preview-bar.secondary {
+  background: #F06292;
+}
+.cherry-blossom-preview.light-preview .preview-bar.surface {
+  background: #FFE4EE;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  body.themes-page {
+    padding-bottom: 80px; /* Space for bottom navigation */
+  }
+  
+  .themes-page .page-content {
+    padding: 1rem;
+    gap: 1.6rem;
+  }
+  
+  .themes-page .themes-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .themes-page .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  /* Touch-friendly theme cards */
+  .themes-page .theme-card {
+    min-height: 44px;
+  }
+}

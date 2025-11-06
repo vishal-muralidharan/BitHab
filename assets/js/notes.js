@@ -12,10 +12,15 @@ class NotesManager {
         };
         this.editingNoteId = null;
         this.editingNoteType = null;
+        this.cache = new Map(); // Add caching for faster access
+        this.saveTimeout = null; // Debounce saves
         this.init();
     }
 
     init() {
+        // Show loading immediately
+        this.showLoading();
+        
         // Wait for DOM to be ready before setting up auth listener
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
@@ -26,10 +31,23 @@ class NotesManager {
         }
     }
 
+    showLoading() {
+        const notesList = document.getElementById('notes-list');
+        if (notesList) {
+            notesList.innerHTML = '<div style="text-align: center; padding: 2rem; opacity: 0.7;">Loading notes...</div>';
+        }
+    }
+
     setupAuth() {
         authManager.onAuthStateChange(user => {
             if (user) {
-                this.loadAllNotes();
+                // Initialize DatabaseService
+                if (window.DatabaseService) {
+                    window.DatabaseService.init(user.uid, this.db);
+                    console.log('DatabaseService initialized for notes');
+                }
+                
+                this.loadAllNotesOptimized();
                 this.setupEventListeners();
             } else {
                 // Auth manager will handle redirect
@@ -82,6 +100,9 @@ class NotesManager {
                 date.setDate(date.getDate() + days);
                 const dateStr = date.toISOString().split('T')[0];
                 document.getElementById('edit-note-date').value = dateStr;
+                if (this.editingNoteType === 'daily') {
+                    this.updateDailyNoteFormState(dateStr);
+                }
             }
         });
 
@@ -138,6 +159,57 @@ class NotesManager {
                 }
             }
         });
+
+        // Auto-save with debouncing for text areas
+        const textArea = document.getElementById('edit-note-text');
+        if (textArea) {
+            textArea.addEventListener('input', () => {
+                this.autoResizeTextarea();
+                // Only auto-save if editing existing note
+                if (this.editingNoteId || this.editingNoteType === 'daily') {
+                    this.debouncedSave(() => {
+                        this.autoSaveNote();
+                    }, 2000); // Auto-save after 2 seconds of no typing
+                }
+            });
+            // Ensure height matches pre-filled content
+            this.autoResizeTextarea();
+        }
+
+        const titleField = document.getElementById('general-note-title');
+        if (titleField) {
+            titleField.addEventListener('input', () => {
+                if (this.editingNoteId) {
+                    this.debouncedSave(() => {
+                        this.autoSaveNote();
+                    }, 2000);
+                }
+            });
+        }
+
+        const dateField = document.getElementById('edit-note-date');
+        if (dateField) {
+            dateField.addEventListener('change', () => {
+                if (this.editingNoteType === 'daily' && dateField.value) {
+                    this.updateDailyNoteFormState(dateField.value);
+                }
+            });
+        }
+        
+        // Window focus refresh with cache optimization
+        window.addEventListener('focus', () => {
+            this.refreshNotesOnFocus();
+        });
+
+        // Cleanup cache every 10 minutes
+        setInterval(() => {
+            this.cleanupCache();
+        }, 600000);
+
+        // Preload common data in background after initial load
+        setTimeout(() => {
+            this.preloadBackgroundData();
+        }, 3000);
         
         // Setup note event delegation for better performance
         this.setupNoteEventDelegation();
@@ -215,6 +287,172 @@ class NotesManager {
         }
 
         this.renderNotes();
+    }
+
+    async loadAllNotesOptimized() {
+        try {
+            const user = this.auth.currentUser;
+            if (!user) return;
+
+            // Check cache first
+            const cacheKey = `notes_${user.uid}`;
+            if (this.cache.has(cacheKey)) {
+                const cachedData = this.cache.get(cacheKey);
+                this.state.dailyNotes = cachedData.daily;
+                this.state.generalNotes = cachedData.general;
+                this.renderNotes();
+                this.updateStats();
+                // Load fresh data in background
+                this.loadFreshData(user.uid);
+                return;
+            }
+
+            this.showLoading(true);
+            
+            // Load daily notes ordered by date (doc id is YYYY-MM-DD)
+            const [dailyNotesSnapshot, allGeneralNotesSnapshot] = await Promise.all([
+                this.db.collection('users')
+                    .doc(user.uid)
+                    .collection('notes')
+                    .get(),
+                this.db.collection('users')
+                    .doc(user.uid)
+                    .collection('generalNotes')
+                    .get()
+            ]);
+            
+            // Process all daily notes
+            this.state.dailyNotes = {};
+            dailyNotesSnapshot.forEach(doc => {
+                this.state.dailyNotes[doc.id] = doc.data().note;
+            });
+
+            // Process general notes
+            this.state.generalNotes = {};
+            allGeneralNotesSnapshot.forEach(doc => {
+                this.state.generalNotes[doc.id] = {
+                    ...doc.data(),
+                    id: doc.id
+                };
+            });
+
+            // Cache the data
+            this.cache.set(cacheKey, {
+                daily: { ...this.state.dailyNotes },
+                general: { ...this.state.generalNotes },
+                timestamp: Date.now()
+            });
+
+            this.renderNotes();
+            this.updateStats();
+            this.showLoading(false);
+
+        } catch (error) {
+            errorHandler.showErrorDialog({
+                title: 'Load Notes Error',
+                message: 'Failed to load notes. Please refresh the page.',
+                details: error.message || 'Unknown error occurred while loading notes',
+                type: 'error'
+            });
+            this.showLoading(false);
+        }
+    }
+
+    async loadFreshData(userId) {
+        // Silently refresh cache in background
+        try {
+            const [dailyNotesSnapshot, generalNotesSnapshot] = await Promise.all([
+                this.db.collection('users')
+                    .doc(userId)
+                    .collection('notes')
+                    .get(),
+                this.db.collection('users')
+                    .doc(userId)
+                    .collection('generalNotes')
+                    .get()
+            ]);
+            
+            // Update cache
+            const freshData = { daily: {}, general: {}, timestamp: Date.now() };
+            dailyNotesSnapshot.forEach(doc => {
+                freshData.daily[doc.id] = doc.data().note;
+            });
+            generalNotesSnapshot.forEach(doc => {
+                freshData.general[doc.id] = { ...doc.data(), id: doc.id };
+            });
+            
+            this.cache.set(`notes_${userId}`, freshData);
+            
+            // Update state if data changed
+            if (JSON.stringify(this.state.dailyNotes) !== JSON.stringify(freshData.daily) ||
+                JSON.stringify(this.state.generalNotes) !== JSON.stringify(freshData.general)) {
+                this.state.dailyNotes = freshData.daily;
+                this.state.generalNotes = freshData.general;
+                this.renderNotes();
+                this.updateStats();
+            }
+        } catch (error) {
+            console.error('Error refreshing notes:', error);
+        }
+    }
+
+    async loadDailyNotes() {
+        const user = this.auth.currentUser;
+        if (!user) return;
+
+        try {
+            const snapshot = await this.db.collection('users').doc(user.uid).collection('notes').get();
+            const dailyNotes = {};
+            snapshot.forEach(doc => {
+                dailyNotes[doc.id] = doc.data().note;
+            });
+
+            this.state.dailyNotes = dailyNotes;
+
+            const cacheKey = `notes_${user.uid}`;
+            const cachedData = this.cache.get(cacheKey) || { daily: {}, general: { ...this.state.generalNotes } };
+            cachedData.daily = { ...dailyNotes };
+            cachedData.timestamp = Date.now();
+            this.cache.set(cacheKey, cachedData);
+        } catch (error) {
+            console.error('Failed to reload daily notes:', error);
+            throw error;
+        }
+    }
+
+    async loadGeneralNotes() {
+        const user = this.auth.currentUser;
+        if (!user) return;
+
+        try {
+            const snapshot = await this.db.collection('users').doc(user.uid).collection('generalNotes').get();
+            const generalNotes = {};
+            snapshot.forEach(doc => {
+                generalNotes[doc.id] = { ...doc.data(), id: doc.id };
+            });
+
+            this.state.generalNotes = generalNotes;
+
+            const cacheKey = `notes_${user.uid}`;
+            const cachedData = this.cache.get(cacheKey) || { daily: { ...this.state.dailyNotes }, general: {} };
+            cachedData.general = { ...generalNotes };
+            cachedData.timestamp = Date.now();
+            this.cache.set(cacheKey, cachedData);
+        } catch (error) {
+            console.error('Failed to reload general notes:', error);
+            throw error;
+        }
+    }
+
+    async refreshNotesInBackground() {
+        const user = this.auth.currentUser;
+        if (!user) return;
+
+        try {
+            await this.loadFreshData(user.uid);
+        } catch (error) {
+            console.error('Background refresh failed:', error);
+        }
     }
 
     async loadAllNotes() {
@@ -436,7 +674,7 @@ class NotesManager {
                     </div>
                     <div class="note-actions">
                         <button class="note-action-btn edit-note-btn" data-date="${note.date}" title="Edit note">
-                            ✏️
+                            <i class="fas fa-pen" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -457,7 +695,7 @@ class NotesManager {
                     <h3 class="general-note-title">${this.escapeHtml(title)}</h3>
                     <div class="note-actions">
                         <button class="note-action-btn edit-general-note-btn" data-id="${note.id}" title="Edit note">
-                            ✏️
+                            <i class="fas fa-pen" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -498,39 +736,121 @@ class NotesManager {
         return div.innerHTML;
     }
 
+    updateDailyNoteFormState(dateStr) {
+        const noteContent = this.state.dailyNotes[dateStr] || '';
+        const noteTextarea = document.getElementById('edit-note-text');
+        const modalElement = document.getElementById('edit-note-modal');
+        const deleteBtn = document.getElementById('delete-note-btn');
+        const titleEl = document.getElementById('edit-modal-title');
+        const dateEl = document.getElementById('edit-modal-date');
+
+        if (noteTextarea) {
+            noteTextarea.value = noteContent;
+            this.autoResizeTextarea();
+        }
+
+        if (noteContent) {
+            this.editingNoteId = dateStr;
+            if (modalElement) {
+                modalElement.classList.add('editing-existing-note');
+            }
+            if (deleteBtn) {
+                deleteBtn.classList.remove('hidden');
+            }
+            if (titleEl) {
+                titleEl.textContent = 'Edit Daily Note';
+            }
+            if (dateEl) {
+                dateEl.textContent = this.formatDate(dateStr);
+            }
+        } else {
+            this.editingNoteId = null;
+            if (modalElement) {
+                modalElement.classList.remove('editing-existing-note');
+            }
+            if (deleteBtn) {
+                deleteBtn.classList.add('hidden');
+            }
+            if (titleEl) {
+                titleEl.textContent = 'Add Daily Note';
+            }
+            if (dateEl) {
+                dateEl.textContent = this.formatDate(dateStr);
+            }
+        }
+    }
+
+    autoResizeTextarea() {
+        const textarea = document.getElementById('edit-note-text');
+        if (!textarea) return;
+
+        if (!textarea.dataset.baseHeight) {
+            const computed = parseFloat(window.getComputedStyle(textarea).minHeight);
+            const fallback = textarea.clientHeight || 120;
+            textarea.dataset.baseHeight = String(computed || fallback);
+        }
+
+        const baseHeight = Number(textarea.dataset.baseHeight) || 120;
+        const computedMax = parseFloat(window.getComputedStyle(textarea).maxHeight);
+        const maxHeight = Number.isFinite(computedMax) && computedMax > 0 ? computedMax : 320;
+
+        textarea.style.height = `${baseHeight}px`;
+        const scrollHeight = textarea.scrollHeight;
+
+        if (scrollHeight <= baseHeight + 16) {
+            textarea.style.height = `${baseHeight}px`;
+            textarea.style.overflowY = 'hidden';
+            return;
+        }
+
+        if (scrollHeight <= maxHeight) {
+            textarea.style.height = `${scrollHeight}px`;
+            textarea.style.overflowY = 'hidden';
+            return;
+        }
+
+        textarea.style.height = `${maxHeight}px`;
+        textarea.style.overflowY = 'auto';
+    }
+
     openAddNoteModal(type) {
         this.editingNoteId = null;
         this.editingNoteType = type;
+        const modal = document.getElementById('edit-note-modal');
+        const deleteBtn = document.getElementById('delete-note-btn');
+        const titleEl = document.getElementById('edit-modal-title');
         
-        // Remove editing class for new notes
-        document.getElementById('edit-note-modal').classList.remove('editing-existing-note');
-        
-        // Show/hide appropriate fields
         if (type === 'daily') {
             document.getElementById('daily-note-fields').classList.remove('hidden');
             document.getElementById('general-note-fields').classList.add('hidden');
-            
-            // Set to today's date by default
+
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
             document.getElementById('edit-note-date').value = todayStr;
-            
-            document.getElementById('edit-modal-title').textContent = 'Add Daily Note';
+            this.updateDailyNoteFormState(todayStr);
         } else {
             document.getElementById('daily-note-fields').classList.add('hidden');
             document.getElementById('general-note-fields').classList.remove('hidden');
-            
+
             document.getElementById('general-note-title').value = '';
-            document.getElementById('edit-modal-title').textContent = 'Add General Note';
+            document.getElementById('edit-note-text').value = '';
+            this.autoResizeTextarea();
+            if (modal) {
+                modal.classList.remove('editing-existing-note');
+            }
+            if (deleteBtn) {
+                deleteBtn.classList.add('hidden');
+            }
+            if (titleEl) {
+                titleEl.textContent = 'Add General Note';
+            }
+            const dateEl = document.getElementById('edit-modal-date');
+            if (dateEl) {
+                dateEl.textContent = '';
+            }
         }
         
-        document.getElementById('edit-note-text').value = '';
-        
-        // Hide delete button for new notes
-        document.getElementById('delete-note-btn').classList.add('hidden');
-        
         // Show modal with animation
-        const modal = document.getElementById('edit-note-modal');
         modal.classList.remove('hidden');
         
         // Trigger animation after a brief delay
@@ -558,13 +878,8 @@ class NotesManager {
             document.getElementById('daily-note-fields').classList.remove('hidden');
             document.getElementById('general-note-fields').classList.add('hidden');
             
-            const note = this.state.dailyNotes[id] || '';
             document.getElementById('edit-note-date').value = id;
-            document.getElementById('edit-note-text').value = note;
-            document.getElementById('edit-modal-title').textContent = `Edit Daily Note - ${this.formatDate(id)}`;
-            
-            // Hide date input for existing notes
-            document.getElementById('edit-note-modal').classList.add('editing-existing-note');
+            this.updateDailyNoteFormState(id);
         } else {
             document.getElementById('daily-note-fields').classList.add('hidden');
             document.getElementById('general-note-fields').classList.remove('hidden');
@@ -572,7 +887,12 @@ class NotesManager {
             const note = this.state.generalNotes[id];
             document.getElementById('general-note-title').value = note.title || '';
             document.getElementById('edit-note-text').value = note.content || '';
+            this.autoResizeTextarea();
             document.getElementById('edit-modal-title').textContent = 'Edit General Note';
+            const dateEl = document.getElementById('edit-modal-date');
+            if (dateEl) {
+                dateEl.textContent = '';
+            }
             
             // Remove the class for general notes
             document.getElementById('edit-note-modal').classList.remove('editing-existing-note');
@@ -614,11 +934,23 @@ class NotesManager {
         }, 300);
     }
 
+    // Debounced save for better performance
+    debouncedSave(callback, delay = 1000) {
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        this.saveTimeout = setTimeout(callback, delay);
+    }
+
     async saveNote() {
         const noteText = document.getElementById('edit-note-text').value.trim();
         
         if (!noteText) {
-            alert('Please enter some content for the note.');
+            errorHandler.showErrorDialog({
+                title: 'Missing Note Content',
+                message: 'Please enter some content for the note.',
+                type: 'validation'
+            });
             return;
         }
         
@@ -631,14 +963,32 @@ class NotesManager {
             if (this.editingNoteType === 'daily') {
                 const dateStr = document.getElementById('edit-note-date').value;
                 if (!dateStr) {
-                    alert('Please select a date.');
+                    errorHandler.showErrorDialog({
+                        title: 'Missing Date',
+                        message: 'Please select a date.',
+                        type: 'validation'
+                    });
                     return;
                 }
 
-                await this.db.collection('users').doc(user.uid).collection('notes').doc(dateStr).set({
-                    note: noteText
-                });
+                // Optimistic update for faster UI response
                 this.state.dailyNotes[dateStr] = noteText;
+                this.renderNotes();
+                this.updateStats();
+
+                // Save to Firebase in background
+                await this.db.collection('users').doc(user.uid).collection('notes').doc(dateStr).set({
+                    note: noteText,
+                    createdAt: new Date().toISOString()
+                });
+
+                // Update cache
+                const cacheKey = `notes_${user.uid}`;
+                if (this.cache.has(cacheKey)) {
+                    const cachedData = this.cache.get(cacheKey);
+                    cachedData.daily[dateStr] = noteText;
+                    this.cache.set(cacheKey, cachedData);
+                }
             } else {
                 let title = document.getElementById('general-note-title').value.trim();
                 
@@ -648,45 +998,208 @@ class NotesManager {
                 }
                 
                 if (this.editingNoteId) {
+                    const updatedNote = {
+                        title: title,
+                        content: noteText,
+                        updatedAt: new Date().toISOString(),
+                        id: this.editingNoteId
+                    };
+
+                    // Optimistic update
+                    this.state.generalNotes[this.editingNoteId] = updatedNote;
+                    this.renderNotes();
+                    this.updateStats();
+
                     // Update existing general note
                     await this.db.collection('users').doc(user.uid).collection('generalNotes').doc(this.editingNoteId).update({
                         title: title,
                         content: noteText,
                         updatedAt: new Date().toISOString()
                     });
-                    this.state.generalNotes[this.editingNoteId] = {
-                        ...this.state.generalNotes[this.editingNoteId],
-                        title: title,
-                        content: noteText,
-                        updatedAt: new Date().toISOString()
-                    };
+
+                    // Update cache
+                    const cacheKey = `notes_${user.uid}`;
+                    if (this.cache.has(cacheKey)) {
+                        const cachedData = this.cache.get(cacheKey);
+                        cachedData.general[this.editingNoteId] = updatedNote;
+                        this.cache.set(cacheKey, cachedData);
+                    }
                 } else {
                     // Create new general note
-                    const noteRef = await this.db.collection('users').doc(user.uid).collection('generalNotes').add({
+                    const noteRef = this.db.collection('users').doc(user.uid).collection('generalNotes').doc();
+                    const newNote = {
                         title: title,
                         content: noteText,
                         createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    });
-                    this.state.generalNotes[noteRef.id] = {
-                        id: noteRef.id,
-                        title: title,
-                        content: noteText,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
+                        updatedAt: new Date().toISOString(),
+                        id: noteRef.id
                     };
+
+                    // Optimistic update
+                    this.state.generalNotes[noteRef.id] = newNote;
+                    this.renderNotes();
+                    this.updateStats();
+
+                    // Save to Firebase in background
+                    await noteRef.set(newNote);
+
+                    // Update cache
+                    const cacheKey = `notes_${user.uid}`;
+                    if (this.cache.has(cacheKey)) {
+                        const cachedData = this.cache.get(cacheKey);
+                        cachedData.general[noteRef.id] = newNote;
+                        this.cache.set(cacheKey, cachedData);
+                    }
                 }
             }
 
-            this.updateStats();
-            this.renderNotes();
             this.closeEditModal();
-            this.showLoading(false);
-            
+            console.log('Note saved successfully with optimistic updates');
         } catch (error) {
-            console.error('Error saving note:', error);
-            alert('Error saving note. Please try again.');
+            errorHandler.showErrorDialog({
+                title: 'Save Note Error',
+                message: 'Failed to save note. Changes may be lost.',
+                details: error.message || 'Unknown error occurred while saving note',
+                type: 'error'
+            });
+            
+            // Revert optimistic updates on error
+            if (this.editingNoteType === 'daily') {
+                await this.loadDailyNotes();
+            } else {
+                await this.loadGeneralNotes();
+            }
+            this.renderNotes();
+            this.updateStats();
+        } finally {
             this.showLoading(false);
+        }
+    }
+
+    async autoSaveNote() {
+        // Silent auto-save without UI feedback
+        const noteText = document.getElementById('edit-note-text').value.trim();
+        
+        if (!noteText) return; // Don't save empty notes
+        
+        try {
+            const user = this.auth.currentUser;
+            if (!user) return;
+
+            if (this.editingNoteType === 'daily') {
+                const dateStr = document.getElementById('edit-note-date').value;
+                if (!dateStr) return;
+
+                // Update local state
+                this.state.dailyNotes[dateStr] = noteText;
+
+                // Save to Firebase
+                await this.db.collection('users').doc(user.uid).collection('notes').doc(dateStr).set({
+                    note: noteText,
+                    createdAt: new Date().toISOString()
+                });
+
+                // Update cache
+                const cacheKey = `notes_${user.uid}`;
+                if (this.cache.has(cacheKey)) {
+                    const cachedData = this.cache.get(cacheKey);
+                    cachedData.daily[dateStr] = noteText;
+                    this.cache.set(cacheKey, cachedData);
+                }
+            } else if (this.editingNoteId) {
+                let title = document.getElementById('general-note-title').value.trim();
+                
+                if (!title) {
+                    title = this.generateNoteTitle(noteText);
+                }
+
+                const updatedNote = {
+                    title: title,
+                    content: noteText,
+                    updatedAt: new Date().toISOString(),
+                    id: this.editingNoteId
+                };
+
+                // Update local state
+                this.state.generalNotes[this.editingNoteId] = updatedNote;
+
+                // Save to Firebase
+                await this.db.collection('users').doc(user.uid).collection('generalNotes').doc(this.editingNoteId).update({
+                    title: title,
+                    content: noteText,
+                    updatedAt: new Date().toISOString()
+                });
+
+                // Update cache
+                const cacheKey = `notes_${user.uid}`;
+                if (this.cache.has(cacheKey)) {
+                    const cachedData = this.cache.get(cacheKey);
+                    cachedData.general[this.editingNoteId] = updatedNote;
+                    this.cache.set(cacheKey, cachedData);
+                }
+            }
+
+            console.log('Auto-save completed silently');
+        } catch (error) {
+            console.error('Auto-save failed:', error);
+            // Don't show error to user for auto-save failures
+        }
+    }
+
+    cleanupCache() {
+        // Remove cache entries older than 30 minutes
+        const maxAge = 30 * 60 * 1000; // 30 minutes
+        const now = Date.now();
+        
+        for (const [key, value] of this.cache.entries()) {
+            if (value.timestamp && (now - value.timestamp) > maxAge) {
+                this.cache.delete(key);
+                console.log('Cleaned up cache entry:', key);
+            }
+        }
+    }
+
+    async preloadBackgroundData() {
+        // Preload recent notes in background for faster access
+        try {
+            const user = this.auth.currentUser;
+            if (!user) return;
+
+            // Load last 10 general notes in background
+            const recentGeneralNotes = await this.db.collection('users')
+                .doc(user.uid)
+                .collection('generalNotes')
+                .orderBy('updatedAt', 'desc')
+                .limit(10)
+                .get();
+
+            // Update cache silently
+            const cacheKey = `notes_${user.uid}`;
+            if (this.cache.has(cacheKey)) {
+                const cachedData = this.cache.get(cacheKey);
+                recentGeneralNotes.forEach(doc => {
+                    if (!cachedData.general[doc.id]) {
+                        cachedData.general[doc.id] = { id: doc.id, ...doc.data() };
+                    }
+                });
+                cachedData.timestamp = Date.now();
+                this.cache.set(cacheKey, cachedData);
+            }
+
+            console.log('Background data preload completed');
+        } catch (error) {
+            console.error('Background preload failed:', error);
+        }
+    }
+
+    async refreshNotesOnFocus() {
+        // Only refresh if user has been away for more than 30 seconds
+        const lastRefresh = this.lastRefreshTime || 0;
+        const now = Date.now();
+        
+        if (now - lastRefresh > 30000) { // 30 seconds
+            this.lastRefreshTime = now;
+            await this.refreshNotesInBackground();
         }
     }
 
@@ -737,8 +1250,12 @@ class NotesManager {
                 this.showLoading(false);
                 
             } catch (error) {
-                console.error('Error deleting note:', error);
-                alert('Error deleting note. Please try again.');
+                errorHandler.showErrorDialog({
+                    title: 'Delete Note Error',
+                    message: 'Error deleting note. Please try again.',
+                    details: error.message || 'Unknown error occurred while deleting note',
+                    type: 'error'
+                });
                 this.showLoading(false);
             }
             

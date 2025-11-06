@@ -37,16 +37,15 @@
     </a>
     <nav class="header-nav">
       <a href="activities.html" class="nav-item">Activities</a>
-      <a href="goals.html" class="nav-item active">Goals</a>
+      <a href="goals.html" class="nav-item">Goals</a>
       <a href="notes.html" class="nav-item">Notes</a>
-      <a href="reminders.html" class="nav-item">Reminders</a>
+      <a href="reminders.html" class="nav-item active">Reminders</a>
       <a href="focus.html" class="nav-item">Focus</a>
       <div class="more-dropdown">
         <button class="more-btn nav-item" aria-label="More options">More</button>
         <div class="more-dropdown-content">
           <a href="themes.html">Themes</a>
         </div>
-      </div>
     </nav>
     <div class="header-actions">
       <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
@@ -55,23 +54,25 @@
       <button id="logout-btn" class="header-btn" aria-label="Logout">Logout</button>
     </div>
   </header>
+  </header>
   <div class="page-container">
     <main class="content">
         <div class="management-column">
             <div class="page-header">
-                <h1>Goals</h1>
-                <p class="page-subtitle">Set, track, and complete your goals</p>
+                <h1>Reminders</h1>
+                <p class="page-subtitle">Set reminders for future dates and times</p>
             </div>
-      <div class="add-item-form">
-        <input type="text" id="add-goal-input" class="add-input" placeholder="Add new goal...">
-        <button id="add-goal-btn" class="add-btn" aria-label="Add goal">
-          <i class="fas fa-plus icon-only" aria-hidden="true"></i>
+      <div class="add-item-form reminder-form">
+        <button type="button" id="add-reminder-btn" class="add-reminder-main-btn">
+          <i class="fas fa-plus icon-prefix" aria-hidden="true"></i>
+          <span>Add New Reminder</span>
         </button>
             </div>
-            <ul id="goal-list" class="goal-list"></ul>
+            <ul id="reminder-list" class="reminder-list"></ul>
         </div>
     </main>
   </div>
+
   <div id="confirmation-modal" class="modal hidden">
     <div class="modal-content">
         <p id="confirmation-message">Are you sure?</p>
@@ -81,22 +82,68 @@
         </div>
     </div>
   </div>
-  
-  <!-- Edit Goal Modal -->
-  <div id="edit-goal-modal" class="modal hidden">
-    <div class="modal-content">
-        <h3>Edit Goal</h3>
-        <div class="edit-form">
-            <label for="edit-goal-name">Goal Name:</label>
-            <input type="text" id="edit-goal-name" placeholder="Goal name">
-            <div class="modal-buttons">
-                <button id="save-goal-edit" class="btn-confirm">Save</button>
-                <button id="cancel-goal-edit" class="btn-cancel">Cancel</button>
+
+  <div id="edit-reminder-modal" class="modal hidden">
+    <div class="modal-content datetime-picker-content">
+        <h3>Edit Reminder</h3>
+        <br>
+    <div class="reminder-form-section">
+      <label for="edit-reminder-name" class="visually-hidden">Reminder details</label>
+            <input type="text" id="edit-reminder-name" class="modal-input" placeholder="What would you like to be reminded about?">
+        </div>
+        <div class="datetime-picker">
+            <div class="date-section">
+                <label for="edit-picker-date">Date:</label>
+                <input type="date" id="edit-picker-date" class="datetime-input">
             </div>
+            <div class="time-section">
+                <label for="edit-picker-time">Time:</label>
+                <input type="time" id="edit-picker-time" class="datetime-input">
+            </div>
+            <div class="quick-date-buttons">
+                <button type="button" class="edit-quick-btn" data-days="0">Today</button>
+                <button type="button" class="edit-quick-btn" data-days="1">Tomorrow</button>
+                <button type="button" class="edit-quick-btn" data-days="7">Next Week</button>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button id="save-reminder-edit" class="btn-confirm">Save Changes</button>
+            <button id="cancel-reminder-edit" class="btn-cancel">Cancel</button>
         </div>
     </div>
   </div>
 
+  <div id="datetime-picker-modal" class="modal hidden">
+    <div class="modal-content datetime-picker-content">
+        <h3 id="datetime-modal-title">Add New Reminder</h3>
+        <br>  
+    <div class="reminder-form-section">
+      <label for="modal-reminder-text" class="visually-hidden">Reminder details</label>
+            <input type="text" id="modal-reminder-text" class="modal-input" placeholder="What would you like to be reminded about?">
+        </div>
+        <div class="datetime-picker">
+            <div class="date-section">
+                <label for="picker-date">Date:</label>
+                <input type="date" id="picker-date" class="datetime-input">
+            </div>
+            <div class="time-section">
+                <label for="picker-time">Time:</label>
+                <input type="time" id="picker-time" class="datetime-input">
+            </div>
+            <div class="quick-date-buttons">
+                <button type="button" class="quick-btn" data-days="0">Today</button>
+                <button type="button" class="quick-btn" data-days="1">Tomorrow</button>
+                <button type="button" class="quick-btn" data-days="7">Next Week</button>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button id="confirm-datetime" class="btn-confirm">Add Reminder</button>
+            <button id="cancel-datetime" class="btn-cancel">Cancel</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -106,18 +153,17 @@
   <script src="../assets/js/database-migration.js"></script>
   <script src="../assets/js/database-service.js"></script>
   <script src="../assets/js/data-sync.js"></script>
-  <script src="../assets/js/unified-theme-system.js"></script>
   <script src="../assets/js/mobile-nav.js"></script>
-  <script src="../assets/js/goals.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
+  <script src="../assets/js/reminders.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Mobile theme toggle
-        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-        if (mobileThemeToggle && window.themeSystem) {
-            mobileThemeToggle.addEventListener('click', () => {
-                window.themeSystem.toggleDarkMode();
-            });
-        }
+      const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+      if (mobileThemeToggle && window.themeSystem) {
+        mobileThemeToggle.addEventListener('click', () => {
+          window.themeSystem.toggleDarkMode();
+        });
+      }
     });
   </script>
   
@@ -132,11 +178,11 @@
         <i class="fas fa-chart-line bottom-nav-icon"></i>
         <span class="bottom-nav-label">Activities</span>
       </a>
-      <a href="goals.html" class="bottom-nav-item active">
+      <a href="goals.html" class="bottom-nav-item">
         <i class="fas fa-bullseye bottom-nav-icon"></i>
         <span class="bottom-nav-label">Goals</span>
       </a>
-      <a href="reminders.html" class="bottom-nav-item">
+      <a href="reminders.html" class="bottom-nav-item active">
         <i class="fas fa-bell bottom-nav-icon"></i>
         <span class="bottom-nav-label">Reminders</span>
       </a>
