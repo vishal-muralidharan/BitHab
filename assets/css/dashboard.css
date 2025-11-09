@@ -221,6 +221,9 @@
     box-shadow: var(--shadow);
     animation: fadeInUp 0.6s ease-out;
     height: 44px; /* Fixed height for alignment */
+    display: flex;               /* Center content horizontally and vertically */
+    align-items: center;         /* Vertical centering */
+    justify-content: center;     /* Horizontal centering */
 }
 
 .current-date-colored {
