@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../assets/js/theme-preload-inline.js"></script>
+  <title>BitHab</title>
+  <link rel="icon" href="../assets/images/logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../assets/css/themes.css" />
+</head>
+<body class="themes-page">
+  <!-- Mobile/Tablet Topbar -->
+  <div class="mobile-topbar">
+    <a href="../index.html" class="logo-link">
+      <h1 class="logo">
+        <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
+        <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
+      </h1>
+    </a>
+    <button id="mobile-theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+      <i></i>
+    </button>
+  </div>
+
+  <header class="header">
+    <a href="../index.html" class="logo-link">
+      <h1 class="logo">
+        <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
+        <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
+      </h1>
+    </a>
+    <nav class="header-nav">
+      <a href="activities.html" class="nav-item">Activities</a>
+      <a href="goals.html" class="nav-item">Goals</a>
+      <a href="notes.html" class="nav-item">Notes</a>
+      <a href="reminders.html" class="nav-item">Reminders</a>
+      <a href="focus.html" class="nav-item">Focus</a>
+      <div class="more-dropdown">
+        <button class="more-btn nav-item" aria-label="More options">More</button>
+        <div class="more-dropdown-content">
+          <a href="themes.html">Themes</a>
+        </div>
+      </div>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
+        <i></i>
+      </button>
+      <button id="logout-btn" class="header-btn" aria-label="Logout">Logout</button>
+    </div>
+  </header>
+  <div class="page-container">
+    <main class="content">
+      <div class="page-content">
+        <div class="page-header">
+          <h1>Themes</h1>
+          <p>Customize your BitHab experience with various themes</p>
+        </div>
+        
+        <!-- Current Theme Section -->
+        <div class="current-theme-section">
+          <h2>Current Theme</h2>
+          <div id="current-theme-display">
+              <!-- Filled dynamically by UnifiedThemeSystem.updateThemeDisplay() -->
+            </div>
+        </div>
+        
+        <div class="themes-grid">
+          <!-- Oceanic Depths Theme -->
+          <div class="theme-card" data-theme="oceanic-depths">
+            <div class="theme-preview-container">
+              <div class="theme-preview oceanic-depths-preview dark-preview">
+                <div class="preview-label">Dark</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+              <div class="theme-preview oceanic-depths-preview light-preview">
+                <div class="preview-label">Light</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3>Oceanic Depths</h3>
+              <button class="theme-select-btn" data-theme="oceanic-depths">Select Theme</button>
+            </div>
+          </div>
+
+          <!-- Evergreen Forest Theme -->
+          <div class="theme-card" data-theme="evergreen-forest">
+            <div class="theme-preview-container">
+              <div class="theme-preview evergreen-forest-preview dark-preview">
+                <div class="preview-label">Dark</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+              <div class="theme-preview evergreen-forest-preview light-preview">
+                <div class="preview-label">Light</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3>Evergreen Forest</h3>
+              <button class="theme-select-btn" data-theme="evergreen-forest">Select Theme</button>
+            </div>
+          </div>
+
+          <!-- Cyberpunk Neon Theme -->
+          <div class="theme-card" data-theme="cyberpunk-neon">
+            <div class="theme-preview-container">
+              <div class="theme-preview cyberpunk-neon-preview dark-preview">
+                <div class="preview-label">Dark</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+              <div class="theme-preview cyberpunk-neon-preview light-preview">
+                <div class="preview-label">Light</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3>Cyberpunk Neon</h3>
+              <button class="theme-select-btn" data-theme="cyberpunk-neon">Select Theme</button>
+            </div>
+          </div>
+
+          <!-- Monochrome Minimalist Theme -->
+          <div class="theme-card" data-theme="monochrome-minimalist">
+            <div class="theme-preview-container">
+              <div class="theme-preview monochrome-minimalist-preview dark-preview">
+                <div class="preview-label">Dark</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+              <div class="theme-preview monochrome-minimalist-preview light-preview">
+                <div class="preview-label">Light</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3>Monochrome</h3>
+              <button class="theme-select-btn" data-theme="monochrome-minimalist">Select Theme</button>
+            </div>
+          </div>
+
+          <!-- Sunrise Coral Theme -->
+          <div class="theme-card" data-theme="sunrise-coral">
+            <div class="theme-preview-container">
+              <div class="theme-preview sunrise-coral-preview dark-preview">
+                <div class="preview-label">Dark</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+              <div class="theme-preview sunrise-coral-preview light-preview">
+                <div class="preview-label">Light</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3>Sunrise Coral</h3>
+              <button class="theme-select-btn" data-theme="sunrise-coral">Select Theme</button>
+            </div>
+          </div>
+
+          <!-- Cherry Blossom Theme -->
+          <div class="theme-card" data-theme="cherry-blossom">
+            <div class="theme-preview-container">
+              <div class="theme-preview cherry-blossom-preview dark-preview">
+                <div class="preview-label">Dark</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+              <div class="theme-preview cherry-blossom-preview light-preview">
+                <div class="preview-label">Light</div>
+                <div class="preview-surface">
+                  <div class="preview-bar primary"></div>
+                  <div class="preview-bar secondary"></div>
+                  <div class="preview-bar surface"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <h3>Cherry Blossom</h3>
+              <button class="theme-select-btn" data-theme="cherry-blossom">Select Theme</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="../config/firebase-config.js"></script>
+  <script src="../assets/js/error-handler.js"></script>
+  <script src="../assets/js/auth-manager.js"></script>
+  <script src="../assets/js/database-migration.js"></script>
+  <script src="../assets/js/database-service.js"></script>
+  <script src="../assets/js/data-sync.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
+  <script src="../assets/js/mobile-nav.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Wait for Firebase to initialize and check authentication
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          // User is authenticated, initialize everything
+          const userId = user.uid;
+          const db = firebase.firestore();
+
+          if (window.DatabaseService) {
+            window.DatabaseService.init(userId, db);
+          }
+          if (window.ThemeSystem?.updateThemeDisplay) {
+            window.ThemeSystem.updateThemeDisplay();
+          }
+
+          const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+          if (mobileThemeToggle && window.themeSystem) {
+            mobileThemeToggle.addEventListener('click', () => {
+              window.themeSystem.toggleDarkMode();
+            });
+          }
+        } else {
+          window.location.href = 'login.html';
+        }
+      });
+    });
+  </script>
+  
+  <!-- Bottom Navigation for Mobile/Tablet -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-content">
+      <a href="../index.html" class="bottom-nav-item">
+        <i class="fas fa-home bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Home</span>
+      </a>
+      <a href="activities.html" class="bottom-nav-item">
+        <i class="fas fa-chart-line bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Activities</span>
+      </a>
+      <a href="goals.html" class="bottom-nav-item">
+        <i class="fas fa-bullseye bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Goals</span>
+      </a>
+      <a href="reminders.html" class="bottom-nav-item">
+        <i class="fas fa-bell bottom-nav-icon"></i>
+        <span class="bottom-nav-label">Reminders</span>
+      </a>
+      <div class="bottom-nav-item more-bottom-nav active">
+        <i class="fas fa-ellipsis-h bottom-nav-icon"></i>
+        <span class="bottom-nav-label">More</span>
+        <div class="more-bottom-dropdown">
+          <a href="notes.html" class="more-dropdown-item">
+            <i class="fas fa-sticky-note"></i>
+            <span>Notes</span>
+          </a>
+          <a href="focus.html" class="more-dropdown-item">
+            <i class="fas fa-clock"></i>
+            <span>Focus</span>
+          </a>
+          <a href="themes.html" class="more-dropdown-item">
+            <i class="fas fa-palette"></i>
+            <span>Themes</span>
+          </a>
+          <button class="more-dropdown-item logout-item" id="logout-bottom-nav">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+</body>
+</html>
