@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const state = {
-        goals: [],
+        goals: [], // [{id, name, completed, createdAt, subgoals:[{id,name,completed,createdAt}]}]
+        ui: {
+            expandedGoals: new Set(),
+        },
     };
 
     const goalList = document.getElementById('goal-list');
@@ -15,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Edit modal elements
     const editGoalModal = document.getElementById('edit-goal-modal');
     const editGoalName = document.getElementById('edit-goal-name');
+    const editSubgoalList = document.getElementById('edit-subgoal-list');
+    const editAddSubgoalInput = document.getElementById('edit-add-subgoal-input');
+    const editAddSubgoalBtn = document.getElementById('edit-add-subgoal-btn');
     const saveGoalEditBtn = document.getElementById('save-goal-edit');
     const cancelGoalEdit = document.getElementById('cancel-goal-edit');
 
@@ -22,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let db;
     let confirmationAction = null;
     let currentEditingGoal = null;
+    let currentEditingDraft = null;
 
     // Show loading immediately
     const showLoading = () => {
@@ -38,15 +45,52 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmationModal.classList.remove('hidden');
     };
 
+    const renderEditSubgoals = () => {
+        if (!currentEditingDraft || !editSubgoalList) return;
+        const list = currentEditingDraft.subgoals || [];
+        if (list.length === 0) {
+            editSubgoalList.innerHTML = '<p style="opacity:0.7; padding: 0.25rem 0.5rem;">No subgoals yet.</p>';
+            return;
+        }
+        editSubgoalList.innerHTML = list.map(sg => `
+            <div class="subgoal-item ${sg.completed ? 'completed' : ''}" data-id="${sg.id}">
+                <label class="subgoal-check">
+                    <input type="checkbox" class="edit-toggle-subgoal" data-id="${sg.id}" ${sg.completed ? 'checked' : ''} />
+                </label>
+                <span class="subgoal-name">${sg.name}</span>
+                <div class="subgoal-actions">
+                    <button class="edit-subgoal-name-btn" data-id="${sg.id}" aria-label="Edit subgoal"><i class="fas fa-pen"></i></button>
+                    <button class="delete-subgoal-modal-btn" data-id="${sg.id}" aria-label="Delete subgoal"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    const enforceGoalCompletionFromSubgoals = (goal) => {
+        if (!goal) return;
+        if (Array.isArray(goal.subgoals) && goal.subgoals.length > 0) {
+            goal.completed = goal.subgoals.every(s => !!s.completed);
+        }
+    };
+
     const showEditGoalModal = (goal) => {
         currentEditingGoal = goal;
-        editGoalName.value = goal.name;
+        // Create a deep draft copy to avoid mutating live state until Save
+        currentEditingDraft = JSON.parse(JSON.stringify({
+            id: goal.id,
+            name: goal.name,
+            completed: !!goal.completed,
+            subgoals: Array.isArray(goal.subgoals) ? goal.subgoals : []
+        }));
+        editGoalName.value = currentEditingDraft.name;
+        renderEditSubgoals();
         editGoalModal.classList.remove('hidden');
     };
 
     const hideEditGoalModal = () => {
         editGoalModal.classList.add('hidden');
         currentEditingGoal = null;
+        currentEditingDraft = null;
     };
 
     const saveState = async () => {
@@ -56,9 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         console.log('Saving goals:', state.goals);
         try {
+            // Convert Set to Array for storage
+            const expandedGoalsArray = state.ui?.expandedGoals ? Array.from(state.ui.expandedGoals) : [];
+            
             // Save using direct Firestore update with merge
             await db.collection('users').doc(userId).set({
                 goals: state.goals,
+                goalsUI: {
+                    expandedGoals: expandedGoalsArray
+                },
                 lastUpdated: Date.now(),
                 lastUpdatedBy: 'goals_page'
             }, { merge: true });
@@ -96,10 +146,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (doc.exists) {
                 const loadedData = doc.data();
                 state.goals = loadedData.goals || [];
+                
+                // Load UI state and convert Array back to Set
+                if (!state.ui) state.ui = { expandedGoals: new Set() };
+                if (loadedData.goalsUI && Array.isArray(loadedData.goalsUI.expandedGoals)) {
+                    state.ui.expandedGoals = new Set(loadedData.goalsUI.expandedGoals);
+                } else {
+                    state.ui.expandedGoals = new Set();
+                }
+                
                 console.log('Goals loaded from Firebase:', state.goals);
+                console.log('UI state loaded:', { expandedGoals: Array.from(state.ui.expandedGoals) });
             } else {
                 console.warn('User document does not exist, creating empty goals array');
                 state.goals = [];
+                if (!state.ui) state.ui = { expandedGoals: new Set() };
             }
         } catch (e) {
             console.error("Error loading goals:", e);
@@ -121,44 +182,140 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         state.goals.forEach(goal => {
-            const goalItem = document.createElement('li');
-            // Apply color-coded classes based on goal state
-            let stateClass = '';
-            if (goal.completed) {
-                stateClass = 'completed'; // Green
-            } else if (goal.status === 'in-progress' || goal.progress > 0) {
-                stateClass = 'in-progress'; // Orange
-            } else {
-                stateClass = 'pending'; // Red
+            // Ensure subgoals array exists and has proper structure
+            if (!Array.isArray(goal.subgoals)) {
+                goal.subgoals = [];
             }
-            goalItem.className = `goal-item ${stateClass}`;
+            // Ensure each subgoal has required fields
+            goal.subgoals = goal.subgoals.map(sg => ({
+                id: sg.id || `sub_${Date.now()}_${Math.random()}`,
+                name: sg.name || 'Unnamed subgoal',
+                completed: !!sg.completed,
+                createdAt: sg.createdAt || Date.now()
+            }));
+
+            // Ensure UI state exists
+            if (!state.ui) state.ui = { expandedGoals: new Set() };
+            if (!state.ui.expandedGoals) state.ui.expandedGoals = new Set();
+            
+            const isExpanded = state.ui.expandedGoals.has(goal.id);
+            const hasSubgoals = isExpanded && (goal.subgoals.length > 0 || isExpanded);
+            const goalItem = document.createElement('li');
+            let stateClass = '';
+            if (goal.completed) stateClass = 'completed';
+            else if (goal.status === 'in-progress' || goal.progress > 0) stateClass = 'in-progress';
+            else stateClass = 'pending';
+
+            goalItem.className = hasSubgoals ? `goal-with-subgoals ${stateClass}` : `goal-item ${stateClass}`;
             goalItem.dataset.id = goal.id;
+            
+            let subgoalsHtml = '';
+            if (goal.subgoals.length > 0) {
+                subgoalsHtml = `
+                    <ul class="sub-goal-list">
+                        ${goal.subgoals.map(sg => `
+                            <li class="sub-goal-item ${sg.completed ? 'completed' : ''}" data-id="${sg.id}" data-parent="${goal.id}">
+                                <div style="display: flex; align-items: center; gap: 0.5em; flex: 1;">
+                                    <span class="${sg.completed ? 'completed-text' : ''}">${sg.name}</span>
+                                </div>
+                                <div class="activity-actions">
+                                    <button class="edit-btn edit-subgoal-btn" data-id="${sg.id}" data-parent="${goal.id}" aria-label="Edit subgoal">
+                                        <i class="fas fa-pen" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="remove-btn delete-subgoal-btn" data-id="${sg.id}" data-parent="${goal.id}" aria-label="Delete subgoal">
+                                        <i class="fas fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+
+            let subAddRowHtml = '';
+            if (isExpanded) {
+                subAddRowHtml = `
+                    <div class="sub-add-row">
+                        <input type="text" class="add-subgoal-input" data-parent="${goal.id}" placeholder="Add subgoal..." />
+                        <button class="add-btn sub-add-btn add-subgoal-btn" data-parent="${goal.id}" aria-label="Add subgoal">&#10148;</button>
+                    </div>
+                `;
+            }
+
             goalItem.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.5em; flex: 1;">
-                    <span>${goal.name}</span>
-                </div>
-                <div class="activity-actions">
-                    <button class="edit-btn edit-goal-btn" data-id="${goal.id}" aria-label="Edit goal">
-                        <i class="fas fa-pen" aria-hidden="true"></i>
-                    </button>
-                    <button class="remove-btn delete-btn" data-id="${goal.id}" aria-label="Delete goal">
-                        <i class="fas fa-trash" aria-hidden="true"></i>
-                    </button>
+                <div class="goal-main">
+                    <div style="display: flex; align-items: center; gap: 0.5em; flex: 1;">
+                        <span class="goal-caret" style="cursor: pointer; user-select: none; padding: 0.25rem;">${isExpanded ? '▼' : '►'}</span>
+                        <span class="goal-name-text" style="cursor: pointer; flex: 1;">${goal.name}</span>
+                    </div>
+                    <div class="activity-actions">
+                        <button class="edit-btn edit-goal-btn" data-id="${goal.id}" aria-label="Edit goal">
+                            <i class="fas fa-pen" aria-hidden="true"></i>
+                        </button>
+                        <button class="remove-btn delete-btn" data-id="${goal.id}" aria-label="Delete goal">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
             `;
+            goalList.appendChild(goalItem);
+            
+            // Append subgoals and add row as child elements inside the goal box
+            if (isExpanded) {
+                if (goal.subgoals.length > 0) {
+                    const subgoalContainer = document.createElement('div');
+                    subgoalContainer.className = 'subgoal-container';
+                    subgoalContainer.dataset.goalId = goal.id;
+                    subgoalContainer.innerHTML = subgoalsHtml;
+                    goalItem.appendChild(subgoalContainer);
+                }
+                
+                const addRowContainer = document.createElement('div');
+                addRowContainer.className = 'subgoal-add-container';
+                addRowContainer.dataset.goalId = goal.id;
+                addRowContainer.innerHTML = subAddRowHtml;
+                goalItem.appendChild(addRowContainer);
+            }
+            
             goalList.appendChild(goalItem);
         });
     };
 
     const handleGoalActions = (e) => {
         const target = e.target;
-        const goalItem = target.closest('.goal-item');
+        
+        // Handle Enter key on add subgoal input
+        if (e.type === 'keyup' && e.key === 'Enter' && target.classList.contains('add-subgoal-input')) {
+            const container = target.closest('.subgoal-add-container');
+            if (container && container.dataset.goalId) {
+                const goal = state.goals.find(g => g.id === container.dataset.goalId);
+                if (goal) {
+                    const name = target.value.trim();
+                    if (name) {
+                        goal.subgoals = goal.subgoals || [];
+                        goal.subgoals.push({ id: `sub_${Date.now()}`, name, completed: false, createdAt: Date.now() });
+                        target.value = '';
+                        enforceGoalCompletionFromSubgoals(goal);
+                        saveState();
+                        renderGoals();
+                    }
+                }
+            }
+            return;
+        }
+        
+        const goalItem = target.closest('.goal-item, .goal-with-subgoals');
         if (goalItem) {
             const goalId = goalItem.dataset.id;
             const goal = state.goals.find(g => g.id === goalId);
             if (goal) {
                 const editBtn = target.closest('.edit-goal-btn');
                 const removeBtn = target.closest('.remove-btn');
+                const expandBtn = target.closest('.expand-btn');
+                const addSubBtn = target.closest('.add-subgoal-btn');
+                const toggleSub = target.closest('.toggle-subgoal');
+                const editSubBtn = target.closest('.edit-subgoal-btn');
+                const deleteSubBtn = target.closest('.delete-subgoal-btn');
 
                 if (editBtn) {
                     e.stopPropagation();
@@ -170,11 +327,80 @@ document.addEventListener('DOMContentLoaded', () => {
                         saveState();
                         renderGoals();
                     });
-                } else if (!target.closest('.activity-actions')) {
-                    // Only toggle completion if not clicking on action buttons
-                    goal.completed = !goal.completed;
+                } else if (target.closest('.goal-caret')) {
+                    // Toggle expand/collapse on clicking the caret
+                    e.stopPropagation();
+                    if (state.ui.expandedGoals.has(goalId)) {
+                        state.ui.expandedGoals.delete(goalId);
+                    } else {
+                        state.ui.expandedGoals.add(goalId);
+                    }
                     saveState();
                     renderGoals();
+                    return;
+                } else if (target.closest('.goal-name-text')) {
+                    // Toggle goal completion on clicking goal name
+                    e.stopPropagation();
+                    if (goal.subgoals && goal.subgoals.length > 0) {
+                        const allDone = goal.subgoals.every(s => !!s.completed);
+                        const next = !allDone;
+                        goal.subgoals.forEach(s => { s.completed = next; });
+                        goal.completed = next;
+                    } else {
+                        goal.completed = !goal.completed;
+                    }
+                    saveState();
+                    renderGoals();
+                    return;
+                } else if (addSubBtn) {
+                    e.stopPropagation();
+                    const container = target.closest('.subgoal-add-container');
+                    const input = container ? container.querySelector('.add-subgoal-input') : null;
+                    if (!input) return;
+                    const name = input.value.trim();
+                    if (!name) return;
+                    goal.subgoals = goal.subgoals || [];
+                    goal.subgoals.push({ id: `sub_${Date.now()}`, name, completed: false, createdAt: Date.now() });
+                    input.value = '';
+                    enforceGoalCompletionFromSubgoals(goal);
+                    saveState();
+                    renderGoals();
+                    return;
+                } else if (target.closest('.sub-goal-item') && !editSubBtn && !deleteSubBtn) {
+                    // Toggle subgoal completion by clicking on the item
+                    e.stopPropagation();
+                    const subItem = target.closest('.sub-goal-item');
+                    const subId = subItem.dataset.id;
+                    const sg = (goal.subgoals || []).find(s => s.id === subId);
+                    if (sg) {
+                        sg.completed = !sg.completed;
+                        enforceGoalCompletionFromSubgoals(goal);
+                        saveState();
+                        renderGoals();
+                    }
+                    return;
+                } else if (editSubBtn) {
+                    e.stopPropagation();
+                    const subId = editSubBtn.dataset.id;
+                    const sg = (goal.subgoals || []).find(s => s.id === subId);
+                    if (sg) {
+                        const newName = prompt('Edit subgoal name', sg.name) || '';
+                        const trimmed = newName.trim();
+                        if (trimmed) {
+                            sg.name = trimmed;
+                            saveState();
+                            renderGoals();
+                        }
+                    }
+                } else if (deleteSubBtn) {
+                    e.stopPropagation();
+                    const subId = deleteSubBtn.dataset.id;
+                    showConfirmation('Delete this subgoal?', () => {
+                        goal.subgoals = (goal.subgoals || []).filter(s => s.id !== subId);
+                        enforceGoalCompletionFromSubgoals(goal);
+                        saveState();
+                        renderGoals();
+                    });
                 }
             }
         }
@@ -199,8 +425,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Update goal name
-        currentEditingGoal.name = newName;
+        // Update draft name
+        currentEditingDraft.name = newName;
+        // Enforce completion rule from subgoals on draft
+        enforceGoalCompletionFromSubgoals(currentEditingDraft);
+
+        // Apply draft to live goal
+        currentEditingGoal.name = currentEditingDraft.name;
+        currentEditingGoal.subgoals = Array.isArray(currentEditingDraft.subgoals) ? currentEditingDraft.subgoals : [];
+        currentEditingGoal.completed = !!currentEditingDraft.completed;
         
         try {
             await saveState();
@@ -286,7 +519,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: `goal_${Date.now()}`, 
                 name, 
                 completed: false,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                subgoals: []
             };
             state.goals.push(newGoal);
             addGoalInput.value = '';
@@ -316,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     addGoalBtn.addEventListener('click', addGoal);
     goalList.addEventListener('click', handleGoalActions);
+    goalList.addEventListener('keyup', handleGoalActions);
 
     confirmNo.addEventListener('click', () => {
         confirmationModal.classList.add('hidden');
@@ -345,6 +580,71 @@ document.addEventListener('DOMContentLoaded', () => {
     editGoalName.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') saveGoalEdit();
     });
+
+    // Add subgoal from modal
+    if (editAddSubgoalBtn) {
+        editAddSubgoalBtn.addEventListener('click', () => {
+            if (!currentEditingDraft || !editAddSubgoalInput) return;
+            const name = editAddSubgoalInput.value.trim();
+            if (!name) return;
+            currentEditingDraft.subgoals = currentEditingDraft.subgoals || [];
+            currentEditingDraft.subgoals.push({ id: `sub_${Date.now()}`, name, completed: false, createdAt: Date.now() });
+            editAddSubgoalInput.value = '';
+            enforceGoalCompletionFromSubgoals(currentEditingDraft);
+            renderEditSubgoals();
+        });
+    }
+
+    if (editAddSubgoalInput) {
+        editAddSubgoalInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                if (!currentEditingDraft) return;
+                const name = editAddSubgoalInput.value.trim();
+                if (!name) return;
+                currentEditingDraft.subgoals = currentEditingDraft.subgoals || [];
+                currentEditingDraft.subgoals.push({ id: `sub_${Date.now()}`, name, completed: false, createdAt: Date.now() });
+                editAddSubgoalInput.value = '';
+                enforceGoalCompletionFromSubgoals(currentEditingDraft);
+                renderEditSubgoals();
+            }
+        });
+    }
+
+    // Delegate actions inside modal subgoal list
+    if (editSubgoalList) {
+        editSubgoalList.addEventListener('click', (e) => {
+            if (!currentEditingDraft) return;
+            const toggle = e.target.closest('.edit-toggle-subgoal');
+            const editBtn = e.target.closest('.edit-subgoal-name-btn');
+            const delBtn = e.target.closest('.delete-subgoal-modal-btn');
+
+            if (toggle) {
+                const subId = toggle.dataset.id;
+                const sg = (currentEditingDraft.subgoals || []).find(s => s.id === subId);
+                if (sg) {
+                    sg.completed = toggle.checked;
+                    enforceGoalCompletionFromSubgoals(currentEditingDraft);
+                    renderEditSubgoals();
+                }
+            } else if (editBtn) {
+                const subId = editBtn.dataset.id;
+                const sg = (currentEditingDraft.subgoals || []).find(s => s.id === subId);
+                if (sg) {
+                    const newName = prompt('Edit subgoal name', sg.name) || '';
+                    const trimmed = newName.trim();
+                    if (trimmed) {
+                        sg.name = trimmed;
+                        renderEditSubgoals();
+                    }
+                }
+            } else if (delBtn) {
+                const subId = delBtn.dataset.id;
+                currentEditingDraft.subgoals = (currentEditingDraft.subgoals || []).filter(s => s.id !== subId);
+                enforceGoalCompletionFromSubgoals(currentEditingDraft);
+                renderEditSubgoals();
+            }
+        });
+    }
 
     setupAuth();
 });

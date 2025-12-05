@@ -89,6 +89,14 @@
         <div class="edit-form">
             <label for="edit-goal-name">Goal Name:</label>
             <input type="text" id="edit-goal-name" placeholder="Goal name">
+        <label>Subgoals:</label>
+        <div id="edit-subgoal-list" class="subgoal-list" style="max-height: 40vh; overflow: auto; padding: 0.25rem;">
+          <!-- Populated by goals.js -->
+        </div>
+        <div class="sub-add-row">
+          <input type="text" id="edit-add-subgoal-input" class="add-subgoal-input" placeholder="Add subgoal...">
+          <button id="edit-add-subgoal-btn" class="add-subgoal-btn" aria-label="Add subgoal"><i class="fas fa-plus"></i></button>
+        </div>
             <div class="modal-buttons">
                 <button id="save-goal-edit" class="btn-confirm">Save</button>
                 <button id="cancel-goal-edit" class="btn-cancel">Cancel</button>

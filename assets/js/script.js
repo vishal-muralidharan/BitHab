@@ -2955,6 +2955,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Redirect to Goals page when a main goal with subgoals is clicked
+        if (goalList) {
+            goalList.addEventListener('click', (e) => {
+                const item = e.target.closest('.goal-item');
+                if (!item) return;
+                const id = item.dataset.id;
+                const goal = (state.goals || []).find(g => g.id === id);
+                if (goal && Array.isArray(goal.subgoals) && goal.subgoals.length > 0) {
+                    window.location.href = 'pages/goals.html?focus=' + encodeURIComponent(id);
+                }
+            });
+        }
+
         if (remindersShowAllBtn) {
             remindersShowAllBtn.setAttribute('aria-controls', 'reminders-preview');
             remindersShowAllBtn.setAttribute('aria-expanded', remindersPreview && remindersPreview.classList.contains('expanded') ? 'true' : 'false');

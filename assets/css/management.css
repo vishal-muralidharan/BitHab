@@ -46,13 +46,34 @@
     background: var(--bg-primary);
     border-radius: var(--radius);
     padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     border-left: 4px solid #ef4444; /* Red for pending (default) */
     box-shadow: var(--shadow);
-    cursor: pointer;
+}
+
+/* Container to group goal with its subgoals */
+.goal-with-subgoals {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    border-left: 4px solid #ef4444;
+    box-shadow: var(--shadow);
+    margin-bottom: 0.5rem;
+}
+
+.goal-with-subgoals.completed {
+    border-left-color: #22c55e;
+}
+
+.goal-with-subgoals.in-progress {
+    border-left-color: #f59e0b;
+}
+
+.goal-with-subgoals .goal-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .goal-item:hover {
@@ -267,7 +288,8 @@
 .activity-actions {
     display: flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.5rem;
+    margin-left: auto;
 }
 
 /* Reminder-specific styles */
@@ -441,8 +463,19 @@
     opacity: 0.8;
 }
 
-.goal-item.completed span {
+.goal-item.completed .goal-name-text {
     text-decoration: line-through;
+}
+
+.goal-with-subgoals.completed .goal-name-text {
+    text-decoration: line-through;
+}
+
+.goal-item.completed .goal-caret,
+.goal-with-subgoals.completed .goal-caret,
+.goal-item.completed .activity-actions,
+.goal-with-subgoals.completed .activity-actions {
+    text-decoration: none;
 }
 
 .goal-item.in-progress {
@@ -521,4 +554,146 @@ body.dark .reminder-item:hover {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* --- Subgoals UI (Goals page) - Activities-style dropdown --- */
+.goal-item .goal-main { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.goal-item .goal-main > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+}
+
+.subgoal-container {
+    margin: 0.75rem 0 0 0;
+    list-style: none;
+}
+
+.subgoal-add-container {
+    margin: 0.5rem 0 0 0;
+    list-style: none;
+}
+
+.sub-goal-list { 
+    list-style: none; 
+    margin: 0; 
+    padding: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.5rem; 
+    width: 100%;
+}
+
+.sub-goal-item { 
+    display: flex; 
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.sub-goal-item::before {
+    content: '•';
+    font-size: 2rem;
+    line-height: 1;
+    margin-left: 1.5rem;
+    margin-right: 0.75rem;
+    color: #ef4444;
+    flex-shrink: 0;
+}
+
+.sub-goal-item.completed::before {
+    color: #22c55e;
+}
+
+.sub-goal-item:hover {
+    background: rgba(var(--accent-primary-rgb, 59, 130, 246), 0.05);
+}
+
+.sub-goal-item > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+}
+
+.sub-goal-item:hover { 
+    background: var(--bg-hover); 
+    transform: translateX(4px);
+}
+
+.sub-goal-item .color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sub-goal-item .completed-text {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.sub-goal-item .activity-actions { 
+    margin-left: auto; 
+    display: inline-flex; 
+    gap: 0.25rem; 
+}
+
+.sub-add-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    margin: 0;
+    padding: 0;
+}
+
+.sub-add-row .add-subgoal-input { 
+    flex: 1; 
+    padding: 0.5rem 0.6rem; 
+    border-radius: 8px; 
+    border: 1px solid var(--bg-hover); 
+    background: var(--bg-primary); 
+    color: var(--text-primary); 
+}
+
+.sub-add-row .add-btn {
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+    opacity: 0.7;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-add-row .add-btn:hover {
+    transform: scale(1.1);
+    opacity: 1;
+    background: var(--bg-hover);
 }
