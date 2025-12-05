@@ -177,11 +177,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderGoals = () => {
         goalList.innerHTML = '';
-        if (state.goals.length === 0) {
+        const completedGoalList = document.getElementById('completed-goal-list');
+        const toggleCompletedBtn = document.getElementById('toggle-completed-goals');
+        
+        if (completedGoalList) {
+            completedGoalList.innerHTML = '';
+        }
+        
+        const activeGoals = state.goals.filter(g => !g.completed);
+        const completedGoals = state.goals.filter(g => g.completed);
+        
+        // Update toggle button visibility
+        if (toggleCompletedBtn) {
+            toggleCompletedBtn.style.display = completedGoals.length > 0 ? 'flex' : 'none';
+        }
+        
+        if (activeGoals.length === 0 && completedGoals.length === 0) {
             goalList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">Add a goal to get started.</p>';
             return;
         }
-        state.goals.forEach(goal => {
+        
+        if (activeGoals.length === 0) {
+            goalList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">All goals completed! 🎉</p>';
+        }
+        
+        // Render active goals
+        activeGoals.forEach(goal => {
+            renderGoalItem(goal, goalList);
+        });
+        
+        // Render completed goals
+        if (completedGoalList) {
+            completedGoals.forEach(goal => {
+                renderGoalItem(goal, completedGoalList);
+            });
+        }
+    };
+    
+    const renderGoalItem = (goal, targetList) => {
             // Ensure subgoals array exists and has proper structure
             if (!Array.isArray(goal.subgoals)) {
                 goal.subgoals = [];
@@ -258,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            goalList.appendChild(goalItem);
             
             // Append subgoals and add row as child elements inside the goal box
             if (isExpanded) {
@@ -277,8 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 goalItem.appendChild(addRowContainer);
             }
             
-            goalList.appendChild(goalItem);
-        });
+            targetList.appendChild(goalItem);
     };
 
     const handleGoalActions = (e) => {
@@ -341,6 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (target.closest('.goal-name-text')) {
                     // Toggle goal completion on clicking goal name
                     e.stopPropagation();
+                    const wasCompleted = goal.completed;
                     if (goal.subgoals && goal.subgoals.length > 0) {
                         const allDone = goal.subgoals.every(s => !!s.completed);
                         const next = !allDone;
@@ -349,8 +381,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         goal.completed = !goal.completed;
                     }
-                    saveState();
-                    renderGoals();
+                    
+                    // Add animation when marking complete/incomplete
+                    if (wasCompleted !== goal.completed) {
+                        goalItem.classList.add('completing');
+                        setTimeout(() => {
+                            saveState();
+                            renderGoals();
+                        }, 300);
+                    } else {
+                        saveState();
+                        renderGoals();
+                    }
                     return;
                 } else if (addSubBtn) {
                     e.stopPropagation();
@@ -551,6 +593,13 @@ document.addEventListener('DOMContentLoaded', () => {
     addGoalBtn.addEventListener('click', addGoal);
     goalList.addEventListener('click', handleGoalActions);
     goalList.addEventListener('keyup', handleGoalActions);
+    
+    // Add event listeners for completed goals list
+    const completedGoalList = document.getElementById('completed-goal-list');
+    if (completedGoalList) {
+        completedGoalList.addEventListener('click', handleGoalActions);
+        completedGoalList.addEventListener('keyup', handleGoalActions);
+    }
 
     confirmNo.addEventListener('click', () => {
         confirmationModal.classList.add('hidden');
@@ -642,6 +691,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentEditingDraft.subgoals = (currentEditingDraft.subgoals || []).filter(s => s.id !== subId);
                 enforceGoalCompletionFromSubgoals(currentEditingDraft);
                 renderEditSubgoals();
+            }
+        });
+    }
+    
+    // Toggle completed goals section
+    const toggleCompletedBtn = document.getElementById('toggle-completed-goals');
+    if (toggleCompletedBtn && completedGoalList) {
+        toggleCompletedBtn.addEventListener('click', () => {
+            const isExpanded = completedGoalList.classList.contains('expanded');
+            if (isExpanded) {
+                completedGoalList.classList.remove('expanded');
+            } else {
+                completedGoalList.classList.add('expanded');
+            }
+            const icon = toggleCompletedBtn.querySelector('.toggle-icon');
+            if (icon) {
+                icon.textContent = isExpanded ? '▼' : '▲';
             }
         });
     }

@@ -975,10 +975,27 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Rendering goals:', state.goals.length, 'total goals');
         goalList.innerHTML = '';
         
+        // Filter active and completed goals
+        const activeGoals = state.goals.filter(g => !g.completed);
+        const completedGoals = state.goals.filter(g => g.completed);
+        
+        // Check if list is expanded
+        const isExpanded = goalList.classList.contains('expanded');
+        
+        // If no active goals but have completed goals, show message
+        if (activeGoals.length === 0 && completedGoals.length > 0) {
+            goalList.innerHTML = '<p style="padding: 0 1rem; opacity: 0.7;">All goals completed! 🎉</p>';
+            const showAllBtn = document.getElementById('goals-show-all');
+            if (showAllBtn) {
+                showAllBtn.style.display = 'none';
+            }
+            return;
+        }
+        
         // Render goals with most recently added first
-        if (state.goals.length > 0) {
+        if (activeGoals.length > 0) {
             // Sort goals by creation date (most recent first) if available, otherwise by order
-            const sortedGoals = state.goals.slice().sort((a, b) => {
+            const sortedGoals = activeGoals.slice().sort((a, b) => {
                 if (a.createdAt && b.createdAt) {
                     return new Date(b.createdAt) - new Date(a.createdAt);
                 }
@@ -1010,11 +1027,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 goalList.appendChild(goalItem);
             });
+            
+            // Show completed goals when expanded
+            if (isExpanded && completedGoals.length > 0) {
+                completedGoals.forEach(goal => {
+                    const goalItem = document.createElement('li');
+                    goalItem.className = 'goal-item completed';
+                    goalItem.dataset.id = goal.id;
+                    goalItem.innerHTML = `
+                        <span>${goal.name}</span>
+                    `;
+                    goalList.appendChild(goalItem);
+                });
+            }
 
             // Show/hide the show all button based on number of goals
             const showAllBtn = document.getElementById('goals-show-all');
             if (showAllBtn) {
-                if (state.goals.length > 4) {
+                const totalToShow = activeGoals.length + (isExpanded ? completedGoals.length : 0);
+                if (activeGoals.length > 4 || completedGoals.length > 0) {
                     showAllBtn.style.display = 'flex';
                 } else {
                     showAllBtn.style.display = 'none';
@@ -2371,9 +2402,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 goal.completed = !goal.completed;
-                db.collection('users').doc(userId).set({ goals: state.goals }, { merge: true });
-                renderGoals();
-                renderReminders();
+                
+                // Add animation class before removing
+                if (goal.completed) {
+                    goalItem.classList.add('completing');
+                    setTimeout(() => {
+                        db.collection('users').doc(userId).set({ goals: state.goals }, { merge: true });
+                        renderGoals();
+                        renderReminders();
+                    }, 300);
+                } else {
+                    db.collection('users').doc(userId).set({ goals: state.goals }, { merge: true });
+                    renderGoals();
+                    renderReminders();
+                }
             }
         }
     };
