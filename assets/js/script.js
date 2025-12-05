@@ -2366,6 +2366,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const goalId = goalItem.dataset.id;
             const goal = state.goals.find(g => g.id === goalId);
             if (goal) {
+                // Don't toggle if goal has subgoals - redirect instead
+                if (goal.subgoals && goal.subgoals.length > 0) {
+                    return;
+                }
                 goal.completed = !goal.completed;
                 db.collection('users').doc(userId).set({ goals: state.goals }, { merge: true });
                 renderGoals();
@@ -2963,6 +2967,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = item.dataset.id;
                 const goal = (state.goals || []).find(g => g.id === id);
                 if (goal && Array.isArray(goal.subgoals) && goal.subgoals.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     window.location.href = 'pages/goals.html?focus=' + encodeURIComponent(id);
                 }
             });
