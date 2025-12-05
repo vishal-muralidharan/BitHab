@@ -235,10 +235,8 @@ class NotesManager {
                     e.stopPropagation();
                     this.openEditModal(editBtn.dataset.date, 'daily');
                 } else if (noteCard) {
-                    const cardEditBtn = noteCard.querySelector('.edit-note-btn');
-                    if (cardEditBtn) {
-                        this.openEditModal(cardEditBtn.dataset.date, 'daily');
-                    }
+                    const date = noteCard.dataset.date || (noteCard.querySelector('.edit-note-btn')?.dataset.date);
+                    if (date) this.openViewNote(date, 'daily');
                 }
             };
             dailyNotesList.addEventListener('click', this.handleDailyNoteClick);
@@ -259,14 +257,60 @@ class NotesManager {
                     e.stopPropagation();
                     this.openEditModal(editBtn.dataset.id, 'general');
                 } else if (noteCard) {
-                    const cardEditBtn = noteCard.querySelector('.edit-general-note-btn');
-                    if (cardEditBtn) {
-                        this.openEditModal(cardEditBtn.dataset.id, 'general');
-                    }
+                    const id = noteCard.dataset.id || (noteCard.querySelector('.edit-general-note-btn')?.dataset.id);
+                    if (id) this.openViewNote(id, 'general');
                 }
             };
             generalNotesList.addEventListener('click', this.handleGeneralNoteClick);
         }
+    }
+
+    openViewNote(identifier, type) {
+        // Build a viewer with proper classes and vertical scrollbars
+        const overlay = document.createElement('div');
+        overlay.className = 'note-viewer-overlay';
+        overlay.addEventListener('click', (e)=>{ if(e.target===overlay) document.body.removeChild(overlay); });
+
+        const modal = document.createElement('div');
+        modal.className = 'note-viewer-modal';
+
+        const header = document.createElement('div');
+        header.className = 'note-viewer-header';
+        const title = document.createElement('h3');
+        title.className = 'note-viewer-title';
+        title.textContent = type === 'daily' ? (identifier) : (this.state.generalNotes[identifier]?.title || 'Note');
+        const actions = document.createElement('div');
+        actions.className = 'note-viewer-actions';
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.className = 'pill note-viewer-btn';
+        editBtn.addEventListener('click', ()=>{
+            document.body.removeChild(overlay);
+            if (type==='daily') this.openEditModal(identifier, 'daily'); else this.openEditModal(identifier, 'general');
+        });
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.className = 'pill note-viewer-btn';
+        closeBtn.addEventListener('click', ()=>{ document.body.removeChild(overlay); });
+        actions.appendChild(editBtn);
+        actions.appendChild(closeBtn);
+        header.appendChild(title);
+        header.appendChild(actions);
+
+        const body = document.createElement('div');
+        body.className = 'note-viewer-body';
+        let content = '';
+        if (type==='daily') {
+            content = this.state.dailyNotes[identifier] || '';
+        } else {
+            content = this.state.generalNotes[identifier]?.content || this.state.generalNotes[identifier]?.text || '';
+        }
+        body.textContent = content || 'Empty note';
+
+        modal.appendChild(header);
+        modal.appendChild(body);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
     }
 
     switchNoteType(type) {

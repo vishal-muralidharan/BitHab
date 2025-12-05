@@ -181,6 +181,14 @@ Since BitHab is 100% client-side, deployment is straightforward:
 2. Upload the repository contents to any static host (Firebase Hosting, Netlify, Vercel, GitHub Pages, etc.).
 3. Set the correct Firebase credentials in production and verify domain authorization in Firebase Auth.
 
+## 🤝 Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/my-feature`.
+3. Commit with descriptive messages following conventional style where possible.
+4. Submit a pull request and describe the change, screenshots welcome.
+
+
 ## 🙏 Acknowledgements
 
 - Built atop Firebase for rapid backend services.

@@ -1,3 +1,76 @@
+/* Note Viewer Overlay and Modal */
+.note-viewer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(2px);
+    z-index: 3000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 10vh 1rem 2rem;
+}
+
+.note-viewer-modal {
+    width: min(720px, 92vw);
+    max-height: 70vh;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* contain rounded corners */
+}
+
+.note-viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.note-viewer-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.note-viewer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.note-viewer-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.note-viewer-body {
+    padding: 1rem;
+    overflow-y: auto;     /* vertical internal scrollbars */
+    overflow-x: hidden;   /* prevent horizontal scrollbar */
+    max-height: calc(70vh - 56px);
+    white-space: pre-wrap; /* preserve line breaks */
+    word-break: break-word; /* wrap long words */
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+/* Scrollbar aesthetics (webkit) */
+.note-viewer-body::-webkit-scrollbar {
+    width: 6px;
+}
+.note-viewer-body::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+.note-viewer-body::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
 /* Notes Page Styles */
 
 .notes-container {
