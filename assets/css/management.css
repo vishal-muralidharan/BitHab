@@ -56,6 +56,7 @@
     background: var(--bg-primary);
     border-radius: var(--radius);
     padding: 1rem;
+    transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     border-left: 4px solid #ef4444;
     box-shadow: var(--shadow);
     margin-bottom: 0.5rem;
@@ -74,6 +75,12 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
+}
+
+.goal-with-subgoals:hover {
+    background: var(--bg-hover);
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 .goal-item:hover {
@@ -568,6 +575,20 @@ body.dark .reminder-item:hover {
 }
 
 .goal-item .goal-main > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+}
+
+.goal-item .goal-name-text,
+.goal-with-subgoals .goal-name-text {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.goal-with-subgoals .goal-main > div:first-child {
     display: flex;
     align-items: center;
     gap: 0.5em;
