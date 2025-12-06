@@ -163,14 +163,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             ${prefix}
             <div class="item-content">
                 <input type="text" class="item-text-input ${item.completed ? 'completed' : ''}" value="${item.text}" data-item-id="${item.id}" />
-                <div class="item-actions">
-                    <button class="item-action-btn add-sub" data-item-id="${item.id}" title="Add sub-item">
-                        <i class="fas fa-plus"></i> Sub
-                    </button>
-                    <button class="item-action-btn delete" data-item-id="${item.id}" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+                <button class="item-action-btn delete" data-item-id="${item.id}" title="Delete" style="margin-left: auto;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="sub-add-row" data-parent-id="${item.id}" style="display: flex; align-items: center; gap: 0.5rem; margin-left: 2rem; margin-top: 0.5rem;">
+                <input type="text" class="sub-add-input" placeholder="Add sub-item..." style="flex: 1;" />
             </div>
         `;
 
@@ -197,15 +195,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Actions
-        itemEl.querySelector('.add-sub').addEventListener('click', (e) => {
-            e.stopPropagation();
-            addSubItem(item.id);
-        });
-
         itemEl.querySelector('.delete').addEventListener('click', (e) => {
             e.stopPropagation();
             deleteItem(item.id);
         });
+
+        const subAddInput = itemEl.querySelector('.sub-add-input');
+        if (subAddInput) {
+            subAddInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    const text = subAddInput.value.trim();
+                    if (text) {
+                        // Ensure subItems array exists
+                        const parent = currentList.items.find(i => i.id === item.id);
+                        if (parent) {
+                            if (!parent.subItems) parent.subItems = [];
+                            parent.subItems.push({
+                                id: `sub_${Date.now()}_${Math.random()}`,
+                                text,
+                                completed: false
+                            });
+                            subAddInput.value = '';
+                            renderListItems();
+                        }
+                    }
+                }
+            });
+        }
 
         return itemEl;
     };
