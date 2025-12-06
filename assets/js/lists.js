@@ -1,14 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const listsGrid = document.getElementById('lists-grid');
     const addListBtn = document.getElementById('add-list-btn');
-    const listEditorModal = document.getElementById('list-editor-modal');
-    const listTitleInput = document.getElementById('list-title-input');
-    const listItemsContainer = document.getElementById('list-items-container');
-    const addItemInput = document.getElementById('add-item-input');
-    const addItemBtn = document.getElementById('add-item-btn');
-    const saveListBtn = document.getElementById('save-list-btn');
-    const cancelListBtn = document.getElementById('cancel-list-btn');
-    const deleteListBtn = document.getElementById('delete-list-btn');
     const confirmationModal = document.getElementById('confirmation-modal');
     const confirmationMessage = document.getElementById('confirmation-message');
     const confirmYes = document.getElementById('confirm-yes');
@@ -17,9 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let state = {
         lists: []
     };
-    let currentList = null;
-    let currentListType = 'checklist';
-    let draggedItem = null;
     let confirmationAction = null;
 
     const { setupAuth, waitForUserId } = window.AuthManager;
@@ -66,6 +55,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return icons[type] || 'fa-list';
     };
 
+    const getListTypeName = (type) => {
+        const names = {
+            checklist: 'Checklist',
+            todo: 'Todo List',
+            numbered: 'Numbered',
+            bulleted: 'Bulleted'
+        };
+        return names[type] || 'List';
+    };
+
     const renderLists = () => {
         if (state.lists.length === 0) {
             listsGrid.innerHTML = `
@@ -80,396 +79,356 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         listsGrid.innerHTML = '';
         state.lists.forEach(list => {
-            const card = document.createElement('div');
-            card.className = 'list-card';
-            card.dataset.listId = list.id;
-
-            const completedCount = list.items.filter(item => item.completed).length;
-            const totalCount = list.items.length;
-            const previewItems = list.items.slice(0, 3);
-
-            card.innerHTML = `
-                <div class="list-card-header">
-                    <i class="fas ${getListIcon(list.type)} list-icon"></i>
-                    <div class="list-card-title">${list.title || 'Untitled List'}</div>
-                </div>
-                <div class="list-card-body">
-                    ${previewItems.map((item, index) => {
-                        const prefix = list.type === 'numbered' ? `${index + 1}.` :
-                                     list.type === 'bulleted' ? '•' : '';
-                        return `
-                            <div class="list-preview-item ${item.completed ? 'completed' : ''}">
-                                ${list.type === 'checklist' || list.type === 'todo' ? 
-                                    `<i class="fas ${item.completed ? 'fa-check-square' : 'fa-square'}" style="color: ${item.completed ? 'var(--accent-primary)' : 'var(--text-secondary)'}"></i>` : 
-                                    `<span style="margin-right: 0.5rem;">${prefix}</span>`
-                                }
-                                <span>${item.text}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                    ${list.items.length > 3 ? `<div class="list-preview-item" style="opacity: 0.5;">+ ${list.items.length - 3} more</div>` : ''}
-                </div>
-                <div class="list-card-footer">
-                    <div class="list-stats">
-                        <span><i class="fas fa-list"></i> ${totalCount} items</span>
-                        ${(list.type === 'checklist' || list.type === 'todo') ? `<span><i class="fas fa-check"></i> ${completedCount}/${totalCount}</span>` : ''}
-                    </div>
-                </div>
-            `;
-
-            card.addEventListener('click', () => openList(list.id));
+            const card = createListCard(list);
             listsGrid.appendChild(card);
         });
     };
 
-    const renderListItems = () => {
-        if (!currentList) return;
+    const createListCard = (list) => {
+        const card = document.createElement('div');
+        card.className = 'list-card';
+        card.dataset.listId = list.id;
 
-        listItemsContainer.innerHTML = '';
-        currentList.items.forEach((item, index) => {
-            const itemEl = createListItemElement(item, index);
-            listItemsContainer.appendChild(itemEl);
-
-            // Render sub-items if any
-            if (item.subItems && item.subItems.length > 0) {
-                const subContainer = document.createElement('div');
-                subContainer.className = 'sub-items-container';
-                item.subItems.forEach(subItem => {
-                    const subEl = createSubItemElement(subItem, item.id);
-                    subContainer.appendChild(subEl);
-                });
-                itemEl.querySelector('.item-content').appendChild(subContainer);
-            }
-        });
-    };
-
-    const createListItemElement = (item, index) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'list-item';
-        itemEl.dataset.itemId = item.id;
-        itemEl.draggable = true;
-
-        let prefix = '';
-        if (currentListType === 'numbered') {
-            prefix = `<span class="item-number">${index + 1}.</span>`;
-        } else if (currentListType === 'bulleted') {
-            prefix = `<span class="item-bullet">•</span>`;
-        } else if (currentListType === 'checklist' || currentListType === 'todo') {
-            prefix = `<i class="fas ${item.completed ? 'fa-check-square' : 'fa-square'} item-checkbox ${item.completed ? 'checked' : ''}" data-item-id="${item.id}"></i>`;
-        }
-
-        itemEl.innerHTML = `
-            <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
-            ${prefix}
-            <div class="item-content">
-                <input type="text" class="item-text-input ${item.completed ? 'completed' : ''}" value="${item.text}" data-item-id="${item.id}" />
-                <button class="item-action-btn delete" data-item-id="${item.id}" title="Delete" style="margin-left: auto;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="sub-add-row" data-parent-id="${item.id}" style="display: flex; align-items: center; gap: 0.5rem; margin-left: 2rem; margin-top: 0.5rem;">
-                <input type="text" class="sub-add-input" placeholder="Add sub-item..." style="flex: 1;" />
+        // Header with icon, title, and delete
+        const header = document.createElement('div');
+        header.className = 'list-card-header-top';
+        
+        const iconDropdown = document.createElement('div');
+        iconDropdown.className = 'list-type-dropdown';
+        iconDropdown.innerHTML = `
+            <i class="fas ${getListIcon(list.type)} list-icon"></i>
+            <div class="list-type-dropdown-content">
+                <div class="list-type-option" data-type="checklist">
+                    <i class="fas fa-check-square"></i>
+                    <span>Checklist</span>
+                </div>
+                <div class="list-type-option" data-type="todo">
+                    <i class="fas fa-list-check"></i>
+                    <span>Todo List</span>
+                </div>
+                <div class="list-type-option" data-type="numbered">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Numbered</span>
+                </div>
+                <div class="list-type-option" data-type="bulleted">
+                    <i class="fas fa-list-ul"></i>
+                    <span>Bulleted</span>
+                </div>
             </div>
         `;
 
-        // Drag events
-        itemEl.addEventListener('dragstart', handleDragStart);
-        itemEl.addEventListener('dragend', handleDragEnd);
-        itemEl.addEventListener('dragover', handleDragOver);
-        itemEl.addEventListener('drop', handleDrop);
-
-        // Checkbox toggle
-        const checkbox = itemEl.querySelector('.item-checkbox');
-        if (checkbox) {
-            checkbox.addEventListener('click', () => toggleItemCompletion(item.id));
-        }
-
-        // Text input
-        const textInput = itemEl.querySelector('.item-text-input');
-        textInput.addEventListener('blur', () => updateItemText(item.id, textInput.value));
-        textInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') {
-                textInput.blur();
-                addNewItem();
-            }
-        });
-
-        // Actions
-        itemEl.querySelector('.delete').addEventListener('click', (e) => {
+        const icon = iconDropdown.querySelector('.list-icon');
+        const dropdown = iconDropdown.querySelector('.list-type-dropdown-content');
+        
+        icon.addEventListener('click', (e) => {
             e.stopPropagation();
-            deleteItem(item.id);
+            dropdown.classList.toggle('show');
         });
 
-        const subAddInput = itemEl.querySelector('.sub-add-input');
-        if (subAddInput) {
-            subAddInput.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter') {
-                    const text = subAddInput.value.trim();
-                    if (text) {
-                        // Ensure subItems array exists
-                        const parent = currentList.items.find(i => i.id === item.id);
-                        if (parent) {
-                            if (!parent.subItems) parent.subItems = [];
-                            parent.subItems.push({
-                                id: `sub_${Date.now()}_${Math.random()}`,
-                                text,
-                                completed: false
-                            });
-                            subAddInput.value = '';
-                            renderListItems();
-                        }
-                    }
-                }
+        iconDropdown.querySelectorAll('.list-type-option').forEach(option => {
+            option.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const newType = option.dataset.type;
+                list.type = newType;
+                icon.className = `fas ${getListIcon(newType)} list-icon`;
+                dropdown.classList.remove('show');
+                await saveState();
+                renderLists();
             });
-        }
+        });
 
-        return itemEl;
+        const titleInput = document.createElement('input');
+        titleInput.className = 'list-card-title';
+        titleInput.value = list.title || '';
+        titleInput.placeholder = 'List title...';
+        titleInput.addEventListener('blur', async () => {
+            list.title = titleInput.value.trim() || 'Untitled List';
+            await saveState();
+        });
+        titleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                titleInput.blur();
+            }
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'list-card-delete';
+        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+        deleteBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            showConfirmation(`Delete list "${list.title}"?`, async () => {
+                state.lists = state.lists.filter(l => l.id !== list.id);
+                await saveState();
+                renderLists();
+            });
+        });
+
+        header.appendChild(iconDropdown);
+        header.appendChild(titleInput);
+        header.appendChild(deleteBtn);
+
+        // Body with items
+        const body = document.createElement('div');
+        body.className = 'list-card-body';
+
+        list.items.forEach((item, index) => {
+            const itemRow = createItemRow(item, index, list);
+            body.appendChild(itemRow);
+
+            // Add sub-items
+            if (item.subItems && item.subItems.length > 0) {
+                item.subItems.forEach(subItem => {
+                    const subRow = createSubItemRow(subItem, item, list);
+                    body.appendChild(subRow);
+                });
+            }
+
+            // Add sub-item input
+            const subAddRow = createSubAddRow(item, list);
+            body.appendChild(subAddRow);
+        });
+
+        // Add item row
+        const addItemRow = createAddItemRow(list);
+        body.appendChild(addItemRow);
+
+        card.appendChild(header);
+        card.appendChild(body);
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!iconDropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        return card;
     };
 
-    const createSubItemElement = (subItem, parentId) => {
-        const subEl = document.createElement('div');
-        subEl.className = 'sub-item';
-        subEl.dataset.subItemId = subItem.id;
+    const createItemRow = (item, index, list) => {
+        const row = document.createElement('div');
+        row.className = 'list-preview-item';
+        if (item.completed && list.type === 'checklist') row.classList.add('completed');
 
         let prefix = '';
-        if (currentListType === 'checklist' || currentListType === 'todo') {
-            prefix = `<i class="fas ${subItem.completed ? 'fa-check-square' : 'fa-square'} item-checkbox ${subItem.completed ? 'checked' : ''}" style="cursor: pointer;"></i>`;
-        } else {
-            prefix = `<span style="color: var(--accent-primary);">◦</span>`;
-        }
-
-        subEl.innerHTML = `
-            ${prefix}
-            <input type="text" class="item-text-input ${subItem.completed ? 'completed' : ''}" value="${subItem.text}" style="font-size: 0.9rem;" />
-            <button class="item-action-btn delete" style="margin-left: auto;">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-
-        const checkbox = subEl.querySelector('.item-checkbox');
-        if (checkbox) {
-            checkbox.addEventListener('click', () => toggleSubItemCompletion(parentId, subItem.id));
-        }
-
-        const textInput = subEl.querySelector('.item-text-input');
-        textInput.addEventListener('blur', () => updateSubItemText(parentId, subItem.id, textInput.value));
-
-        subEl.querySelector('.delete').addEventListener('click', () => deleteSubItem(parentId, subItem.id));
-
-        return subEl;
-    };
-
-    const handleDragStart = (e) => {
-        draggedItem = e.currentTarget;
-        e.currentTarget.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-    };
-
-    const handleDragEnd = (e) => {
-        e.currentTarget.classList.remove('dragging');
-        document.querySelectorAll('.list-item').forEach(item => {
-            item.classList.remove('drag-over');
-        });
-        draggedItem = null;
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        const target = e.currentTarget;
-        if (target !== draggedItem && target.classList.contains('list-item')) {
-            target.classList.add('drag-over');
-        }
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        const target = e.currentTarget;
-        target.classList.remove('drag-over');
-
-        if (draggedItem && target !== draggedItem) {
-            const draggedId = draggedItem.dataset.itemId;
-            const targetId = target.dataset.itemId;
-
-            const draggedIndex = currentList.items.findIndex(item => item.id === draggedId);
-            const targetIndex = currentList.items.findIndex(item => item.id === targetId);
-
-            if (draggedIndex !== -1 && targetIndex !== -1) {
-                const [movedItem] = currentList.items.splice(draggedIndex, 1);
-                currentList.items.splice(targetIndex, 0, movedItem);
-                renderListItems();
-            }
-        }
-    };
-
-    const toggleItemCompletion = (itemId) => {
-        const item = currentList.items.find(i => i.id === itemId);
-        if (item) {
-            item.completed = !item.completed;
-            renderListItems();
-        }
-    };
-
-    const toggleSubItemCompletion = (parentId, subItemId) => {
-        const item = currentList.items.find(i => i.id === parentId);
-        if (item && item.subItems) {
-            const subItem = item.subItems.find(si => si.id === subItemId);
-            if (subItem) {
-                subItem.completed = !subItem.completed;
-                renderListItems();
-            }
-        }
-    };
-
-    const updateItemText = (itemId, text) => {
-        const item = currentList.items.find(i => i.id === itemId);
-        if (item) {
-            item.text = text.trim();
-        }
-    };
-
-    const updateSubItemText = (parentId, subItemId, text) => {
-        const item = currentList.items.find(i => i.id === parentId);
-        if (item && item.subItems) {
-            const subItem = item.subItems.find(si => si.id === subItemId);
-            if (subItem) {
-                subItem.text = text.trim();
-            }
-        }
-    };
-
-    const deleteItem = (itemId) => {
-        currentList.items = currentList.items.filter(i => i.id !== itemId);
-        renderListItems();
-    };
-
-    const addSubItem = (parentId) => {
-        const item = currentList.items.find(i => i.id === parentId);
-        if (item) {
-            if (!item.subItems) item.subItems = [];
-            item.subItems.push({
-                id: `sub_${Date.now()}_${Math.random()}`,
-                text: 'New sub-item',
-                completed: false
+        if (list.type === 'numbered') {
+            prefix = `<span style="font-weight: 600; color: var(--text-secondary); min-width: 1.5rem; flex-shrink: 0;">${index + 1}.</span>`;
+        } else if (list.type === 'bulleted') {
+            prefix = `<span style="color: var(--accent-primary); font-weight: bold; flex-shrink: 0;">•</span>`;
+        } else if (list.type === 'todo') {
+            prefix = `<span style="color: var(--accent-primary); font-weight: bold; flex-shrink: 0; min-width: 1.5rem;">☐</span>`;
+        } else if (list.type === 'checklist') {
+            const checkbox = document.createElement('i');
+            checkbox.className = `fas ${item.completed ? 'fa-check-square' : 'fa-square'} preview-checkbox`;
+            checkbox.style.color = item.completed ? 'var(--accent-primary)' : 'var(--text-secondary)';
+            checkbox.style.cursor = 'pointer';
+            checkbox.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                item.completed = !item.completed;
+                await saveState();
+                renderLists();
             });
-            renderListItems();
+            row.appendChild(checkbox);
         }
-    };
 
-    const deleteSubItem = (parentId, subItemId) => {
-        const item = currentList.items.find(i => i.id === parentId);
-        if (item && item.subItems) {
-            item.subItems = item.subItems.filter(si => si.id !== subItemId);
-            renderListItems();
+        if (prefix) {
+            row.innerHTML += prefix;
         }
-    };
 
-    const addNewItem = () => {
-        const text = addItemInput.value.trim();
-        if (!text) return;
-
-        currentList.items.push({
-            id: `item_${Date.now()}_${Math.random()}`,
-            text: text,
-            completed: false,
-            subItems: []
+        const input = document.createElement('input');
+        input.value = item.text;
+        if (item.completed && list.type === 'checklist') input.classList.add('completed');
+        input.addEventListener('blur', async () => {
+            item.text = input.value.trim();
+            if (!item.text) {
+                list.items = list.items.filter(i => i.id !== item.id);
+            }
+            await saveState();
+            renderLists();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
         });
 
-        addItemInput.value = '';
-        renderListItems();
-    };
-
-    const openList = (listId) => {
-        currentList = state.lists.find(l => l.id === listId);
-        if (!currentList) return;
-
-        currentListType = currentList.type;
-        listTitleInput.value = currentList.title;
-
-        // Update type selector
-        document.querySelectorAll('.list-type-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.type === currentListType);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'item-delete';
+        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+        deleteBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            list.items = list.items.filter(i => i.id !== item.id);
+            await saveState();
+            renderLists();
         });
 
-        renderListItems();
-        deleteListBtn.style.display = 'block';
-        listEditorModal.classList.remove('hidden');
+        row.appendChild(input);
+        row.appendChild(deleteBtn);
+
+        return row;
     };
 
-    const createNewList = () => {
-        currentList = {
+    const createSubItemRow = (subItem, parentItem, list) => {
+        const row = document.createElement('div');
+        row.className = 'sub-item-row';
+        if (subItem.completed && list.type === 'checklist') row.classList.add('completed');
+
+        if (list.type === 'checklist') {
+            const checkbox = document.createElement('i');
+            checkbox.className = `fas ${subItem.completed ? 'fa-check-square' : 'fa-square'} preview-checkbox`;
+            checkbox.style.color = subItem.completed ? 'var(--accent-primary)' : 'var(--text-secondary)';
+            checkbox.style.cursor = 'pointer';
+            checkbox.style.flexShrink = '0';
+            checkbox.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                subItem.completed = !subItem.completed;
+                await saveState();
+                renderLists();
+            });
+            row.appendChild(checkbox);
+        } else if (list.type === 'todo') {
+            const bullet = document.createElement('span');
+            bullet.textContent = '☐';
+            bullet.style.color = 'var(--accent-primary)';
+            bullet.style.flexShrink = '0';
+            row.appendChild(bullet);
+        } else {
+            const bullet = document.createElement('span');
+            bullet.textContent = '◦';
+            bullet.style.color = 'var(--accent-primary)';
+            bullet.style.flexShrink = '0';
+            row.appendChild(bullet);
+        }
+
+        const input = document.createElement('input');
+        input.value = subItem.text;
+        if (subItem.completed && list.type === 'checklist') input.classList.add('completed');
+        input.addEventListener('blur', async () => {
+            subItem.text = input.value.trim();
+            if (!subItem.text) {
+                parentItem.subItems = parentItem.subItems.filter(si => si.id !== subItem.id);
+            }
+            await saveState();
+            renderLists();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'item-delete';
+        deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+        deleteBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            parentItem.subItems = parentItem.subItems.filter(si => si.id !== subItem.id);
+            await saveState();
+            renderLists();
+        });
+
+        row.appendChild(input);
+        row.appendChild(deleteBtn);
+
+        return row;
+    };
+
+    const createSubAddRow = (parentItem, list) => {
+        const row = document.createElement('div');
+        row.className = 'sub-add-row-inline';
+
+        const placeholder = document.createElement('span');
+        placeholder.style.color = 'var(--text-secondary)';
+        placeholder.style.fontSize = '0.85rem';
+        placeholder.style.flexShrink = '0';
+        placeholder.textContent = '◦';
+        row.appendChild(placeholder);
+
+        const input = document.createElement('input');
+        input.placeholder = 'Add sub-item...';
+        input.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const text = input.value.trim();
+                if (text) {
+                    if (!parentItem.subItems) parentItem.subItems = [];
+                    parentItem.subItems.push({
+                        id: `sub_${Date.now()}_${Math.random()}`,
+                        text,
+                        completed: false
+                    });
+                    await saveState();
+                    renderLists();
+                }
+            }
+        });
+
+        row.appendChild(input);
+
+        return row;
+    };
+
+    const createAddItemRow = (list) => {
+        const row = document.createElement('div');
+        row.className = 'list-card-add-item';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-plus add-icon';
+        row.appendChild(icon);
+
+        const input = document.createElement('input');
+        input.placeholder = 'Add item...';
+        input.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const text = input.value.trim();
+                if (text) {
+                    list.items.push({
+                        id: `item_${Date.now()}_${Math.random()}`,
+                        text,
+                        completed: false,
+                        subItems: []
+                    });
+                    await saveState();
+                    renderLists();
+                }
+            }
+        });
+
+        row.appendChild(input);
+
+        return row;
+    };
+
+    const createNewList = async () => {
+        const newList = {
             id: `list_${Date.now()}`,
-            title: '',
+            title: 'New List',
             type: 'checklist',
             items: [],
             createdAt: Date.now()
         };
-        currentListType = 'checklist';
-        listTitleInput.value = '';
-        listItemsContainer.innerHTML = '';
-        addItemInput.value = '';
-
-        document.querySelectorAll('.list-type-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.type === 'checklist');
-        });
-
-        deleteListBtn.style.display = 'none';
-        listEditorModal.classList.remove('hidden');
-    };
-
-    const saveCurrentList = async () => {
-        if (!currentList) return;
-
-        currentList.title = listTitleInput.value.trim() || 'Untitled List';
-        currentList.type = currentListType;
-        currentList.updatedAt = Date.now();
-
-        const existingIndex = state.lists.findIndex(l => l.id === currentList.id);
-        if (existingIndex >= 0) {
-            state.lists[existingIndex] = currentList;
-        } else {
-            state.lists.push(currentList);
-        }
-
+        state.lists.unshift(newList);
         await saveState();
         renderLists();
-        listEditorModal.classList.add('hidden');
-        currentList = null;
-    };
 
-    const deleteCurrentList = () => {
-        if (!currentList) return;
-
-        showConfirmation(`Delete list "${currentList.title}"?`, async () => {
-            state.lists = state.lists.filter(l => l.id !== currentList.id);
-            await saveState();
-            renderLists();
-            listEditorModal.classList.add('hidden');
-            currentList = null;
-        });
+        // Focus on the new list title
+        setTimeout(() => {
+            const card = listsGrid.querySelector(`[data-list-id="${newList.id}"]`);
+            if (card) {
+                const titleInput = card.querySelector('.list-card-title');
+                if (titleInput) {
+                    titleInput.select();
+                }
+            }
+        }, 100);
     };
 
     // Event Listeners
     addListBtn.addEventListener('click', createNewList);
-    saveListBtn.addEventListener('click', saveCurrentList);
-    cancelListBtn.addEventListener('click', () => {
-        listEditorModal.classList.add('hidden');
-        currentList = null;
-    });
-    deleteListBtn.addEventListener('click', deleteCurrentList);
-
-    addItemBtn.addEventListener('click', addNewItem);
-    addItemInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') addNewItem();
-    });
-
-    document.querySelectorAll('.list-type-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentListType = btn.dataset.type;
-            document.querySelectorAll('.list-type-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderListItems();
-        });
-    });
 
     confirmYes.addEventListener('click', () => {
         if (confirmationAction) {

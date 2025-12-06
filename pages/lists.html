@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="../assets/js/theme-preload-inline.js"></script>
-  <title>BitHab - Lists</title>
+  <title>BitHab</title>
   <link rel="icon" href="../assets/images/logo.png" type="image/png">
   <link rel="apple-touch-icon" href="../assets/images/logo.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -75,47 +75,6 @@
         <div id="lists-grid" class="lists-grid"></div>
       </div>
     </main>
-  </div>
-
-  <!-- List Editor Modal -->
-  <div id="list-editor-modal" class="modal hidden">
-    <div class="modal-content list-editor-content">
-      <div class="list-editor-header">
-        <input type="text" id="list-title-input" class="list-title-input" placeholder="List Title" />
-        <div class="list-type-selector">
-          <button class="list-type-btn active" data-type="checklist" title="Checklist">
-            <i class="fas fa-check-square"></i>
-          </button>
-          <button class="list-type-btn" data-type="todo" title="Todo List">
-            <i class="fas fa-list-check"></i>
-          </button>
-          <button class="list-type-btn" data-type="numbered" title="Numbered List">
-            <i class="fas fa-list-ol"></i>
-          </button>
-          <button class="list-type-btn" data-type="bulleted" title="Bulleted List">
-            <i class="fas fa-list-ul"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="list-editor-body">
-        <div id="list-items-container" class="list-items-container"></div>
-        <div class="add-item-row">
-          <input type="text" id="add-item-input" class="add-item-input" placeholder="Add item..." />
-          <button id="add-item-btn" class="add-item-btn">
-            <i class="fas fa-plus"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="list-editor-footer">
-        <button id="save-list-btn" class="btn-confirm">Save</button>
-        <button id="cancel-list-btn" class="btn-cancel">Cancel</button>
-        <button id="delete-list-btn" class="btn-delete" style="margin-left: auto;">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
   </div>
 
   <!-- Confirmation Modal -->
