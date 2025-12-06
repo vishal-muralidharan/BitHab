@@ -369,6 +369,31 @@ class AuthManager {
 // Create global instance
 window.authManager = new AuthManager();
 
+// Backward-compatible adapter for legacy consumers expecting window.AuthManager
+// Provides setupAuth(callback) and waitForUserId() used by pages like lists.js
+if (!window.AuthManager) {
+    window.AuthManager = {
+        setupAuth: (callback) => {
+            if (!window.authManager || typeof callback !== 'function') return;
+            window.authManager.onAuthStateChange(user => {
+                if (user) {
+                    try {
+                        const database = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+                        callback(user.uid, database);
+                    } catch (err) {
+                        console.error('setupAuth callback error:', err);
+                    }
+                }
+            });
+        },
+        waitForUserId: async () => {
+            if (!window.authManager) return null;
+            const user = await window.authManager.waitForAuth();
+            return user ? user.uid : null;
+        }
+    };
+}
+
 // Export for modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AuthManager;
