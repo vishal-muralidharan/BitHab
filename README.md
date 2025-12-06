@@ -4,11 +4,12 @@ BitHab is a habit-tracking dashboard that brings together activities, goals, rem
 
 ## ✨ Features
 
-- **One home base** that shows today’s activities, notes, goals, reminders, and calendar in a single glance.
+- **One home base** that shows today's activities, notes, goals, reminders, and calendar in a single glance.
 - **Notes that remember** with instant save, date shortcuts, and buttons that stay visible even when the text is long.
+- **Lists for everything** with checklists, todos, numbered or bulleted formats, all editable inline with sub-items.
 - **Activity streaks** that track main tasks and sub tasks while colouring the calendar so progress is easy to spot.
-- **Goals at a glance** with simple status colours for what’s pending, in motion, or done.
-- **Reminders that nudge** highlighting what’s coming up next and what needs your attention right now.
+- **Goals at a glance** with simple status colours for what's pending, in motion, or done.
+- **Reminders that nudge** highlighting what's coming up next and what needs your attention right now.
 - **Focus timer** for distraction-free sessions that adapts to the theme you choose.
 - **Themes for every mood** including dark/light switches that update the whole app smoothly.
 - **Built for phones and laptops** with responsive layouts and quick access buttons wherever you are.
@@ -54,6 +55,11 @@ Follow this path to get comfortable with the app’s flow:
 - Browse theme cards to see how each preset looks before you choose.
 - Apply a theme or toggle dark mode to update the whole app instantly.
 - Your selections are saved in local storage, so the app remembers your look.
+
+### 📋 Lists (`pages/lists.html`)
+- Create lists in four formats: checklist, todo, numbered, or bulleted styles.
+- Add items and sub-items inline; press Enter to save instantly.
+- Switch list types with the icon dropdown or delete with cross buttons.
 
 ---
 
@@ -104,7 +110,7 @@ Follow this path to get comfortable with the app’s flow:
 
 1. **Bootstrap** – `index.html` loads shared styles (`style.css`, `dashboard.css`) and the dashboard script (`assets/js/script.js`). The script sets up Firebase, fetches user data, and initializes theme preferences before showing the main layout.
 2. **Data layer** – `database-service.js` and `data-sync.js` wrap Firestore calls. `database-migration.js` keeps older data compatible so the UI can use a single shape everywhere.
-3. **Feature modules** – Dedicated scripts (`activities.js`, `notes.js`, `goals.js`, `reminders.js`, `focus.js`) manage their own logic but share a central state object and rendering helpers.
+3. **Feature modules** – Dedicated scripts (`activities.js`, `notes.js`, `goals.js`, `reminders.js`, `lists.js`, `focus.js`) manage their own logic but share a central state object and rendering helpers.
 4. **Theme system** – `unified-theme-system.js` and `themes.css` expose CSS variables and helper functions so every page responds to theme or dark-mode changes instantly.
 5. **Navigation model** – Core pages live under `pages/`, yet key actions (logging, note edits, reminders) are mirrored on the dashboard by reusing the same rendering utilities.
 
@@ -128,6 +134,7 @@ Follow this path to get comfortable with the app’s flow:
 │   │   ├── dashboard.css
 │   │   ├── deep-focus.css
 │   │   ├── focus.css
+│   │   ├── lists.css
 │   │   ├── management.css
 │   │   ├── notes.css
 │   │   ├── style.css
@@ -144,6 +151,7 @@ Follow this path to get comfortable with the app’s flow:
 │       ├── error-handler.js
 │       ├── focus.js
 │       ├── goals.js
+│       ├── lists.js
 │       ├── mobile-nav.js
 │       ├── notes.js
 │       ├── reminders.js
@@ -160,6 +168,7 @@ Follow this path to get comfortable with the app’s flow:
 │   ├── deep-focus.html
 │   ├── focus.html
 │   ├── goals.html
+│   ├── lists.html
 │   ├── login.html
 │   ├── notes.html
 │   ├── register.html
