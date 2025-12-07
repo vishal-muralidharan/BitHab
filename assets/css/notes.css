@@ -312,9 +312,13 @@
     font-size: 0.9rem;
     line-height: 1.6;
     resize: none;
-    overflow-y: auto;
+    overflow-y: hidden;
     font-family: inherit;
     transition: all 0.2s;
+}
+
+.note-content-input.has-scroll {
+    overflow-y: auto;
 }
 
 .note-content-input:focus {

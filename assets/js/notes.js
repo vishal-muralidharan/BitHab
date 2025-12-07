@@ -483,7 +483,15 @@ class NotesManager {
 
     autoResizeTextarea(textarea) {
         textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
+        const newHeight = Math.min(textarea.scrollHeight, 300);
+        textarea.style.height = newHeight + 'px';
+        
+        // Show scrollbar only if content exceeds max height
+        if (textarea.scrollHeight > 300) {
+            textarea.classList.add('has-scroll');
+        } else {
+            textarea.classList.remove('has-scroll');
+        }
     }
 
     async addNewNote() {
