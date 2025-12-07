@@ -61,7 +61,7 @@
         <div class="notes-container">
             <div class="page-header">
                 <h1>Notes</h1>
-                <p class="page-subtitle">Organize your thoughts with daily notes and general notes</p>
+                <p class="page-subtitle">Capture thoughts inline with daily and general notes</p>
             </div>
             
             <!-- Toolbar -->
@@ -69,26 +69,30 @@
                 <div class="toolbar-left">
                     <button id="daily-notes-btn" class="note-type-btn active">
                         <i class="fas fa-calendar-day"></i>
-                        Daily Notes
+                        Daily
                     </button>
                     <button id="general-notes-btn" class="note-type-btn">
-                        <i class="fas fa-note-sticky"></i>
-                        General Notes
+                        <i class="fas fa-sticky-note"></i>
+                        General
                     </button>
                 </div>
                 <div class="toolbar-right">
-                    <button id="filter-all-btn" class="filter-btn active">
-                        <i class="fas fa-list"></i>
-                        All
-                    </button>
-                    <button id="filter-favorites-btn" class="filter-btn">
-                        <i class="fas fa-star"></i>
-                        Favorites
-                    </button>
-                    <button id="add-note-btn" class="btn-primary">
-                        <i class="fas fa-plus"></i>
-                        Add Note
-                    </button>
+                    <div class="add-note-wrapper">
+                        <button id="add-note-btn" class="btn-primary">
+                            <i class="fas fa-plus"></i>
+                            New Note
+                        </button>
+                    </div>
+                    <div class="filter-group">
+                        <button id="filter-all-btn" class="filter-btn active">
+                            <i class="fas fa-list"></i>
+                            All
+                        </button>
+                        <button id="filter-favorites-btn" class="filter-btn">
+                            <i class="fas fa-star"></i>
+                            Favorites
+                        </button>
+                    </div>
                 </div>
             </div>
             

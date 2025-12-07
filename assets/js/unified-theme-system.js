@@ -500,9 +500,8 @@ class UnifiedThemeSystem {
                     }
                 }
 
-                const changedAt = (firebase.firestore?.FieldValue && typeof firebase.firestore.FieldValue.serverTimestamp === 'function')
-                    ? firebase.firestore.FieldValue.serverTimestamp()
-                    : new Date().toISOString();
+                // Use ISO string for array items (serverTimestamp not supported in arrays)
+                const changedAt = new Date().toISOString();
 
                 themeHistory.push({
                     theme: this.currentTheme,

@@ -98,6 +98,7 @@ class NotesManager {
                     date: doc.id,
                     content: data.content || data.note || '',
                     favorite: data.favorite || false,
+                    order: data.order,
                     createdAt: data.createdAt,
                     updatedAt: data.updatedAt
                 });
@@ -112,6 +113,7 @@ class NotesManager {
                     title: data.title || 'Untitled',
                     content: data.content || data.note || '',
                     favorite: data.favorite || false,
+                    order: data.order,
                     createdAt: data.createdAt,
                     updatedAt: data.updatedAt
                 });
@@ -223,11 +225,13 @@ class NotesManager {
             filtered = filtered.filter(note => note.favorite);
         }
         
-        // Sort: favorites first, then by date/title
+        // Sort by custom order if available, then by date/title
         filtered.sort((a, b) => {
-            if (a.favorite && !b.favorite) return -1;
-            if (!a.favorite && b.favorite) return 1;
-            
+            // If both have order, use it
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
+            // Otherwise sort by date/title
             if (a.type === 'daily') {
                 return b.date.localeCompare(a.date);
             } else {
@@ -256,12 +260,24 @@ class NotesManager {
         const favIcon = note.favorite ? 'fas fa-star' : 'far fa-star';
         const identifier = note.type === 'daily' ? note.date : note.id;
         
+        // Format date for better display
+        let dateDisplay = '';
+        if (note.type === 'daily') {
+            const date = new Date(note.date + 'T00:00:00');
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            dateDisplay = date.toLocaleDateString('en-US', options);
+        }
+        
         return `
             <div class="note-card" data-note-id="${identifier}" data-type="${note.type}" draggable="true">
                 <div class="note-header">
                     <div class="note-identifier">
                         ${note.type === 'daily' 
-                            ? `<input type="date" class="note-date-input" value="${note.date}" data-note-id="${identifier}">` 
+                            ? `<div class="note-date-display" data-note-id="${identifier}" title="Click to change date">
+                                <i class="fas fa-calendar-day"></i>
+                                <span>${dateDisplay}</span>
+                                <input type="date" class="note-date-input" value="${note.date}" data-note-id="${identifier}" style="display: none;">
+                               </div>` 
                             : `<input type="text" class="note-title-input" value="${note.title || ''}" placeholder="Note title" data-note-id="${identifier}">`
                         }
                     </div>
@@ -337,13 +353,52 @@ class NotesManager {
         );
         
         if (draggedIndex !== -1 && targetIndex !== -1) {
+            // Reorder in local array
             const [removed] = this.notes.splice(draggedIndex, 1);
             this.notes.splice(targetIndex, 0, removed);
+            
+            // Save new order to Firestore
+            this.saveNoteOrder();
+            
             this.renderNotes();
+        }
+    }
+    
+    async saveNoteOrder() {
+        const db = firebase.firestore();
+        const batch = db.batch();
+        
+        // Update order field for current type's notes
+        const filteredNotes = this.notes.filter(n => n.type === this.currentType);
+        filteredNotes.forEach((note, index) => {
+            const collection = note.type === 'daily' ? 'notes' : 'generalNotes';
+            const noteId = note.type === 'daily' ? note.date : note.id;
+            const ref = db.collection('users').doc(this.userId)
+                .collection(collection).doc(noteId);
+            batch.update(ref, { order: index });
+        });
+        
+        try {
+            await batch.commit();
+            console.log('Note order saved');
+        } catch (error) {
+            console.error('Error saving note order:', error);
         }
     }
 
     setupInlineEditing() {
+        // Date display click to edit
+        document.querySelectorAll('.note-date-display').forEach(display => {
+            display.addEventListener('click', (e) => {
+                const input = display.querySelector('.note-date-input');
+                display.querySelector('i').style.display = 'none';
+                display.querySelector('span').style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                input.showPicker?.();
+            });
+        });
+        
         // Date inputs for daily notes
         document.querySelectorAll('.note-date-input').forEach(input => {
             input.addEventListener('change', async (e) => {
@@ -365,6 +420,13 @@ class NotesManager {
                     
                     await this.updateNoteDate(noteId, newDate, oldDate);
                 }
+            });
+            
+            input.addEventListener('blur', (e) => {
+                const display = e.target.parentElement;
+                display.querySelector('i').style.display = 'inline';
+                display.querySelector('span').style.display = 'inline';
+                e.target.style.display = 'none';
             });
         });
         
@@ -421,7 +483,7 @@ class NotesManager {
 
     autoResizeTextarea(textarea) {
         textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 500) + 'px';
+        textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
     }
 
     async addNewNote() {
