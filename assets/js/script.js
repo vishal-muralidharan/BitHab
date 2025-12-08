@@ -1307,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const textarea = document.createElement('textarea');
         textarea.className = 'notes-editor home-notes-editor';
-        textarea.placeholder = 'Write your note for this day...';
+        textarea.placeholder = 'Write your note for this day';
         textarea.value = existingNote;
         textarea.dataset.date = dateStr;
         editorContainer.appendChild(textarea);

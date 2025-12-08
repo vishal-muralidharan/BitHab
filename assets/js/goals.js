@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isExpanded) {
                 subAddRowHtml = `
                     <div class="sub-add-row">
-                        <input type="text" class="add-subgoal-input" data-parent="${goal.id}" placeholder="Add subgoal..." />
+                        <input type="text" class="add-subgoal-input" data-parent="${goal.id}" placeholder="Add subgoal" />
                         <button class="add-btn sub-add-btn add-subgoal-btn" data-parent="${goal.id}" aria-label="Add subgoal">&#10148;</button>
                     </div>
                 `;

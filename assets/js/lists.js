@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const titleInput = document.createElement('input');
         titleInput.className = 'list-card-title';
         titleInput.value = list.title || '';
-        titleInput.placeholder = 'List title...';
+        titleInput.placeholder = 'List title';
         
         titleInput.addEventListener('focus', () => {
             state.selectedListId = list.id;
@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         row.appendChild(placeholder);
 
         const input = document.createElement('input');
-        input.placeholder = 'Add sub-item...';
+        input.placeholder = 'Add sub-item';
         
         input.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         row.className = 'list-card-add-item';
 
         const input = document.createElement('input');
-        input.placeholder = 'Add item...';
+        input.placeholder = 'Add item';
         input.className = 'add-item-input';
         
         input.addEventListener('click', (e) => {

@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 subAddRowHtml = `
                 <div class="sub-add-row">
                     <input type="color" class="sub-activity-color-picker" value="#3B82F6">
-                    <input type="text" class="add-input sub-activity-input" placeholder="Add sub-activity...">
+                    <input type="text" class="add-input sub-activity-input" placeholder="Add sub-activity">
                     <button class="add-btn sub-add-btn" aria-label="Add sub-activity">&#10148;</button>
                 </div>`;
             }

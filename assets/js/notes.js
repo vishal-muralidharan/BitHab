@@ -290,7 +290,7 @@ class NotesManager {
                         </button>
                     </div>
                 </div>
-                <textarea class="note-content-input" data-note-id="${identifier}" placeholder="Write your note here...">${note.content}</textarea>
+                <textarea class="note-content-input" data-note-id="${identifier}" placeholder="Write your note here">${note.content}</textarea>
             </div>
         `;
     }
