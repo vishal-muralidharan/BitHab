@@ -45,9 +45,10 @@
 
 /* Lists Grid */
 .lists-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1.5rem;
+    align-items: flex-start;
 }
 
 .list-card {
@@ -56,15 +57,40 @@
     padding: 1.5rem;
     box-shadow: var(--shadow);
     transition: all 0.3s ease;
-    border: 1px solid transparent;
-    display: flex;
+    border: 2px solid transparent;
+    display: inline-flex;
     flex-direction: column;
     gap: 1rem;
+    cursor: pointer;
+    position: relative;
+    min-width: 280px;
 }
 
 .list-card:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     border-color: var(--accent-primary);
+}
+
+/* Selected list indicator */
+.list-card.selected {
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 8px 24px rgba(var(--accent-primary-rgb, 59, 130, 246), 0.2);
+    background: var(--bg-secondary);
+}
+
+/* Dark mode shadow enhancement */
+[data-theme="dark"] .list-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .list-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .list-card.selected {
+    box-shadow: 0 8px 24px rgba(var(--accent-primary-rgb, 59, 130, 246), 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+    border-color: var(--accent-primary);
+    background: var(--bg-secondary);
 }
 
 .list-card-header {
@@ -92,10 +118,12 @@
     font-weight: 600;
     color: var(--text-primary);
     flex: 1;
+    min-width: 0;
     border: none;
     background: transparent;
     outline: none;
     padding: 0.25rem;
+    width: auto;
 }
 
 .list-card-title::placeholder {
@@ -190,34 +218,23 @@
 .list-card-add-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
     padding: 0.5rem;
     border-radius: 6px;
-    transition: background 0.2s ease;
 }
 
-.list-card-add-item:hover {
-    background: var(--bg-hover);
-}
-
-.list-card-add-item input {
+.list-card-add-item .add-item-input {
     flex: 1;
     border: none;
     background: transparent;
     color: var(--text-primary);
     outline: none;
-    padding: 0;
+    padding: 0.25rem;
+    font-size: 0.9rem;
 }
 
-.list-card-add-item input::placeholder {
+.list-card-add-item .add-item-input::placeholder {
     color: var(--text-secondary);
     opacity: 0.5;
-}
-
-.list-card-add-item .add-icon {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    flex-shrink: 0;
 }
 
 .list-card-footer {
@@ -257,6 +274,10 @@
     color: var(--text-primary);
     outline: none;
     padding: 0;
+}
+
+.sub-item-row.completed {
+    opacity: 0.6;
 }
 
 .sub-item-row input.completed {

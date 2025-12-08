@@ -7,7 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmNo = document.getElementById('confirm-no');
 
     let state = {
-        lists: []
+        lists: [],
+        selectedListId: null,
+        focusedItemId: null
     };
     let confirmationAction = null;
 
@@ -88,6 +90,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const card = document.createElement('div');
         card.className = 'list-card';
         card.dataset.listId = list.id;
+        
+        // Add selected class if this is the selected list
+        if (state.selectedListId === list.id) {
+            card.classList.add('selected');
+        }
+        
+        // Add click handler to select list
+        card.addEventListener('click', (e) => {
+            // Don't trigger if clicking on input fields or buttons
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                return;
+            }
+            
+            // Toggle selection
+            if (state.selectedListId === list.id) {
+                state.selectedListId = null;
+            } else {
+                state.selectedListId = list.id;
+            }
+            renderLists();
+        });
 
         // Header with icon, title, and delete
         const header = document.createElement('div');
@@ -141,10 +164,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         titleInput.className = 'list-card-title';
         titleInput.value = list.title || '';
         titleInput.placeholder = 'List title...';
+        
+        titleInput.addEventListener('focus', () => {
+            state.selectedListId = list.id;
+        });
+        
         titleInput.addEventListener('blur', async () => {
             list.title = titleInput.value.trim() || 'Untitled List';
             await saveState();
         });
+        
         titleInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -184,14 +213,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // Add sub-item input
-            const subAddRow = createSubAddRow(item, list);
-            body.appendChild(subAddRow);
+            // Add sub-item input - always render but hide if not focused
+            if (state.selectedListId === list.id) {
+                const subAddRow = createSubAddRow(item, list);
+                if (state.focusedItemId !== item.id) {
+                    subAddRow.style.display = 'none';
+                }
+                body.appendChild(subAddRow);
+            }
         });
 
-        // Add item row
-        const addItemRow = createAddItemRow(list);
-        body.appendChild(addItemRow);
+        // Add item row - only show if list is selected
+        if (state.selectedListId === list.id) {
+            const addItemRow = createAddItemRow(list);
+            body.appendChild(addItemRow);
+        }
 
         card.appendChild(header);
         card.appendChild(body);
@@ -238,19 +274,72 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const input = document.createElement('input');
         input.value = item.text;
+        input.dataset.itemId = item.id;
         if (item.completed && list.type === 'checklist') input.classList.add('completed');
+        
+        input.addEventListener('focus', () => {
+            state.selectedListId = list.id;
+            state.focusedItemId = item.id;
+            
+            // Show sub-add row for this item
+            const card = input.closest('.list-card');
+            if (card) {
+                // Hide all other sub-add rows in this card
+                card.querySelectorAll('.sub-add-row-inline').forEach(row => row.style.display = 'none');
+                
+                // Show this item's sub-add row
+                const nextSubAdd = input.closest('.list-preview-item').nextElementSibling;
+                while (nextSubAdd && nextSubAdd.classList.contains('sub-item-row')) {
+                    if (nextSubAdd.nextSibling && nextSubAdd.nextSibling.classList?.contains('sub-add-row-inline')) {
+                        break;
+                    }
+                }
+                // Find the sub-add row after all sub-items
+                let subAddRow = input.closest('.list-preview-item').nextElementSibling;
+                while (subAddRow && subAddRow.classList.contains('sub-item-row')) {
+                    subAddRow = subAddRow.nextElementSibling;
+                }
+                if (subAddRow && subAddRow.classList.contains('sub-add-row-inline')) {
+                    subAddRow.style.display = 'flex';
+                }
+            }
+        });
+        
         input.addEventListener('blur', async () => {
             item.text = input.value.trim();
             if (!item.text) {
                 list.items = list.items.filter(i => i.id !== item.id);
             }
+            state.focusedItemId = null;
             await saveState();
-            renderLists();
         });
-        input.addEventListener('keydown', (e) => {
+        
+        input.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                input.blur();
+                const text = input.value.trim();
+                if (text) {
+                    item.text = text;
+                    await saveState();
+                    
+                    // Create new item after current one
+                    const currentIndex = list.items.findIndex(i => i.id === item.id);
+                    const newItem = {
+                        id: `item_${Date.now()}_${Math.random()}`,
+                        text: '',
+                        completed: false,
+                        subItems: []
+                    };
+                    list.items.splice(currentIndex + 1, 0, newItem);
+                    await saveState();
+                    renderLists();
+                    
+                    // Focus on new item
+                    setTimeout(() => {
+                        const newInput = document.querySelector(`input[data-item-id="${newItem.id}"]`);
+                        if (newInput) newInput.focus();
+                    }, 50);
+                }
             }
         });
 
@@ -304,19 +393,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const input = document.createElement('input');
         input.value = subItem.text;
+        input.dataset.subItemId = subItem.id;
         if (subItem.completed && list.type === 'checklist') input.classList.add('completed');
+        
+        input.addEventListener('focus', () => {
+            state.selectedListId = list.id;
+            state.focusedItemId = parentItem.id;
+        });
+        
         input.addEventListener('blur', async () => {
             subItem.text = input.value.trim();
             if (!subItem.text) {
                 parentItem.subItems = parentItem.subItems.filter(si => si.id !== subItem.id);
             }
             await saveState();
-            renderLists();
         });
-        input.addEventListener('keydown', (e) => {
+        
+        input.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                input.blur();
+                const text = input.value.trim();
+                if (text) {
+                    subItem.text = text;
+                    await saveState();
+                    
+                    // Create new sub-item after current one
+                    const currentIndex = parentItem.subItems.findIndex(si => si.id === subItem.id);
+                    const newSubItem = {
+                        id: `sub_${Date.now()}_${Math.random()}`,
+                        text: '',
+                        completed: false
+                    };
+                    parentItem.subItems.splice(currentIndex + 1, 0, newSubItem);
+                    await saveState();
+                    renderLists();
+                    
+                    // Focus on new sub-item
+                    setTimeout(() => {
+                        const newInput = document.querySelector(`input[data-sub-item-id="${newSubItem.id}"]`);
+                        if (newInput) newInput.focus();
+                    }, 50);
+                }
             }
         });
 
@@ -349,19 +466,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const input = document.createElement('input');
         input.placeholder = 'Add sub-item...';
+        
+        input.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
         input.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const text = input.value.trim();
                 if (text) {
                     if (!parentItem.subItems) parentItem.subItems = [];
-                    parentItem.subItems.push({
+                    const newSubItem = {
                         id: `sub_${Date.now()}_${Math.random()}`,
                         text,
                         completed: false
-                    });
+                    };
+                    parentItem.subItems.push(newSubItem);
+                    input.value = '';
                     await saveState();
                     renderLists();
+                    
+                    // Focus on new sub-item
+                    setTimeout(() => {
+                        const newInput = document.querySelector(`input[data-sub-item-id="${newSubItem.id}"]`);
+                        if (newInput) newInput.focus();
+                    }, 50);
                 }
             }
         });
@@ -375,25 +505,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const row = document.createElement('div');
         row.className = 'list-card-add-item';
 
-        const icon = document.createElement('i');
-        icon.className = 'fas fa-plus add-icon';
-        row.appendChild(icon);
-
         const input = document.createElement('input');
         input.placeholder = 'Add item...';
+        input.className = 'add-item-input';
+        
+        input.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
         input.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const text = input.value.trim();
                 if (text) {
-                    list.items.push({
+                    const newItem = {
                         id: `item_${Date.now()}_${Math.random()}`,
                         text,
                         completed: false,
                         subItems: []
-                    });
+                    };
+                    list.items.push(newItem);
+                    input.value = '';
                     await saveState();
                     renderLists();
+                    
+                    // Focus on new item
+                    setTimeout(() => {
+                        const newInput = document.querySelector(`input[data-item-id="${newItem.id}"]`);
+                        if (newInput) newInput.focus();
+                    }, 50);
                 }
             }
         });
@@ -412,6 +552,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             createdAt: Date.now()
         };
         state.lists.unshift(newList);
+        state.selectedListId = newList.id; // Auto-select new list
         await saveState();
         renderLists();
 
@@ -429,6 +570,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Event Listeners
     addListBtn.addEventListener('click', createNewList);
+
+    // Click outside lists to deselect
+    listsGrid.addEventListener('click', (e) => {
+        if (e.target === listsGrid) {
+            state.selectedListId = null;
+            renderLists();
+        }
+    });
+
+    // Click on page container to deselect
+    document.addEventListener('click', (e) => {
+        const clickedInsideList = e.target.closest('.list-card');
+        const clickedToolbar = e.target.closest('.lists-toolbar');
+        const clickedModal = e.target.closest('.modal');
+        
+        if (!clickedInsideList && !clickedToolbar && !clickedModal && state.selectedListId) {
+            state.selectedListId = null;
+            renderLists();
+        }
+    });
 
     confirmYes.addEventListener('click', () => {
         if (confirmationAction) {
