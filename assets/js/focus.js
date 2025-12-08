@@ -431,8 +431,17 @@ class FocusMode {
     // Reusable Confirm/Prompt Dialogs
     showConfirmDialog(message, title = 'Confirm') {
         return new Promise(resolve => {
+            // Use custom dialogs if available
+            if (window.customDialogs && typeof window.customDialogs.confirm === 'function') {
+                window.customDialogs.confirm(message, title).then(result => resolve(result));
+                return;
+            }
+            
             const modal = document.getElementById('app-modal');
-            if (!modal) { resolve(window.confirm(message)); return; }
+            if (!modal) { 
+                resolve(window.confirm(message)); 
+                return; 
+            }
             const titleEl = document.getElementById('modal-title');
             const msgEl = document.getElementById('modal-message');
             const inputWrap = document.getElementById('modal-input-wrap');

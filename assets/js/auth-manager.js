@@ -159,6 +159,16 @@ class AuthManager {
 
         const confirmationMessage = 'Are you sure you want to logout?';
 
+        // Try custom dialogs first
+        if (window.customDialogs && typeof window.customDialogs.confirm === 'function') {
+            window.customDialogs.confirm(confirmationMessage, 'Confirm Logout').then(confirmed => {
+                if (confirmed) {
+                    proceed();
+                }
+            });
+            return;
+        }
+
         if (window.BitHabMobileNav && typeof window.BitHabMobileNav.showConfirmation === 'function') {
             window.BitHabMobileNav.showConfirmation(confirmationMessage, proceed);
             return;
@@ -169,6 +179,7 @@ class AuthManager {
             return;
         }
 
+        // Fallback to native confirm only if custom dialogs not available
         if (typeof window.confirm === 'function') {
             if (window.confirm(confirmationMessage)) {
                 proceed();

@@ -31,7 +31,7 @@ class NotesManager {
         } catch (error) {
             console.error('Notes initialization error:', error);
             if (!error.message.includes('permission')) {
-                alert('Failed to initialize notes. Please refresh the page.');
+                window.customDialogs?.showError('Failed to load notes. Please refresh the page.');
             }
         }
     }
@@ -413,7 +413,7 @@ class NotesManager {
                     );
                     
                     if (existingNote) {
-                        alert('A note for this date already exists!');
+                        window.customDialogs?.alert('A note for this date already exists. Please choose a different date.', 'Duplicate Date', 'warning');
                         e.target.value = oldDate;
                         return;
                     }
@@ -501,7 +501,7 @@ class NotesManager {
             const existingNote = this.notes.find(n => n.type === 'daily' && n.date === today);
             
             if (existingNote) {
-                alert('A note for today already exists!');
+                window.customDialogs?.alert('A note for today already exists. You can edit the existing note or change its date to create a new one.', 'Duplicate Note', 'info');
                 return;
             }
             
@@ -571,7 +571,7 @@ class NotesManager {
             this.renderNotes();
         } catch (error) {
             console.error('Error saving note:', error);
-            alert('Failed to save note: ' + error.message);
+            window.customDialogs?.showError(error);
         }
     }
 
@@ -608,7 +608,7 @@ class NotesManager {
             }
         } catch (error) {
             console.error('Error updating note date:', error);
-            alert('Failed to update date: ' + error.message);
+            window.customDialogs?.showError('Unable to change the note date. Please try again.');
         }
     }
 
@@ -628,7 +628,7 @@ class NotesManager {
             note.title = newTitle;
         } catch (error) {
             console.error('Error updating note title:', error);
-            alert('Failed to update title: ' + error.message);
+            window.customDialogs?.showError('Unable to update the note title. Please try again.');
         }
     }
 
@@ -652,7 +652,7 @@ class NotesManager {
             note.content = content;
         } catch (error) {
             console.error('Error updating note content:', error);
-            alert('Failed to update note: ' + error.message);
+            window.customDialogs?.showError('Unable to save your changes. Please try again.');
         }
     }
 
@@ -678,12 +678,17 @@ class NotesManager {
             this.renderNotes();
         } catch (error) {
             console.error('Error toggling favorite:', error);
-            alert('Failed to toggle favorite: ' + error.message);
+            window.customDialogs?.showError('Unable to update favorite status. Please try again.');
         }
     }
 
     async deleteNote(noteId) {
-        if (!confirm('Are you sure you want to delete this note?')) {
+        const confirmed = await window.customDialogs?.confirm(
+            'This action cannot be undone. Are you sure you want to delete this note?',
+            'Delete Note'
+        );
+        
+        if (!confirmed) {
             return;
         }
         
@@ -704,9 +709,10 @@ class NotesManager {
             );
             
             this.renderNotes();
+            window.customDialogs?.showSuccess('Note deleted successfully');
         } catch (error) {
             console.error('Error deleting note:', error);
-            alert('Failed to delete note: ' + error.message);
+            window.customDialogs?.showError('Unable to delete the note. Please try again.');
         }
     }
 }

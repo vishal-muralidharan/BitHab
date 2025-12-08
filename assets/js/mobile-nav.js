@@ -104,6 +104,17 @@
                 return;
             }
 
+            // Use customDialogs if available
+            if (window.customDialogs && typeof window.customDialogs.confirm === 'function') {
+                window.customDialogs.confirm(message, 'Confirm').then(confirmed => {
+                    if (confirmed && typeof onConfirm === 'function') {
+                        onConfirm();
+                    }
+                });
+                return;
+            }
+
+            // Fallback to native confirm
             if (window.confirm(message) && typeof onConfirm === 'function') {
                 onConfirm();
             }

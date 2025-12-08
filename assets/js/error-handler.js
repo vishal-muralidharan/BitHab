@@ -389,11 +389,11 @@ class ErrorHandler {
             case 'auth/user-disabled':
                 return 'This account has been disabled.';
             case 'auth/user-not-found':
-                return 'No account found with this email address.';
+                return 'Username not found. Please check your email or create a new account.';
             case 'auth/wrong-password':
-                return 'Incorrect password. Please try again.';
+                return 'Password doesn\'t match. Please try again or reset your password.';
             case 'auth/invalid-login-credentials':
-                return 'An internal error occurred. Please try again later.';
+                return 'Invalid email or password. Please check your credentials and try again.';
             case 'auth/too-many-requests':
                 return 'Too many failed attempts. Please try again later.';
             case 'auth/email-already-in-use':
@@ -559,7 +559,12 @@ class ErrorHandler {
             return overlay;
         } catch (error) {
             console.error('Error displaying dialog:', error);
-            alert(options?.message || 'An error occurred');
+            // Fallback to custom dialogs if available
+            if (window.customDialogs && typeof window.customDialogs.alert === 'function') {
+                window.customDialogs.alert(options?.message || 'An error occurred', 'Error', 'error');
+            } else {
+                alert(options?.message || 'An error occurred');
+            }
             return null;
         }
     }

@@ -2475,7 +2475,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Check if future date for reminder suggestion
             if (clickedDate > today) {
-                if (confirm('This is a future date. Would you like to set a reminder instead?')) {
+                const message = 'This is a future date. Would you like to set a reminder instead?';
+                
+                // Use custom dialog if available
+                if (window.customDialogs && typeof window.customDialogs.confirm === 'function') {
+                    window.customDialogs.confirm(message, 'Set Reminder?').then(confirmed => {
+                        if (confirmed) {
+                            window.location.href = 'pages/reminders.html';
+                        }
+                    });
+                } else if (confirm(message)) {
                     window.location.href = 'pages/reminders.html';
                 }
                 return;
