@@ -6,6 +6,7 @@ class NotesManager {
         this.currentFilter = 'all'; // 'all' or 'favorites'
         this.notes = [];
         this.draggedCard = null;
+        this.isDeleting = false;
         this.isInitialized = false;
         this.init();
     }
@@ -569,6 +570,20 @@ class NotesManager {
             }
             
             this.renderNotes();
+            // After rendering, scroll to the newly added/updated note card
+            const identifier = note.type === 'daily' ? note.date : note.id;
+            const attemptScroll = (tries = 0) => {
+                const card = document.querySelector(`.note-card[data-note-id="${identifier}"]`);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const textarea = card.querySelector('.note-content-input');
+                    textarea?.focus();
+                } else if (tries < 5) {
+                    setTimeout(() => attemptScroll(tries + 1), 100);
+                }
+            };
+            // Kick off with a slight delay to allow DOM to settle
+            setTimeout(() => attemptScroll(), 100);
         } catch (error) {
             console.error('Error saving note:', error);
             window.customDialogs?.showError(error);
@@ -683,16 +698,24 @@ class NotesManager {
     }
 
     async deleteNote(noteId) {
-        const confirmed = await window.customDialogs?.confirm(
-            'This action cannot be undone. Are you sure you want to delete this note?',
-            'Delete Note'
-        );
-        
-        if (!confirmed) {
-            return;
-        }
-        
+        if (this.isDeleting) return;
+        this.isDeleting = true;
         try {
+            // Ask for confirmation (fallback to native confirm if custom dialog unavailable)
+            let confirmed = true;
+            if (window.customDialogs && typeof window.customDialogs.confirm === 'function') {
+                confirmed = await window.customDialogs.confirm(
+                    'This action cannot be undone. Are you sure you want to delete this note?',
+                    'Delete Note'
+                );
+            } else {
+                confirmed = window.confirm('Delete this note? This cannot be undone.');
+            }
+            if (!confirmed) {
+                this.isDeleting = false;
+                return;
+            }
+
             const note = this.notes.find(n => 
                 (n.type === 'daily' ? n.date : n.id) === noteId
             );
@@ -709,10 +732,18 @@ class NotesManager {
             );
             
             this.renderNotes();
-            window.customDialogs?.showSuccess('Note deleted successfully');
+            // Prefer non-blocking toast for success
+            if (window.customDialogs && typeof window.customDialogs.showToast === 'function') {
+                window.customDialogs.showToast('Note deleted successfully', 'success', 2000);
+            } else if (window.customDialogs && typeof window.customDialogs.showSuccess === 'function') {
+                window.customDialogs.showSuccess('Note deleted successfully');
+                setTimeout(() => { window.customDialogs.closeModal?.(); }, 2000);
+            }
         } catch (error) {
             console.error('Error deleting note:', error);
             window.customDialogs?.showError('Unable to delete the note. Please try again.');
+        } finally {
+            this.isDeleting = false;
         }
     }
 }

@@ -2,6 +2,7 @@
 class CustomDialogs {
     constructor() {
         this.activeModal = null;
+        this.toastContainer = null;
         this.init();
     }
 
@@ -11,6 +12,16 @@ class CustomDialogs {
             const container = document.createElement('div');
             container.id = 'custom-modal-container';
             document.body.appendChild(container);
+        }
+
+        // Create toast container
+        if (!document.getElementById('custom-toast-container')) {
+            const toastContainer = document.createElement('div');
+            toastContainer.id = 'custom-toast-container';
+            document.body.appendChild(toastContainer);
+            this.toastContainer = toastContainer;
+        } else {
+            this.toastContainer = document.getElementById('custom-toast-container');
         }
     }
 
@@ -151,6 +162,29 @@ class CustomDialogs {
     // Show success message
     showSuccess(message, title = 'Success') {
         return this.alert(message, title, 'success');
+    }
+
+    // Non-blocking toast notification
+    showToast(message, type = 'success', duration = 2000) {
+        try {
+            if (!this.toastContainer) this.init();
+            const toast = document.createElement('div');
+            toast.className = `custom-toast custom-toast-${type}`;
+            toast.innerHTML = `<span class="custom-toast-message">${this.escapeHtml(message)}</span>`;
+
+            this.toastContainer.appendChild(toast);
+            // Trigger CSS animation
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            // Auto-remove after duration
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, Math.max(1000, duration));
+        } catch (e) {
+            // Fallback to alert if toast fails
+            this.showSuccess(message);
+        }
     }
 
     // Convert error codes to human-readable messages
