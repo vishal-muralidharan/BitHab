@@ -62,7 +62,9 @@
         <div class="management-column">
             <div class="page-header">
                 <h1>Activities</h1>
-                <p class="page-subtitle">Add, edit, and organize your daily activities</p>
+                <button id="open-schedule-btn" class="schedule-link-btn">
+                    <i class="fas fa-calendar-check"></i> Schedule Activities
+                </button>
             </div>
       <div class="add-item-form">
         <input type="text" id="add-activity-input" class="add-input" placeholder="Add new activity">
@@ -131,6 +133,14 @@
   <script src="../assets/js/activities.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Open schedule activities
+        const scheduleBtn = document.getElementById('open-schedule-btn');
+        if (scheduleBtn) {
+          scheduleBtn.addEventListener('click', () => {
+            window.location.href = 'schedule-activities.html';
+          });
+        }
+        
         // Mobile theme toggle
         const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
         if (mobileThemeToggle && window.themeSystem) {

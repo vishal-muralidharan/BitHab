@@ -1,0 +1,593 @@
+// Simplified Schedule Activities for BitHab
+document.addEventListener('DOMContentLoaded', () => {
+    const state = {
+        activities: [],
+        schedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': 'completed' } } }
+        patterns: {}, // { activityId: { subActivityId: { type, days/dates } } }
+        selectedActivityId: null,
+        selectedSubActivityId: null,
+        currentDate: null,
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear()
+    };
+
+    let userId = null;
+    let db = null;
+
+    // DOM Elements
+    const activitySelector = document.getElementById('activity-selector');
+    const subActivitySelector = document.getElementById('subactivity-selector');
+    const setScheduleBtn = document.getElementById('set-schedule-btn');
+    const calendarContainer = document.getElementById('schedule-calendar-container');
+    const activityStats = document.getElementById('activity-stats');
+    const backBtn = document.getElementById('back-to-activities');
+    
+    const patternModal = document.getElementById('pattern-modal');
+    const closePatternModal = document.getElementById('close-pattern-modal');
+    const savePatternBtn = document.getElementById('save-pattern-btn');
+    const clearPatternBtn = document.getElementById('clear-pattern-btn');
+    
+    const dateModal = document.getElementById('date-modal');
+    const closeDateModal = document.getElementById('close-date-modal');
+    const dateModalTitle = document.getElementById('date-modal-title');
+    const dateModalInfo = document.getElementById('date-modal-info');
+    const markCompletedBtn = document.getElementById('mark-completed-btn');
+    const markScheduledBtn = document.getElementById('mark-scheduled-btn');
+
+    // Initialize
+    const init = async () => {
+        try {
+            await waitForAuth();
+            await Promise.all([loadActivities(), loadSchedules()]);
+            renderActivitySelector();
+            setupEventListeners();
+        } catch (error) {
+            console.error('Initialization error:', error);
+        }
+    };
+
+    const waitForAuth = () => {
+        return new Promise((resolve, reject) => {
+            const checkAuth = () => {
+                if (window.authManager && window.authManager.currentUser) {
+                    userId = window.authManager.currentUser.uid;
+                    db = window.authManager.db;
+                    resolve();
+                } else if (firebase.auth().currentUser) {
+                    userId = firebase.auth().currentUser.uid;
+                    db = firebase.firestore();
+                    resolve();
+                } else {
+                    setTimeout(checkAuth, 100);
+                }
+            };
+            checkAuth();
+            setTimeout(() => reject(new Error('Auth timeout')), 10000);
+        });
+    };
+
+    const setupEventListeners = () => {
+        backBtn.addEventListener('click', () => window.location.href = 'activities.html');
+        
+        activitySelector.addEventListener('change', (e) => {
+            state.selectedActivityId = e.target.value;
+            state.selectedSubActivityId = null;
+            renderSubActivities();
+            renderCalendar();
+            renderStats();
+        });
+
+        subActivitySelector.addEventListener('change', (e) => {
+            state.selectedSubActivityId = e.target.value;
+            renderCalendar();
+            renderStats();
+        });
+
+        setScheduleBtn.addEventListener('click', () => openPatternModal());
+        
+        closeDateModal.addEventListener('click', () => dateModal.classList.add('hidden'));
+        markCompletedBtn.addEventListener('click', () => setDateStatus('completed'));
+        markScheduledBtn.addEventListener('click', () => setDateStatus('planned'));
+
+        closePatternModal.addEventListener('click', () => patternModal.classList.add('hidden'));
+        savePatternBtn.addEventListener('click', () => savePattern());
+        clearPatternBtn.addEventListener('click', () => clearPattern());
+
+        dateModal.addEventListener('click', (e) => {
+            if (e.target === dateModal) dateModal.classList.add('hidden');
+        });
+
+        patternModal.addEventListener('click', (e) => {
+            if (e.target === patternModal) patternModal.classList.add('hidden');
+        });
+
+        // Pattern type selector
+        document.querySelectorAll('input[name="pattern-type"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.getElementById('weekly-options').style.display = e.target.value === 'weekly' ? 'block' : 'none';
+                document.getElementById('monthly-options').style.display = e.target.value === 'monthly' ? 'block' : 'none';
+                document.getElementById('daily-options').style.display = e.target.value === 'daily' ? 'block' : 'none';
+            });
+        });
+
+        // Generate date selector for monthly pattern
+        const dateSelector = document.getElementById('date-selector');
+        for (let i = 1; i <= 31; i++) {
+            const div = document.createElement('div');
+            div.className = 'date-option';
+            div.textContent = i;
+            div.dataset.date = i;
+            div.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+            dateSelector.appendChild(div);
+        }
+    };
+
+    // Data Loading
+    const loadActivities = async () => {
+        try {
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                state.activities = data.activities || [];
+            }
+        } catch (error) {
+            console.error('Error loading activities:', error);
+        }
+    };
+
+    const loadSchedules = async () => {
+        try {
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                state.schedules = data.activitySchedules || {};
+                state.patterns = data.activityPatterns || {};
+            }
+        } catch (error) {
+            console.error('Error loading schedules:', error);
+        }
+    };
+
+    const saveSchedules = async () => {
+        try {
+            await db.collection('users').doc(userId).set({
+                activitySchedules: state.schedules,
+                activityPatterns: state.patterns,
+                lastUpdated: Date.now()
+            }, { merge: true });
+        } catch (error) {
+            console.error('Error saving schedules:', error);
+        }
+    };
+
+    // Rendering
+    const renderActivitySelector = () => {
+        // Populate activity selector
+        if (state.activities.length === 0) {
+            calendarContainer.innerHTML = `
+                <div class="empty-state-simple">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>No Activities Yet</h3>
+                    <p>Create activities first to schedule them</p>
+                    <button onclick="window.location.href='activities.html'" class="back-btn">
+                        Go to Activities
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        activitySelector.innerHTML = '<option value="">Select an activity</option>' +
+            state.activities.map(activity => 
+                `<option value="${activity.id}">${activity.name}</option>`
+            ).join('');
+        
+        renderCalendar();
+    };
+
+    const renderSubActivities = () => {
+        if (!state.selectedActivityId) {
+            subActivitySelector.style.display = 'none';
+            setScheduleBtn.style.display = 'none';
+            return;
+        }
+
+        const activity = state.activities.find(a => a.id === state.selectedActivityId);
+        if (!activity || !activity.subActivities || activity.subActivities.length === 0) {
+            subActivitySelector.style.display = 'none';
+            setScheduleBtn.style.display = 'inline-flex';
+            return;
+        }
+
+        subActivitySelector.style.display = 'block';
+        setScheduleBtn.style.display = 'inline-flex';
+        subActivitySelector.innerHTML = '<option value="">All sub-activities</option>' +
+            activity.subActivities.map(sub => 
+                `<option value="${sub.id}">${sub.name}</option>`
+            ).join('');
+    };
+
+    const renderStats = () => {
+        if (!state.selectedActivityId) {
+            activityStats.innerHTML = `
+                <div class="stat-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Select an activity to view progress</p>
+                </div>
+            `;
+            return;
+        }
+
+        const activitySchedules = state.schedules[state.selectedActivityId] || {};
+        const subActId = state.selectedSubActivityId || 'main';
+        const schedule = activitySchedules[subActId] || {};
+        
+        const currentMonthKey = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
+        const scheduledDates = getScheduledDates(currentMonthKey);
+        const completedDates = Object.keys(schedule).filter(date => 
+            date.startsWith(currentMonthKey) && schedule[date] === 'completed'
+        );
+
+        const allScheduledDates = getAllScheduledDatesCount();
+        const allCompletedDates = Object.keys(schedule).filter(date => schedule[date] === 'completed').length;
+        const completionRate = allScheduledDates > 0 ? Math.round((allCompletedDates / allScheduledDates) * 100) : 0;
+
+        activityStats.innerHTML = `
+            <div class="stat-row">
+                <span class="stat-label">
+                    <i class="fas fa-calendar-check"></i> This Month
+                </span>
+                <span class="stat-value">${completedDates.length}/${scheduledDates.length}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">
+                    <i class="fas fa-check-circle"></i> Completed
+                </span>
+                <span class="stat-value">${allCompletedDates}</span>
+            </div>
+            
+            <div class="stat-row">
+                <span class="stat-label">
+                    <i class="fas fa-calendar-plus"></i> Total Scheduled
+                </span>
+                <span class="stat-value">${allScheduledDates}</span>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Completion Rate</span>
+                    <span>${completionRate}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${completionRate}%">
+                        ${completionRate > 15 ? completionRate + '%' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    const renderCalendar = () => {
+        if (!state.selectedActivityId) {
+            calendarContainer.innerHTML = `
+                <div class="calendar-placeholder">
+                    <i class="fas fa-arrow-up"></i>
+                    <p>Select an activity above to view and manage its schedule</p>
+                </div>
+            `;
+            return;
+        }
+
+        const year = state.currentYear;
+        const month = state.currentMonth;
+        const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+
+        let html = `
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" onclick="window.scheduleApp.changeMonth(-1)">‹</button>
+                <h2>${monthName} ${year}</h2>
+                <button class="calendar-nav-btn" onclick="window.scheduleApp.changeMonth(1)">›</button>
+            </div>
+            <div class="calendar-grid">
+        `;
+
+        // Weekday headers
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            html += `<div class="calendar-weekday">${day}</div>`;
+        });
+
+        // Empty cells for days before month starts
+        for (let i = 0; i < firstDay; i++) {
+            html += `<div class="calendar-day empty"></div>`;
+        }
+
+        // Days of month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const subId = state.selectedSubActivityId || 'main';
+            const status = getDateStatus(state.selectedActivityId, subId, dateStr);
+            const scheduled = isDateScheduled(dateStr);
+            const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+
+            let classes = 'calendar-day';
+            if (status === 'completed') classes += ' completed';
+            else if (scheduled) classes += ' planned';
+            if (isToday) classes += ' today';
+
+            html += `
+                <div class="${classes}" 
+                     data-date="${dateStr}"
+                     onclick="window.scheduleApp.handleDayClick('${dateStr}')">
+                    <span class="day-number">${day}</span>
+                    ${status === 'completed' ? '<span class="status-indicator">✓</span>' : scheduled ? '<span class="status-indicator">○</span>' : ''}
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+        calendarContainer.innerHTML = html;
+    };
+
+    const getDateStatus = (activityId, subActId, dateStr) => {
+        const subId = subActId || 'main';
+        return state.schedules[activityId]?.[subId]?.[dateStr] || null;
+    };
+
+    const isDateScheduled = (dateStr) => {
+        if (!state.selectedActivityId) return false;
+        
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const pattern = state.patterns[actId]?.[subId];
+        
+        if (!pattern) return false;
+
+        const date = new Date(dateStr + 'T00:00:00');
+        
+        if (pattern.type === 'daily') return true;
+        
+        if (pattern.type === 'weekly') {
+            const dayOfWeek = date.getDay();
+            return pattern.days && pattern.days.includes(dayOfWeek);
+        }
+        
+        if (pattern.type === 'monthly') {
+            const dayOfMonth = date.getDate();
+            return pattern.dates && pattern.dates.includes(dayOfMonth);
+        }
+        
+        return false;
+    };
+
+    const getScheduledDates = (monthKey) => {
+        const [year, month] = monthKey.split('-').map(Number);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const dates = [];
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            if (isDateScheduled(dateStr)) {
+                dates.push(dateStr);
+            }
+        }
+        
+        return dates;
+    };
+
+    const getAllScheduledDatesCount = () => {
+        // Count scheduled dates for the entire year
+        const year = state.currentYear;
+        let count = 0;
+        
+        for (let month = 1; month <= 12; month++) {
+            const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+            count += getScheduledDates(monthKey).length;
+        }
+        
+        return count;
+    };
+
+    const handleDayClick = (dateStr) => {
+        if (!state.selectedActivityId) return;
+
+        const activity = state.activities.find(a => a.id === state.selectedActivityId);
+        const subId = state.selectedSubActivityId || 'main';
+        const scheduled = isDateScheduled(dateStr);
+        
+        if (!scheduled) {
+            alert('This date is not scheduled for this activity. Please set a schedule pattern first.');
+            return;
+        }
+
+        state.currentDate = dateStr;
+        const currentStatus = getDateStatus(state.selectedActivityId, subId, dateStr);
+        const formattedDate = formatDateForDisplay(dateStr);
+
+        let title = activity.name;
+        if (state.selectedSubActivityId) {
+            const subAct = activity.subActivities?.find(s => s.id === state.selectedSubActivityId);
+            if (subAct) title += ` - ${subAct.name}`;
+        }
+
+        dateModalTitle.textContent = title;
+        dateModalInfo.textContent = formattedDate;
+
+        // Show appropriate buttons based on status
+        if (currentStatus === 'completed') {
+            markCompletedBtn.style.display = 'none';
+            markScheduledBtn.style.display = 'flex';
+        } else {
+            markCompletedBtn.style.display = 'flex';
+            markScheduledBtn.style.display = 'none';
+        }
+
+        dateModal.classList.remove('hidden');
+    };
+    
+    const changeMonth = (delta) => {
+        state.currentMonth += delta;
+        if (state.currentMonth > 11) {
+            state.currentMonth = 0;
+            state.currentYear++;
+        } else if (state.currentMonth < 0) {
+            state.currentMonth = 11;
+            state.currentYear--;
+        }
+        renderCalendar();
+    };
+
+    const setDateStatus = async (status) => {
+        if (!state.selectedActivityId || !state.currentDate) return;
+
+        const activityId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const dateStr = state.currentDate;
+
+        // Initialize nested structure
+        if (!state.schedules[activityId]) {
+            state.schedules[activityId] = {};
+        }
+        if (!state.schedules[activityId][subId]) {
+            state.schedules[activityId][subId] = {};
+        }
+
+        // Set or remove status
+        if (status === 'completed') {
+            state.schedules[activityId][subId][dateStr] = 'completed';
+        } else {
+            delete state.schedules[activityId][subId][dateStr];
+        }
+
+        await saveSchedules();
+        renderCalendar();
+        renderStats();
+        dateModal.classList.add('hidden');
+    };
+
+    // Pattern Management
+    const openPatternModal = () => {
+        if (!state.selectedActivityId) return;
+
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const pattern = state.patterns[actId]?.[subId];
+
+        // Reset pattern modal
+        document.querySelectorAll('input[name="pattern-type"]').forEach(radio => radio.checked = false);
+        document.querySelectorAll('.day-option input').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.date-option').forEach(opt => opt.classList.remove('selected'));
+
+        // Load existing pattern
+        if (pattern) {
+            document.querySelector(`input[name="pattern-type"][value="${pattern.type}"]`).checked = true;
+            document.getElementById('weekly-options').style.display = pattern.type === 'weekly' ? 'block' : 'none';
+            document.getElementById('monthly-options').style.display = pattern.type === 'monthly' ? 'block' : 'none';
+            document.getElementById('daily-options').style.display = pattern.type === 'daily' ? 'block' : 'none';
+
+            if (pattern.type === 'weekly' && pattern.days) {
+                pattern.days.forEach(day => {
+                    const checkbox = document.querySelector(`.day-option input[value="${day}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            if (pattern.type === 'monthly' && pattern.dates) {
+                pattern.dates.forEach(date => {
+                    const option = document.querySelector(`.date-option[data-date="${date}"]`);
+                    if (option) option.classList.add('selected');
+                });
+            }
+        } else {
+            document.querySelector('input[name="pattern-type"][value="weekly"]').checked = true;
+            document.getElementById('weekly-options').style.display = 'block';
+        }
+
+        patternModal.classList.remove('hidden');
+    };
+
+    const savePattern = async () => {
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const patternType = document.querySelector('input[name="pattern-type"]:checked')?.value;
+
+        if (!patternType) {
+            alert('Please select a pattern type');
+            return;
+        }
+
+        const pattern = { type: patternType };
+
+        if (patternType === 'weekly') {
+            const selectedDays = Array.from(document.querySelectorAll('.day-option input:checked'))
+                .map(cb => parseInt(cb.value));
+            if (selectedDays.length === 0) {
+                alert('Please select at least one day');
+                return;
+            }
+            pattern.days = selectedDays;
+        }
+
+        if (patternType === 'monthly') {
+            const selectedDates = Array.from(document.querySelectorAll('.date-option.selected'))
+                .map(opt => parseInt(opt.dataset.date));
+            if (selectedDates.length === 0) {
+                alert('Please select at least one date');
+                return;
+            }
+            pattern.dates = selectedDates;
+        }
+
+        // Initialize nested structure
+        if (!state.patterns[actId]) {
+            state.patterns[actId] = {};
+        }
+        state.patterns[actId][subId] = pattern;
+
+        await saveSchedules();
+        renderCalendar();
+        renderStats();
+        patternModal.classList.add('hidden');
+    };
+
+    const clearPattern = async () => {
+        if (!confirm('This will clear the schedule pattern. Continue?')) return;
+
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+
+        if (state.patterns[actId]?.[subId]) {
+            delete state.patterns[actId][subId];
+            await saveSchedules();
+            renderCalendar();
+            renderStats();
+        }
+
+        patternModal.classList.add('hidden');
+    };
+    
+    // Public API
+    window.scheduleApp = {
+        handleDayClick,
+        changeMonth
+    };
+
+    // Utilities
+    const formatDateForDisplay = (dateStr) => {
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'long',
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    };
+
+    // Start the app
+    init();
+});

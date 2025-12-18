@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../assets/js/theme-preload-inline.js"></script>
+  <title>Schedule Activities - BitHab</title>
+  <link rel="icon" href="../assets/images/logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:400,500&display=swap" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../assets/css/custom-dialogs.css" />
+  <link rel="stylesheet" href="../assets/css/management.css" />
+  <link rel="stylesheet" href="../assets/css/schedule.css" />
+</head>
+<body>
+  <!-- Mobile/Tablet Topbar -->
+  <div class="mobile-topbar">
+    <a href="../index.html" class="logo-link">
+      <h1 class="logo">
+        <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
+        <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
+      </h1>
+    </a>
+    <button id="mobile-theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <header class="header">
+    <a href="../index.html" class="logo-link">
+      <h1 class="logo">
+        <img src="../assets/images/logo-transparent-light.png" alt="BitHab Logo" class="logo-light">
+        <img src="../assets/images/logo-transparent-dark.png" alt="BitHab Logo" class="logo-dark">
+      </h1>
+    </a>
+    <nav class="header-nav">
+      <a href="activities.html" class="nav-item active">Activities</a>
+      <a href="goals.html" class="nav-item">Goals</a>
+      <a href="notes.html" class="nav-item">Notes</a>
+      <a href="reminders.html" class="nav-item">Reminders</a>
+      <a href="focus.html" class="nav-item">Focus</a>
+      <div class="more-dropdown">
+        <button class="more-btn nav-item" aria-label="More options">More</button>
+        <div class="more-dropdown-content">
+          <a href="themes.html">Themes</a>
+          <a href="lists.html">Lists</a>
+        </div>
+      </div>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button id="logout-btn" class="header-btn" aria-label="Logout">Logout</button>
+    </div>
+  </header>
+  
+  <div class="page-container">
+    <main class="content">
+      <div class="management-column">
+        <div class="page-header">
+          <h1>Schedule Activities</h1>
+          <button id="back-to-activities" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+        
+        <div class="schedule-controls">
+          <div class="control-row">
+            <select id="activity-selector" class="activity-selector">
+              <option value="">Select an activity</option>
+            </select>
+            <select id="subactivity-selector" class="activity-selector" style="display: none;">
+              <option value="">Select a sub-activity</option>
+            </select>
+          </div>
+          <button id="set-schedule-btn" class="schedule-pattern-btn" style="display: none;">
+            <i class="fas fa-calendar-days"></i> Set Schedule Pattern
+          </button>
+        </div>
+        
+        <div class="schedule-layout">
+          <div class="schedule-calendar-section">
+            <div id="schedule-calendar-container" class="schedule-calendar-container">
+              <!-- Calendar will be rendered here -->
+            </div>
+          </div>
+          
+          <div class="schedule-stats-section">
+            <div class="stats-card">
+              <h3>Activity Progress</h3>
+              <div id="activity-stats" class="activity-stats">
+                <div class="stat-placeholder">
+                  <i class="fas fa-chart-line"></i>
+                  <p>Select an activity to view progress</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Schedule Pattern Modal -->
+  <div id="pattern-modal" class="modal hidden">
+    <div class="modal-content pattern-modal-content">
+      <span class="close" id="close-pattern-modal" role="button" aria-label="Close modal">
+        <i class="fas fa-xmark"></i>
+      </span>
+      <h3>Set Schedule Pattern</h3>
+      <p id="pattern-modal-info">Define when this activity should be scheduled</p>
+      
+      <div class="pattern-options">
+        <div class="pattern-type-selector">
+          <label class="pattern-type-option">
+            <input type="radio" name="pattern-type" value="weekly" checked>
+            <span><i class="fas fa-calendar-week"></i> Weekly on specific days</span>
+          </label>
+          <label class="pattern-type-option">
+            <input type="radio" name="pattern-type" value="monthly">
+            <span><i class="fas fa-calendar-day"></i> Monthly on specific dates</span>
+          </label>
+          <label class="pattern-type-option">
+            <input type="radio" name="pattern-type" value="daily">
+            <span><i class="fas fa-calendar"></i> Daily</span>
+          </label>
+        </div>
+        
+        <div id="weekly-options" class="pattern-details">
+          <label>Select days:</label>
+          <div class="day-selector">
+            <label class="day-option"><input type="checkbox" value="0"> Sun</label>
+            <label class="day-option"><input type="checkbox" value="1"> Mon</label>
+            <label class="day-option"><input type="checkbox" value="2"> Tue</label>
+            <label class="day-option"><input type="checkbox" value="3"> Wed</label>
+            <label class="day-option"><input type="checkbox" value="4"> Thu</label>
+            <label class="day-option"><input type="checkbox" value="5"> Fri</label>
+            <label class="day-option"><input type="checkbox" value="6"> Sat</label>
+          </div>
+        </div>
+        
+        <div id="monthly-options" class="pattern-details" style="display: none;">
+          <label>Select dates (1-31):</label>
+          <div class="date-selector" id="date-selector">
+            <!-- Dates will be generated here -->
+          </div>
+        </div>
+        
+        <div id="daily-options" class="pattern-details" style="display: none;">
+          <p class="pattern-note">Activity will be scheduled every day</p>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button id="save-pattern-btn" class="primary-btn">
+          <i class="fas fa-save"></i> Save Pattern
+        </button>
+        <button id="clear-pattern-btn" class="secondary-btn">
+          <i class="fas fa-trash"></i> Clear Pattern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Status Modal -->
+  <div id="date-modal" class="modal hidden">
+    <div class="modal-content date-modal-content">
+      <span class="close" id="close-date-modal" role="button" aria-label="Close modal">
+        <i class="fas fa-xmark"></i>
+      </span>
+      <h3 id="date-modal-title">Date Status</h3>
+      <p id="date-modal-info"></p>
+      
+      <div class="date-status-actions">
+        <button id="mark-completed-btn" class="status-action-btn completed">
+          <i class="fas fa-check-circle"></i> Mark as Completed
+        </button>
+        <button id="mark-scheduled-btn" class="status-action-btn planned">
+          <i class="fas fa-calendar-check"></i> Mark as Scheduled
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="../config/firebase-config.js"></script>
+  <script src="../assets/js/error-handler.js"></script>
+  <script src="../assets/js/auth-manager.js"></script>
+  <script src="../assets/js/database-service.js"></script>
+  <script src="../assets/js/data-sync.js"></script>
+  <script src="../assets/js/unified-theme-system.js"></script>
+  <script src="../assets/js/mobile-nav.js"></script>
+  <script src="../assets/js/custom-dialogs.js"></script>
+  <script src="../assets/js/schedule-activities.js"></script>
+</body>
+</html>
