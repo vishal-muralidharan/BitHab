@@ -532,7 +532,9 @@
 
 /* Pattern Modal */
 .pattern-modal-content {
-    max-width: 600px;
+    max-width: 700px;
+    min-height: 650px;
+    width: 90vw;
 }
 
 .pattern-modal-content h3 {
@@ -550,6 +552,11 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+}
+
+.pattern-details-container {
+    min-height: 280px;
+    position: relative;
 }
 
 .pattern-type-selector {
@@ -597,6 +604,9 @@
     background: var(--hover-bg);
     border-radius: 0.5rem;
     border: 1px solid var(--border-color);
+    position: absolute;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .pattern-details label {
@@ -608,21 +618,24 @@
 
 .day-selector {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.75rem;
 }
 
 .day-option {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.75rem 0.5rem;
+    justify-content: center;
+    padding: 1rem 0.5rem;
     border: 2px solid var(--border-color);
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s;
     font-size: 0.9rem;
     font-weight: 500;
+    position: relative;
+    min-height: 60px;
 }
 
 .day-option:hover {
@@ -631,13 +644,46 @@
 }
 
 .day-option input[type="checkbox"] {
-    margin-bottom: 0.25rem;
-    width: 1.125rem;
-    height: 1.125rem;
+    position: absolute;
+    opacity: 0;
     cursor: pointer;
 }
 
-.day-option input[type="checkbox"]:checked + span,
+.day-option .day-label {
+    position: relative;
+    padding-left: 1.75rem;
+}
+
+.day-option .day-label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.25rem;
+    background: var(--card-bg);
+    transition: all 0.2s;
+}
+
+.day-option input[type="checkbox"]:checked + .day-label::before {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.day-option input[type="checkbox"]:checked + .day-label::after {
+    content: '✓';
+    position: absolute;
+    left: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
 .day-option:has(input:checked) {
     border-color: var(--primary-color);
     background: var(--primary-color-alpha);
@@ -647,8 +693,10 @@
 
 .date-selector {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
     gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .date-option {
@@ -663,6 +711,7 @@
     font-size: 0.9rem;
     font-weight: 500;
     padding: 0.5rem;
+    position: relative;
 }
 
 .date-option:hover {
@@ -677,14 +726,50 @@
     font-weight: 600;
 }
 
-.pattern-note {
-    margin: 0;
-    padding: 1rem;
-    background: var(--card-bg);
+.date-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 0.125rem;
+    right: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.date-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
     border-radius: 0.5rem;
-    text-align: center;
-    color: var(--text-secondary);
-    font-style: italic;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: var(--calendar-icon-filter, invert(0));
+}
+
+#start-date-section {
+    padding: 1rem;
+    background: var(--hover-bg);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+#start-date-section label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .modal-actions {
@@ -698,14 +783,14 @@
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 0.875rem 1.5rem;
+    padding: 1rem 1.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
     font-weight: 600;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
     transition: all 0.2s;
 }
 
@@ -715,24 +800,32 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.primary-btn:active {
+    transform: translateY(0);
+}
+
 .secondary-btn {
     background: transparent;
     color: #ef4444;
     border: 2px solid #ef4444;
-    padding: 0.875rem 1.5rem;
+    padding: 1rem 1.5rem;
     border-radius: 0.5rem;
     cursor: pointer;
     font-weight: 600;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
     transition: all 0.2s;
 }
 
 .secondary-btn:hover {
     background: rgba(239, 68, 68, 0.1);
     transform: translateY(-2px);
+}
+
+.secondary-btn:active {
+    transform: translateY(0);
 }
 
 @media (max-width: 1024px) {

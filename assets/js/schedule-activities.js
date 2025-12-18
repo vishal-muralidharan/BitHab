@@ -107,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('weekly-options').style.display = e.target.value === 'weekly' ? 'block' : 'none';
                 document.getElementById('monthly-options').style.display = e.target.value === 'monthly' ? 'block' : 'none';
                 document.getElementById('daily-options').style.display = e.target.value === 'daily' ? 'block' : 'none';
+                
+                // Show/hide main start date section
+                document.getElementById('start-date-section').style.display = e.target.value === 'daily' ? 'none' : 'block';
             });
         });
 
@@ -145,8 +148,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.schedules = data.activitySchedules || {};
                 state.patterns = data.activityPatterns || {};
             }
+            
+            // Sync with main calendar logs
+            await syncWithMainCalendar();
         } catch (error) {
             console.error('Error loading schedules:', error);
+        }
+    };
+
+    const syncWithMainCalendar = async () => {
+        try {
+            // Load logs from main calendar
+            const logsSnapshot = await db.collection('users').doc(userId).collection('logs').get();
+            const logs = {};
+            logsSnapshot.forEach(doc => {
+                const logData = doc.data();
+                logs[doc.id] = logData.loggedSubActivityIds || [];
+            });
+
+            // Sync completions for each activity
+            state.activities.forEach(activity => {
+                if (!state.schedules[activity.id]) {
+                    state.schedules[activity.id] = {};
+                }
+
+                // Sync main activity
+                if (!state.schedules[activity.id].main) {
+                    state.schedules[activity.id].main = {};
+                }
+
+                // Check each date in logs
+                Object.keys(logs).forEach(dateStr => {
+                    const loggedIds = logs[dateStr];
+                    if (loggedIds.includes(activity.id)) {
+                        // Main activity was completed on this date
+                        state.schedules[activity.id].main[dateStr] = 'completed';
+                    }
+
+                    // Check sub-activities
+                    if (activity.subActivities) {
+                        activity.subActivities.forEach(sub => {
+                            if (loggedIds.includes(sub.id)) {
+                                if (!state.schedules[activity.id][sub.id]) {
+                                    state.schedules[activity.id][sub.id] = {};
+                                }
+                                state.schedules[activity.id][sub.id][dateStr] = 'completed';
+                            }
+                        });
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error syncing with main calendar:', error);
         }
     };
 
@@ -224,14 +277,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const subActId = state.selectedSubActivityId || 'main';
         const schedule = activitySchedules[subActId] || {};
         
+        // Get pattern for date filtering
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const pattern = state.patterns[actId]?.[subId];
+        const startDate = pattern?.startDate ? new Date(pattern.startDate + 'T00:00:00') : null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         const currentMonthKey = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
-        const scheduledDates = getScheduledDates(currentMonthKey);
-        const completedDates = Object.keys(schedule).filter(date => 
-            date.startsWith(currentMonthKey) && schedule[date] === 'completed'
-        );
+        
+        // Filter scheduled dates for this month (after start date and on/before today)
+        const scheduledDates = getScheduledDates(currentMonthKey).filter(date => {
+            const dateObj = new Date(date + 'T00:00:00');
+            return (!startDate || dateObj >= startDate) && dateObj <= today;
+        });
+        
+        // Filter completed dates for this month (after start date and on/before today)
+        const completedDates = Object.keys(schedule).filter(date => {
+            if (!date.startsWith(currentMonthKey) || schedule[date] !== 'completed') return false;
+            const dateObj = new Date(date + 'T00:00:00');
+            return (!startDate || dateObj >= startDate) && dateObj <= today;
+        });
 
         const allScheduledDates = getAllScheduledDatesCount();
-        const allCompletedDates = Object.keys(schedule).filter(date => schedule[date] === 'completed').length;
+        
+        // Count only completions between start date and today
+        const allCompletedDates = Object.keys(schedule).filter(date => {
+            if (schedule[date] !== 'completed') return false;
+            const dateObj = new Date(date + 'T00:00:00');
+            return (!startDate || dateObj >= startDate) && dateObj <= today;
+        }).length;
+        
         const completionRate = allScheduledDates > 0 ? Math.round((allCompletedDates / allScheduledDates) * 100) : 0;
 
         activityStats.innerHTML = `
@@ -349,6 +426,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!pattern) return false;
 
         const date = new Date(dateStr + 'T00:00:00');
+        const startDate = pattern.startDate ? new Date(pattern.startDate + 'T00:00:00') : null;
+        
+        // Check if date is before start date
+        if (startDate && date < startDate) return false;
         
         if (pattern.type === 'daily') return true;
         
@@ -381,13 +462,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getAllScheduledDatesCount = () => {
-        // Count scheduled dates for the entire year
-        const year = state.currentYear;
-        let count = 0;
+        if (!state.selectedActivityId) return 0;
         
-        for (let month = 1; month <= 12; month++) {
-            const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-            count += getScheduledDates(monthKey).length;
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const pattern = state.patterns[actId]?.[subId];
+        
+        if (!pattern || !pattern.startDate) return 0;
+        
+        const startDate = new Date(pattern.startDate + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let count = 0;
+        const currentDate = new Date(startDate);
+        
+        // Count only dates from start date up to today
+        while (currentDate <= today) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            if (isDateScheduled(dateStr)) {
+                count++;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
         }
         
         return count;
@@ -482,6 +578,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('input[name="pattern-type"]').forEach(radio => radio.checked = false);
         document.querySelectorAll('.day-option input').forEach(cb => cb.checked = false);
         document.querySelectorAll('.date-option').forEach(opt => opt.classList.remove('selected'));
+        document.getElementById('pattern-start-date').value = '';
+        document.getElementById('daily-start-date').value = '';
+
+        // Set default start date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('pattern-start-date').value = today;
 
         // Load existing pattern
         if (pattern) {
@@ -489,6 +591,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('weekly-options').style.display = pattern.type === 'weekly' ? 'block' : 'none';
             document.getElementById('monthly-options').style.display = pattern.type === 'monthly' ? 'block' : 'none';
             document.getElementById('daily-options').style.display = pattern.type === 'daily' ? 'block' : 'none';
+            document.getElementById('start-date-section').style.display = pattern.type === 'daily' ? 'none' : 'block';
+
+            if (pattern.startDate) {
+                document.getElementById('pattern-start-date').value = pattern.startDate;
+                document.getElementById('daily-start-date').value = pattern.startDate;
+            }
 
             if (pattern.type === 'weekly' && pattern.days) {
                 pattern.days.forEach(day => {
@@ -506,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             document.querySelector('input[name="pattern-type"][value="weekly"]').checked = true;
             document.getElementById('weekly-options').style.display = 'block';
+            document.getElementById('start-date-section').style.display = 'block';
         }
 
         patternModal.classList.remove('hidden');
@@ -522,6 +631,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const pattern = { type: patternType };
+
+        // Get start date
+        const startDateInput = patternType === 'daily' 
+            ? document.getElementById('daily-start-date').value
+            : document.getElementById('pattern-start-date').value;
+        
+        if (!startDateInput) {
+            alert('Please select a start date');
+            return;
+        }
+        pattern.startDate = startDateInput;
 
         if (patternType === 'weekly') {
             const selectedDays = Array.from(document.querySelectorAll('.day-option input:checked'))

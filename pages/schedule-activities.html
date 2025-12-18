@@ -131,38 +131,63 @@
           </label>
         </div>
         
-        <div id="weekly-options" class="pattern-details">
-          <label>Select days:</label>
-          <div class="day-selector">
-            <label class="day-option"><input type="checkbox" value="0"> Sun</label>
-            <label class="day-option"><input type="checkbox" value="1"> Mon</label>
-            <label class="day-option"><input type="checkbox" value="2"> Tue</label>
-            <label class="day-option"><input type="checkbox" value="3"> Wed</label>
-            <label class="day-option"><input type="checkbox" value="4"> Thu</label>
-            <label class="day-option"><input type="checkbox" value="5"> Fri</label>
-            <label class="day-option"><input type="checkbox" value="6"> Sat</label>
+        <div class="pattern-details-container">
+          <div id="weekly-options" class="pattern-details">
+            <label>Select days:</label>
+            <div class="day-selector">
+              <label class="day-option">
+                <input type="checkbox" value="0">
+                <span class="day-label">Sun</span>
+              </label>
+              <label class="day-option">
+                <input type="checkbox" value="1">
+                <span class="day-label">Mon</span>
+              </label>
+              <label class="day-option">
+                <input type="checkbox" value="2">
+                <span class="day-label">Tue</span>
+              </label>
+              <label class="day-option">
+                <input type="checkbox" value="3">
+                <span class="day-label">Wed</span>
+              </label>
+              <label class="day-option">
+                <input type="checkbox" value="4">
+                <span class="day-label">Thu</span>
+              </label>
+              <label class="day-option">
+                <input type="checkbox" value="5">
+                <span class="day-label">Fri</span>
+              </label>
+              <label class="day-option">
+                <input type="checkbox" value="6">
+                <span class="day-label">Sat</span>
+              </label>
+            </div>
+          </div>
+          
+          <div id="monthly-options" class="pattern-details" style="display: none;">
+            <label>Select dates (1-31):</label>
+            <div class="date-selector" id="date-selector">
+              <!-- Dates will be generated here -->
+            </div>
+          </div>
+          
+          <div id="daily-options" class="pattern-details" style="display: none;">
+            <label>Start date:</label>
+            <input type="date" id="daily-start-date" class="date-input">
           </div>
         </div>
         
-        <div id="monthly-options" class="pattern-details" style="display: none;">
-          <label>Select dates (1-31):</label>
-          <div class="date-selector" id="date-selector">
-            <!-- Dates will be generated here -->
-          </div>
-        </div>
-        
-        <div id="daily-options" class="pattern-details" style="display: none;">
-          <p class="pattern-note">Activity will be scheduled every day</p>
+        <div id="start-date-section">
+          <label>Start scheduling from:</label>
+          <input type="date" id="pattern-start-date" class="date-input">
         </div>
       </div>
       
       <div class="modal-actions">
-        <button id="save-pattern-btn" class="primary-btn">
-          <i class="fas fa-save"></i> Save Pattern
-        </button>
-        <button id="clear-pattern-btn" class="secondary-btn">
-          <i class="fas fa-trash"></i> Clear Pattern
-        </button>
+        <button id="save-pattern-btn" class="primary-btn">Save</button>
+        <button id="clear-pattern-btn" class="secondary-btn">Clear</button>
       </div>
     </div>
   </div>
