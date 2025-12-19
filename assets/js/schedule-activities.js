@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const state = {
         activities: [],
-        schedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': 'completed' } } }
+        schedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': count } } }
         patterns: {}, // { activityId: { subActivityId: { type, days/dates } } }
         selectedActivityId: null,
         selectedSubActivityId: null,
@@ -79,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         subActivitySelector.addEventListener('change', (e) => {
             state.selectedSubActivityId = e.target.value;
+            // Show schedule button only if subactivity is selected when parent has subactivities
+            const activity = state.activities.find(a => a.id === state.selectedActivityId);
+            if (activity && activity.subActivities && activity.subActivities.length > 0) {
+                setScheduleBtn.style.display = e.target.value ? 'inline-flex' : 'none';
+            }
             renderCalendar();
             renderStats();
         });
@@ -181,8 +186,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.keys(logs).forEach(dateStr => {
                     const loggedIds = logs[dateStr];
                     if (loggedIds.includes(activity.id)) {
-                        // Main activity was completed on this date
-                        state.schedules[activity.id].main[dateStr] = 'completed';
+                        // Main activity was completed on this date - set to 1 if not already set
+                        if (!state.schedules[activity.id].main[dateStr]) {
+                            state.schedules[activity.id].main[dateStr] = 1;
+                        }
                     }
 
                     // Check sub-activities
@@ -192,7 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (!state.schedules[activity.id][sub.id]) {
                                     state.schedules[activity.id][sub.id] = {};
                                 }
-                                state.schedules[activity.id][sub.id][dateStr] = 'completed';
+                                if (!state.schedules[activity.id][sub.id][dateStr]) {
+                                    state.schedules[activity.id][sub.id][dateStr] = 1;
+                                }
                             }
                         });
                     }
@@ -254,12 +263,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Activity has subactivities - show selector but hide button until subactivity is selected
         subActivitySelector.style.display = 'block';
-        setScheduleBtn.style.display = 'inline-flex';
-        subActivitySelector.innerHTML = '<option value="">All sub-activities</option>' +
+        subActivitySelector.innerHTML = '<option value="">Select a sub-activity</option>' +
             activity.subActivities.map(sub => 
                 `<option value="${sub.id}">${sub.name}</option>`
             ).join('');
+        
+        // Only show schedule button if a subactivity is selected
+        setScheduleBtn.style.display = state.selectedSubActivityId ? 'inline-flex' : 'none';
     };
 
     const renderStats = () => {
@@ -273,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const activity = state.activities.find(a => a.id === state.selectedActivityId);
         const activitySchedules = state.schedules[state.selectedActivityId] || {};
         const subActId = state.selectedSubActivityId || 'main';
         const schedule = activitySchedules[subActId] || {};
@@ -295,21 +308,62 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Filter completed dates for this month (after start date and on/before today)
         const completedDates = Object.keys(schedule).filter(date => {
-            if (!date.startsWith(currentMonthKey) || schedule[date] !== 'completed') return false;
+            if (!date.startsWith(currentMonthKey) || !schedule[date] || schedule[date] === 0) return false;
             const dateObj = new Date(date + 'T00:00:00');
             return (!startDate || dateObj >= startDate) && dateObj <= today;
         });
 
         const allScheduledDates = getAllScheduledDatesCount();
         
-        // Count only completions between start date and today
+        // Count only completions between start date and today - sum up all completion counts
+        const allCompletedCount = Object.keys(schedule).reduce((sum, date) => {
+            if (!schedule[date] || schedule[date] === 0) return sum;
+            const dateObj = new Date(date + 'T00:00:00');
+            if ((!startDate || dateObj >= startDate) && dateObj <= today) {
+                return sum + (typeof schedule[date] === 'number' ? schedule[date] : 1);
+            }
+            return sum;
+        }, 0);
+        
+        // Count unique completion dates for percentage
         const allCompletedDates = Object.keys(schedule).filter(date => {
-            if (schedule[date] !== 'completed') return false;
+            if (!schedule[date] || schedule[date] === 0) return false;
             const dateObj = new Date(date + 'T00:00:00');
             return (!startDate || dateObj >= startDate) && dateObj <= today;
         }).length;
         
         const completionRate = allScheduledDates > 0 ? Math.round((allCompletedDates / allScheduledDates) * 100) : 0;
+
+        // If no schedule pattern exists, show different information
+        if (allScheduledDates === 0) {
+            const createdDate = activity.createdAt ? new Date(activity.createdAt).toLocaleDateString() : 'Unknown';
+            const totalCompletions = Object.keys(schedule).reduce((sum, date) => {
+                return sum + (schedule[date] && schedule[date] !== 0 ? (typeof schedule[date] === 'number' ? schedule[date] : 1) : 0);
+            }, 0);
+            
+            activityStats.innerHTML = `
+                <div class="stat-placeholder">
+                    <i class="fas fa-calendar-times"></i>
+                    <p style="margin: 0.5rem 0;">No schedule pattern set</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Click "Set Schedule Pattern" to create a recurring schedule</p>
+                </div>
+                <div class="stat-row" style="margin-top: 1rem;">
+                    <span class="stat-label">
+                        <i class="fas fa-calendar-day"></i> Created
+                    </span>
+                    <span class="stat-value">${createdDate}</span>
+                </div>
+                ${totalCompletions > 0 ? `
+                <div class="stat-row">
+                    <span class="stat-label">
+                        <i class="fas fa-check-circle"></i> Manual Completions
+                    </span>
+                    <span class="stat-value">${totalCompletions}</span>
+                </div>
+                ` : ''}
+            `;
+            return;
+        }
 
         activityStats.innerHTML = `
             <div class="stat-row">
@@ -321,9 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <div class="stat-row">
                 <span class="stat-label">
-                    <i class="fas fa-check-circle"></i> Completed
+                    <i class="fas fa-check-circle"></i> Total Completions
                 </span>
-                <span class="stat-value">${allCompletedDates}</span>
+                <span class="stat-value">${allCompletedCount}</span>
             </div>
             
             <div class="stat-row">
@@ -388,21 +442,41 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const subId = state.selectedSubActivityId || 'main';
-            const status = getDateStatus(state.selectedActivityId, subId, dateStr);
+            const completionCount = getDateStatus(state.selectedActivityId, subId, dateStr);
             const scheduled = isDateScheduled(dateStr);
             const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+            const isPast = new Date(dateStr + 'T00:00:00') <= today;
 
             let classes = 'calendar-day';
-            if (status === 'completed') classes += ' completed';
+            if (completionCount > 0) classes += ' completed';
             else if (scheduled) classes += ' planned';
             if (isToday) classes += ' today';
+            if (scheduled && !isPast) classes += ' future';
+
+            let statusIndicator = '';
+            if (completionCount > 0) {
+                statusIndicator = `<span class="status-indicator">${completionCount > 1 ? completionCount + '✓' : '✓'}</span>`;
+            } else if (scheduled) {
+                statusIndicator = '<span class="status-indicator">○</span>';
+            }
+
+            let actions = '';
+            if (scheduled && isPast) {
+                actions = `
+                    <div class="day-actions">
+                        <button class="day-action-btn plus" onclick="event.stopPropagation(); window.scheduleApp.incrementCompletion('${dateStr}')">+</button>
+                        ${completionCount > 0 ? `<button class="day-action-btn minus" onclick="event.stopPropagation(); window.scheduleApp.decrementCompletion('${dateStr}')">-</button>` : ''}
+                    </div>
+                `;
+            }
 
             html += `
                 <div class="${classes}" 
                      data-date="${dateStr}"
                      onclick="window.scheduleApp.handleDayClick('${dateStr}')">
                     <span class="day-number">${day}</span>
-                    ${status === 'completed' ? '<span class="status-indicator">✓</span>' : scheduled ? '<span class="status-indicator">○</span>' : ''}
+                    ${statusIndicator}
+                    ${actions}
                 </div>
             `;
         }
@@ -501,8 +575,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const clickedDate = new Date(dateStr + 'T00:00:00');
+        
+        if (clickedDate > today) {
+            alert('Cannot mark completion for future dates.');
+            return;
+        }
+
         state.currentDate = dateStr;
-        const currentStatus = getDateStatus(state.selectedActivityId, subId, dateStr);
+        const completionCount = getDateStatus(state.selectedActivityId, subId, dateStr);
         const formattedDate = formatDateForDisplay(dateStr);
 
         let title = activity.name;
@@ -512,13 +595,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         dateModalTitle.textContent = title;
-        dateModalInfo.textContent = formattedDate;
+        dateModalInfo.textContent = `${formattedDate}${completionCount > 0 ? ` (${completionCount} completion${completionCount > 1 ? 's' : ''})` : ''}`;
 
         // Show appropriate buttons based on status
-        if (currentStatus === 'completed') {
-            markCompletedBtn.style.display = 'none';
+        if (completionCount > 0) {
+            markCompletedBtn.textContent = 'Add Another';
+            markCompletedBtn.style.display = 'flex';
+            markScheduledBtn.textContent = 'Clear All';
             markScheduledBtn.style.display = 'flex';
         } else {
+            markCompletedBtn.textContent = 'Mark as Completed';
             markCompletedBtn.style.display = 'flex';
             markScheduledBtn.style.display = 'none';
         }
@@ -555,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set or remove status
         if (status === 'completed') {
-            state.schedules[activityId][subId][dateStr] = 'completed';
+            state.schedules[activityId][subId][dateStr] = (state.schedules[activityId][subId][dateStr] || 0) + 1;
         } else {
             delete state.schedules[activityId][subId][dateStr];
         }
@@ -564,6 +650,49 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
         renderStats();
         dateModal.classList.add('hidden');
+    };
+
+    const incrementCompletion = async (dateStr) => {
+        if (!state.selectedActivityId) return;
+
+        const activityId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+
+        // Initialize nested structure
+        if (!state.schedules[activityId]) {
+            state.schedules[activityId] = {};
+        }
+        if (!state.schedules[activityId][subId]) {
+            state.schedules[activityId][subId] = {};
+        }
+
+        // Increment completion count
+        state.schedules[activityId][subId][dateStr] = (state.schedules[activityId][subId][dateStr] || 0) + 1;
+
+        await saveSchedules();
+        renderCalendar();
+        renderStats();
+    };
+
+    const decrementCompletion = async (dateStr) => {
+        if (!state.selectedActivityId) return;
+
+        const activityId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+
+        if (!state.schedules[activityId]?.[subId]?.[dateStr]) return;
+
+        // Decrement completion count
+        state.schedules[activityId][subId][dateStr]--;
+
+        // Remove if count reaches 0
+        if (state.schedules[activityId][subId][dateStr] <= 0) {
+            delete state.schedules[activityId][subId][dateStr];
+        }
+
+        await saveSchedules();
+        renderCalendar();
+        renderStats();
     };
 
     // Pattern Management
@@ -694,7 +823,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Public API
     window.scheduleApp = {
         handleDayClick,
-        changeMonth
+        changeMonth,
+        incrementCompletion,
+        decrementCompletion
     };
 
     // Utilities
