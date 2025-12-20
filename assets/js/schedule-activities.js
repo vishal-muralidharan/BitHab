@@ -15,8 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let db = null;
 
     // DOM Elements
-    const activitySelector = document.getElementById('activity-selector');
-    const subActivitySelector = document.getElementById('subactivity-selector');
     const setScheduleBtn = document.getElementById('set-schedule-btn');
     const calendarContainer = document.getElementById('schedule-calendar-container');
     const activityStats = document.getElementById('activity-stats');
@@ -68,25 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setupEventListeners = () => {
         backBtn.addEventListener('click', () => window.location.href = 'activities.html');
-        
-        activitySelector.addEventListener('change', (e) => {
-            state.selectedActivityId = e.target.value;
-            state.selectedSubActivityId = null;
-            renderSubActivities();
-            renderCalendar();
-            renderStats();
-        });
-
-        subActivitySelector.addEventListener('change', (e) => {
-            state.selectedSubActivityId = e.target.value;
-            // Show schedule button only if subactivity is selected when parent has subactivities
-            const activity = state.activities.find(a => a.id === state.selectedActivityId);
-            if (activity && activity.subActivities && activity.subActivities.length > 0) {
-                setScheduleBtn.style.display = e.target.value ? 'inline-flex' : 'none';
-            }
-            renderCalendar();
-            renderStats();
-        });
 
         setScheduleBtn.addEventListener('click', () => openPatternModal());
         
@@ -226,9 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Rendering
     const renderActivitySelector = () => {
-        // Populate activity selector
+        const activityGrid = document.getElementById('activity-grid');
+        
         if (state.activities.length === 0) {
-            calendarContainer.innerHTML = `
+            activityGrid.innerHTML = `
                 <div class="empty-state-simple">
                     <i class="fas fa-calendar-alt"></i>
                     <h3>No Activities Yet</h3>
@@ -238,37 +218,63 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             `;
+            calendarContainer.innerHTML = '';
             return;
         }
 
-        activitySelector.innerHTML = '<option value="">Select an activity</option>' +
-            state.activities.map(activity => 
-                `<option value="${activity.id}">${activity.name}</option>`
-            ).join('');
+        activityGrid.innerHTML = state.activities.map(activity => {
+            const isSelected = state.selectedActivityId === activity.id;
+            const hasSubactivities = activity.subActivities && activity.subActivities.length > 0;
+            return `
+                <div class="activity-card ${isSelected ? 'selected' : ''}" 
+                     data-id="${activity.id}"
+                     onclick="window.scheduleApp.selectActivity('${activity.id}')">
+                    <div class="activity-card-color" style="background: ${activity.color || '#888'}"></div>
+                    <div class="activity-card-content">
+                        <div class="activity-card-name">${activity.name}</div>
+                        ${hasSubactivities ? `<div class="activity-card-meta"><i class="fas fa-sitemap"></i> ${activity.subActivities.length} sub-activities</div>` : ''}
+                    </div>
+                    ${isSelected ? '<i class="fas fa-check-circle activity-card-check"></i>' : ''}
+                </div>
+            `;
+        }).join('');
         
         renderCalendar();
     };
 
     const renderSubActivities = () => {
+        const subActivitySection = document.getElementById('subactivity-section');
+        const subActivityGrid = document.getElementById('subactivity-grid');
+        
         if (!state.selectedActivityId) {
-            subActivitySelector.style.display = 'none';
+            subActivitySection.style.display = 'none';
             setScheduleBtn.style.display = 'none';
             return;
         }
 
         const activity = state.activities.find(a => a.id === state.selectedActivityId);
         if (!activity || !activity.subActivities || activity.subActivities.length === 0) {
-            subActivitySelector.style.display = 'none';
+            subActivitySection.style.display = 'none';
             setScheduleBtn.style.display = 'inline-flex';
             return;
         }
 
-        // Activity has subactivities - show selector but hide button until subactivity is selected
-        subActivitySelector.style.display = 'block';
-        subActivitySelector.innerHTML = '<option value="">Select a sub-activity</option>' +
-            activity.subActivities.map(sub => 
-                `<option value="${sub.id}">${sub.name}</option>`
-            ).join('');
+        // Activity has subactivities - show cards but hide button until subactivity is selected
+        subActivitySection.style.display = 'block';
+        subActivityGrid.innerHTML = activity.subActivities.map(sub => {
+            const isSelected = state.selectedSubActivityId === sub.id;
+            return `
+                <div class="subactivity-card ${isSelected ? 'selected' : ''}" 
+                     data-id="${sub.id}"
+                     onclick="window.scheduleApp.selectSubActivity('${sub.id}')">
+                    <div class="activity-card-color" style="background: ${sub.color || '#888'}"></div>
+                    <div class="activity-card-content">
+                        <div class="activity-card-name">${sub.name}</div>
+                    </div>
+                    ${isSelected ? '<i class="fas fa-check-circle activity-card-check"></i>' : ''}
+                </div>
+            `;
+        }).join('');
         
         // Only show schedule button if a subactivity is selected
         setScheduleBtn.style.display = state.selectedSubActivityId ? 'inline-flex' : 'none';
@@ -641,9 +647,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set or remove status
         if (status === 'completed') {
+            // Add one more completion
             state.schedules[activityId][subId][dateStr] = (state.schedules[activityId][subId][dateStr] || 0) + 1;
-        } else {
-            delete state.schedules[activityId][subId][dateStr];
+        } else if (status === 'planned') {
+            // Clear all completions (revert to scheduled only)
+            state.schedules[activityId][subId][dateStr] = 0;
         }
 
         await saveSchedules();
@@ -820,12 +828,35 @@ document.addEventListener('DOMContentLoaded', () => {
         patternModal.classList.add('hidden');
     };
     
+    // Selection methods
+    const selectActivity = (activityId) => {
+        state.selectedActivityId = activityId;
+        state.selectedSubActivityId = null;
+        renderActivitySelector();
+        renderSubActivities();
+        renderCalendar();
+        renderStats();
+    };
+
+    const selectSubActivity = (subActivityId) => {
+        state.selectedSubActivityId = subActivityId;
+        const activity = state.activities.find(a => a.id === state.selectedActivityId);
+        if (activity && activity.subActivities && activity.subActivities.length > 0) {
+            setScheduleBtn.style.display = subActivityId ? 'inline-flex' : 'none';
+        }
+        renderSubActivities();
+        renderCalendar();
+        renderStats();
+    };
+
     // Public API
     window.scheduleApp = {
         handleDayClick,
         changeMonth,
         incrementCompletion,
-        decrementCompletion
+        decrementCompletion,
+        selectActivity,
+        selectSubActivity
     };
 
     // Utilities

@@ -70,13 +70,14 @@
         </div>
         
         <div class="schedule-controls">
-          <div class="control-row">
-            <select id="activity-selector" class="activity-selector">
-              <option value="">Select an activity</option>
-            </select>
-            <select id="subactivity-selector" class="activity-selector" style="display: none;">
-              <option value="">Select a sub-activity</option>
-            </select>
+          <div id="activity-grid" class="activity-grid">
+            <!-- Activities will be rendered here -->
+          </div>
+          <div id="subactivity-section" class="subactivity-section" style="display: none;">
+            <div class="section-label">Select a sub-activity:</div>
+            <div id="subactivity-grid" class="subactivity-grid">
+              <!-- Sub-activities will be rendered here -->
+            </div>
           </div>
           <button id="set-schedule-btn" class="schedule-pattern-btn" style="display: none;">
             <i class="fas fa-calendar-days"></i> Set Schedule Pattern
