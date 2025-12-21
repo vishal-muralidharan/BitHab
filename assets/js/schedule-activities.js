@@ -78,11 +78,44 @@ document.addEventListener('DOMContentLoaded', () => {
         clearPatternBtn.addEventListener('click', () => clearPattern());
 
         dateModal.addEventListener('click', (e) => {
-            if (e.target === dateModal) dateModal.classList.add('hidden');
+            if (e.target === dateModal) {
+                dateModal.classList.add('hidden');
+            }
         });
 
         patternModal.addEventListener('click', (e) => {
-            if (e.target === patternModal) patternModal.classList.add('hidden');
+            if (e.target === patternModal) {
+                patternModal.classList.add('hidden');
+            }
+        });
+
+        // Click outside activity/subactivity grids to deselect
+        document.addEventListener('click', (e) => {
+            const activityGrid = document.getElementById('activity-grid');
+            const subactivitySection = document.getElementById('subactivity-section');
+            const setScheduleBtn = document.getElementById('set-schedule-btn');
+            
+            // Check if click is on an activity or subactivity card
+            if (e.target.closest('.activity-card') || e.target.closest('.subactivity-card')) {
+                return; // Don't deselect if clicking on a card
+            }
+            
+            // Check if click is outside all interactive areas
+            if (!activityGrid.contains(e.target) && 
+                !subactivitySection.contains(e.target) && 
+                !setScheduleBtn.contains(e.target) &&
+                !e.target.closest('.modal') &&
+                !e.target.closest('.calendar-day')) {
+                // Only deselect if something was selected
+                if (state.selectedActivityId || state.selectedSubActivityId) {
+                    state.selectedActivityId = null;
+                    state.selectedSubActivityId = null;
+                    renderActivitySelector();
+                    renderSubActivities();
+                    renderCalendar();
+                    renderStats();
+                }
+            }
         });
 
         // Pattern type selector
@@ -239,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
         
+        renderSubActivities();
         renderCalendar();
     };
 
@@ -253,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const activity = state.activities.find(a => a.id === state.selectedActivityId);
+        
         if (!activity || !activity.subActivities || activity.subActivities.length === 0) {
             subActivitySection.style.display = 'none';
             setScheduleBtn.style.display = 'inline-flex';
@@ -342,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // If no schedule pattern exists, show different information
         if (allScheduledDates === 0) {
-            const createdDate = activity.createdAt ? new Date(activity.createdAt).toLocaleDateString() : 'Unknown';
             const totalCompletions = Object.keys(schedule).reduce((sum, date) => {
                 return sum + (schedule[date] && schedule[date] !== 0 ? (typeof schedule[date] === 'number' ? schedule[date] : 1) : 0);
             }, 0);
@@ -353,14 +387,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p style="margin: 0.5rem 0;">No schedule pattern set</p>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Click "Set Schedule Pattern" to create a recurring schedule</p>
                 </div>
+                ${activity.createdAt ? `
                 <div class="stat-row" style="margin-top: 1rem;">
                     <span class="stat-label">
                         <i class="fas fa-calendar-day"></i> Created
                     </span>
-                    <span class="stat-value">${createdDate}</span>
+                    <span class="stat-value">${new Date(activity.createdAt).toLocaleDateString()}</span>
                 </div>
+                ` : ''}
                 ${totalCompletions > 0 ? `
-                <div class="stat-row">
+                <div class="stat-row" ${!activity.createdAt ? 'style="margin-top: 1rem;"' : ''}>
                     <span class="stat-label">
                         <i class="fas fa-check-circle"></i> Manual Completions
                     </span>
@@ -715,12 +751,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('input[name="pattern-type"]').forEach(radio => radio.checked = false);
         document.querySelectorAll('.day-option input').forEach(cb => cb.checked = false);
         document.querySelectorAll('.date-option').forEach(opt => opt.classList.remove('selected'));
-        document.getElementById('pattern-start-date').value = '';
-        document.getElementById('daily-start-date').value = '';
 
-        // Set default start date to today
+        // Set default start date to today for both inputs
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('pattern-start-date').value = today;
+        document.getElementById('daily-start-date').value = today;
 
         // Load existing pattern
         if (pattern) {
@@ -833,8 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.selectedActivityId = activityId;
         state.selectedSubActivityId = null;
         renderActivitySelector();
-        renderSubActivities();
-        renderCalendar();
+        // renderSubActivities is already called by renderActivitySelector
         renderStats();
     };
 
