@@ -728,7 +728,6 @@
 }
 
 .pattern-details-container {
-    min-height: 100px;
     position: relative;
 }
 
@@ -777,7 +776,6 @@
     background: var(--hover-bg);
     border-radius: 0.5rem;
     border: 1px solid var(--border-color);
-    position: absolute;
     width: 100%;
     box-sizing: border-box;
 }
@@ -870,8 +868,9 @@
 .date-selector {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.3rem;
+    gap: 0.2rem;
     padding: 0.25rem;
+    max-width: 100%;
 }
 
 .date-option {
@@ -879,14 +878,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid var(--border-color);
-    border-radius: 0.3rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.2rem;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 500;
-    padding: 0.15rem;
+    padding: 0;
     position: relative;
+    min-height: 26px;
+    max-height: 38px;
 }
 
 .date-option:hover {
@@ -904,9 +905,9 @@
 .date-option.selected::after {
     content: '✓';
     position: absolute;
-    top: 0.125rem;
-    right: 0.25rem;
-    font-size: 0.75rem;
+    top: 0.05rem;
+    right: 0.15rem;
+    font-size: 0.65rem;
     font-weight: bold;
 }
 
