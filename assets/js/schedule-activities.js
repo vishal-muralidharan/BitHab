@@ -1,5 +1,10 @@
 // Simplified Schedule Activities for BitHab
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize custom dialogs
+    if (!window.customDialogs) {
+        window.customDialogs = new CustomDialogs();
+    }
+    
     const state = {
         activities: [],
         schedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': count } } }
@@ -605,29 +610,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return count;
     };
 
-    const handleDayClick = (dateStr) => {
+    const handleDayClick = async (dateStr) => {
         if (!state.selectedActivityId) return;
 
         const activity = state.activities.find(a => a.id === state.selectedActivityId);
         const subId = state.selectedSubActivityId || 'main';
         const scheduled = isDateScheduled(dateStr);
         
-        if (!scheduled) {
-            alert('This date is not scheduled for this activity. Please set a schedule pattern first.');
-            return;
-        }
-
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const clickedDate = new Date(dateStr + 'T00:00:00');
         
         if (clickedDate > today) {
-            alert('Cannot mark completion for future dates.');
+            await window.customDialogs.alert('Cannot mark completion for future dates.', 'Future Date');
             return;
         }
 
         state.currentDate = dateStr;
-        const completionCount = getDateStatus(state.selectedActivityId, subId, dateStr);
+        const completionCount = getDateStatus(state.selectedActivityId, subId, dateStr) || 0;
         const formattedDate = formatDateForDisplay(dateStr);
 
         let title = activity.name;
@@ -637,11 +637,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         dateModalTitle.textContent = title;
-        dateModalInfo.textContent = `${formattedDate}${completionCount > 0 ? ` (${completionCount} completion${completionCount > 1 ? 's' : ''})` : ''}`;
+        
+        // Include warning if not scheduled
+        let infoText = formattedDate;
+        if (completionCount > 0) {
+            infoText += ` (${completionCount} completion${completionCount > 1 ? 's' : ''})`;
+        }
+        if (!scheduled) {
+            infoText += '\n⚠️ Not scheduled - marking will add to schedule';
+        }
+        dateModalInfo.textContent = infoText;
 
         // Show appropriate buttons based on status
         if (completionCount > 0) {
-            markCompletedBtn.textContent = 'Add Another';
+            markCompletedBtn.textContent = 'Add Another Completion';
             markCompletedBtn.style.display = 'flex';
             markScheduledBtn.textContent = 'Clear All';
             markScheduledBtn.style.display = 'flex';
@@ -681,19 +690,36 @@ document.addEventListener('DOMContentLoaded', () => {
             state.schedules[activityId][subId] = {};
         }
 
+        const currentCount = state.schedules[activityId][subId][dateStr] || 0;
+
         // Set or remove status
         if (status === 'completed') {
+            // No confirmation needed - the modal button click is the confirmation
             // Add one more completion
-            state.schedules[activityId][subId][dateStr] = (state.schedules[activityId][subId][dateStr] || 0) + 1;
+            state.schedules[activityId][subId][dateStr] = currentCount + 1;
         } else if (status === 'planned') {
-            // Clear all completions (revert to scheduled only)
-            state.schedules[activityId][subId][dateStr] = 0;
+            // Clear all completions with confirmation
+            const confirmed = await window.customDialogs.confirm(
+                `Clear all ${currentCount} completion(s) for this date?`,
+                'Clear Completions'
+            );
+            
+            if (!confirmed) {
+                dateModal.classList.add('hidden');
+                return;
+            }
+            delete state.schedules[activityId][subId][dateStr];
         }
 
         await saveSchedules();
         renderCalendar();
         renderStats();
         dateModal.classList.add('hidden');
+        
+        // Show success toast
+        if (status === 'completed') {
+            window.customDialogs.showToast('Completion marked!', 'success', 1500);
+        }
     };
 
     const incrementCompletion = async (dateStr) => {
@@ -701,6 +727,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const activityId = state.selectedActivityId;
         const subId = state.selectedSubActivityId || 'main';
+        
+        // Verify this is a past date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const targetDate = new Date(dateStr + 'T00:00:00');
+        
+        if (targetDate > today) {
+            await window.customDialogs.alert('Cannot mark completion for future dates.', 'Future Date');
+            return;
+        }
 
         // Initialize nested structure
         if (!state.schedules[activityId]) {
@@ -709,13 +745,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.schedules[activityId][subId]) {
             state.schedules[activityId][subId] = {};
         }
+        
+        const currentCount = state.schedules[activityId][subId][dateStr] || 0;
 
-        // Increment completion count
-        state.schedules[activityId][subId][dateStr] = (state.schedules[activityId][subId][dateStr] || 0) + 1;
+        // Increment completion count directly (no confirmation for quick +/- buttons)
+        state.schedules[activityId][subId][dateStr] = currentCount + 1;
 
         await saveSchedules();
         renderCalendar();
         renderStats();
+        
+        // Show quick feedback
+        window.customDialogs.showToast('Completion added!', 'success', 1000);
     };
 
     const decrementCompletion = async (dateStr) => {
@@ -798,7 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const patternType = document.querySelector('input[name="pattern-type"]:checked')?.value;
 
         if (!patternType) {
-            alert('Please select a pattern type');
+            await window.customDialogs.alert('Please select a pattern type', 'Pattern Required');
             return;
         }
 
@@ -810,7 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : document.getElementById('pattern-start-date').value;
         
         if (!startDateInput) {
-            alert('Please select a start date');
+            await window.customDialogs.alert('Please select a start date', 'Start Date Required');
             return;
         }
         pattern.startDate = startDateInput;
@@ -819,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedDays = Array.from(document.querySelectorAll('.day-option input:checked'))
                 .map(cb => parseInt(cb.value));
             if (selectedDays.length === 0) {
-                alert('Please select at least one day');
+                await window.customDialogs.alert('Please select at least one day', 'Days Required');
                 return;
             }
             pattern.days = selectedDays;
@@ -829,7 +870,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedDates = Array.from(document.querySelectorAll('.date-option.selected'))
                 .map(opt => parseInt(opt.dataset.date));
             if (selectedDates.length === 0) {
-                alert('Please select at least one date');
+                await window.customDialogs.alert('Please select at least one date', 'Dates Required');
                 return;
             }
             pattern.dates = selectedDates;
@@ -848,7 +889,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const clearPattern = async () => {
-        if (!confirm('This will clear the schedule pattern. Continue?')) return;
+        const confirmed = await window.customDialogs.confirm(
+            'This will clear the schedule pattern. Continue?',
+            'Clear Pattern'
+        );
+        
+        if (!confirmed) return;
 
         const actId = state.selectedActivityId;
         const subId = state.selectedSubActivityId || 'main';
@@ -858,6 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await saveSchedules();
             renderCalendar();
             renderStats();
+            window.customDialogs.showToast('Pattern cleared', 'success', 1500);
         }
 
         patternModal.classList.add('hidden');
