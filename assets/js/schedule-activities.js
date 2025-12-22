@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         activities: [],
         schedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': count } } }
+        skipped: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': true } } }
         patterns: {}, // { activityId: { subActivityId: { type, days/dates } } }
         selectedActivityId: null,
         selectedSubActivityId: null,
@@ -168,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userDoc.exists) {
                 const data = userDoc.data();
                 state.schedules = data.activitySchedules || {};
+                state.skipped = data.activitySkipped || {};
                 state.patterns = data.activityPatterns || {};
             }
             
@@ -233,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await db.collection('users').doc(userId).set({
                 activitySchedules: state.schedules,
+                activitySkipped: state.skipped,
                 activityPatterns: state.patterns,
                 lastUpdated: Date.now()
             }, { merge: true });
@@ -296,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!activity || !activity.subActivities || activity.subActivities.length === 0) {
             subActivitySection.style.display = 'none';
             setScheduleBtn.style.display = 'inline-flex';
+            updateScheduleButtonText();
             return;
         }
 
@@ -318,6 +322,19 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Only show schedule button if a subactivity is selected
         setScheduleBtn.style.display = state.selectedSubActivityId ? 'inline-flex' : 'none';
+        updateScheduleButtonText();
+    };
+    
+    const updateScheduleButtonText = () => {
+        if (!state.selectedActivityId) return;
+        
+        const actId = state.selectedActivityId;
+        const subId = state.selectedSubActivityId || 'main';
+        const hasPattern = state.patterns[actId]?.[subId];
+        
+        setScheduleBtn.innerHTML = hasPattern 
+            ? '<i class="fas fa-calendar-edit"></i> Edit Schedule Pattern'
+            : '<i class="fas fa-calendar-days"></i> Set Schedule Pattern';
     };
 
     const renderStats = () => {
@@ -500,21 +517,31 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isToday) classes += ' today';
             if (scheduled && !isPast) classes += ' future';
 
-            let statusIndicator = '';
-            if (completionCount > 0) {
-                statusIndicator = `<span class="status-indicator">${completionCount > 1 ? completionCount + '✓' : '✓'}</span>`;
-            } else if (scheduled) {
-                statusIndicator = '<span class="status-indicator">○</span>';
+            // Check if date is skipped
+            const actId = state.selectedActivityId;
+            const subId2 = state.selectedSubActivityId || 'main';
+            const skipCount = state.skipped[actId]?.[subId2]?.[dateStr] || 0;
+            
+            if (skipCount > 0) {
+                classes += ' skipped';
             }
 
-            let actions = '';
-            if (scheduled && isPast) {
-                actions = `
-                    <div class="day-actions">
-                        <button class="day-action-btn plus" onclick="event.stopPropagation(); window.scheduleApp.incrementCompletion('${dateStr}')">+</button>
-                        ${completionCount > 0 ? `<button class="day-action-btn minus" onclick="event.stopPropagation(); window.scheduleApp.decrementCompletion('${dateStr}')">-</button>` : ''}
-                    </div>
-                `;
+            let statusIndicator = '';
+            if (completionCount > 0 && skipCount > 0) {
+                // Show both green and red dots
+                statusIndicator = `<span class="status-indicator-group">
+                    <span class="status-indicator dot ${completionCount > 1 ? 'multiple' : ''}" title="${completionCount} completion${completionCount > 1 ? 's' : ''}"></span>
+                    <span class="status-indicator skipped-indicator ${skipCount > 1 ? 'multiple' : ''}" title="${skipCount} skipped"></span>
+                </span>`;
+            } else if (completionCount > 0) {
+                // Show green dot for completed dates
+                statusIndicator = `<span class="status-indicator dot ${completionCount > 1 ? 'multiple' : ''}" title="${completionCount} completion${completionCount > 1 ? 's' : ''}"></span>`;
+            } else if (skipCount > 0) {
+                // Show red dot for skipped dates
+                statusIndicator = `<span class="status-indicator skipped-indicator ${skipCount > 1 ? 'multiple' : ''}" title="${skipCount} skipped"></span>`;
+            } else if (scheduled) {
+                // Show blue circle for scheduled dates
+                statusIndicator = '<span class="status-indicator">○</span>';
             }
 
             html += `
@@ -523,7 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
                      onclick="window.scheduleApp.handleDayClick('${dateStr}')">
                     <span class="day-number">${day}</span>
                     ${statusIndicator}
-                    ${actions}
                 </div>
             `;
         }
@@ -587,27 +613,52 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const actId = state.selectedActivityId;
         const subId = state.selectedSubActivityId || 'main';
+        const schedule = state.schedules[actId]?.[subId] || {};
         const pattern = state.patterns[actId]?.[subId];
         
-        if (!pattern || !pattern.startDate) return 0;
-        
-        const startDate = new Date(pattern.startDate + 'T00:00:00');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        let count = 0;
-        const currentDate = new Date(startDate);
+        let totalScheduled = 0;
+        const countedDates = new Set();
         
-        // Count only dates from start date up to today
-        while (currentDate <= today) {
-            const dateStr = currentDate.toISOString().split('T')[0];
-            if (isDateScheduled(dateStr)) {
-                count++;
+        // Count pattern-based scheduled dates (up to and including today)
+        if (pattern && pattern.startDate) {
+            const startDate = new Date(pattern.startDate + 'T00:00:00');
+            const currentDate = new Date(startDate);
+            
+            while (currentDate <= today) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                if (isDateScheduled(dateStr)) {
+                    countedDates.add(dateStr);
+                    totalScheduled++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
             }
-            currentDate.setDate(currentDate.getDate() + 1);
         }
         
-        return count;
+        // Add additional completions beyond the first for each date
+        // And add any manually completed dates not in the pattern
+        Object.keys(schedule).forEach(dateStr => {
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            if (dateObj > today) return; // Skip future dates
+            
+            const count = schedule[dateStr];
+            if (count && count > 0) {
+                if (!countedDates.has(dateStr)) {
+                    // This date wasn't in the pattern, count it as scheduled
+                    totalScheduled++;
+                    countedDates.add(dateStr);
+                }
+                
+                // Additional completions beyond the first count as additional scheduled
+                if (count > 1) {
+                    totalScheduled += (count - 1);
+                }
+            }
+        });
+        
+        return totalScheduled;
     };
 
     const handleDayClick = async (dateStr) => {
@@ -638,26 +689,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dateModalTitle.textContent = title;
         
+        // Check if date is skipped
+        const skipCount = state.skipped[state.selectedActivityId]?.[subId]?.[dateStr] || 0;
+        
         // Include warning if not scheduled
         let infoText = formattedDate;
-        if (completionCount > 0) {
+        if (completionCount > 0 && skipCount > 0) {
+            infoText += ` (${completionCount} completion${completionCount > 1 ? 's' : ''}, ${skipCount} skipped)`;
+        } else if (completionCount > 0) {
             infoText += ` (${completionCount} completion${completionCount > 1 ? 's' : ''})`;
+        } else if (skipCount > 0) {
+            infoText += ` (${skipCount} skipped)`;
         }
         if (!scheduled) {
             infoText += '\n⚠️ Not scheduled - marking will add to schedule';
         }
         dateModalInfo.textContent = infoText;
 
-        // Show appropriate buttons based on status
-        if (completionCount > 0) {
-            markCompletedBtn.textContent = 'Add Another Completion';
+        // Show appropriate buttons: Mark Completion, Skipped, or Clear All
+        if (completionCount > 0 || skipCount > 0) {
+            markCompletedBtn.innerHTML = '<i class="fas fa-check-circle"></i> Mark Completion';
             markCompletedBtn.style.display = 'flex';
-            markScheduledBtn.textContent = 'Clear All';
+            markScheduledBtn.innerHTML = '<i class="fas fa-times-circle"></i> Clear All';
             markScheduledBtn.style.display = 'flex';
+            
+            // Add skipped button
+            let skippedBtn = document.getElementById('mark-skipped-btn');
+            if (!skippedBtn) {
+                skippedBtn = document.createElement('button');
+                skippedBtn.id = 'mark-skipped-btn';
+                skippedBtn.className = 'status-action-btn skipped';
+                markScheduledBtn.parentElement.insertBefore(skippedBtn, markScheduledBtn);
+                skippedBtn.addEventListener('click', () => setDateStatus('skipped'));
+            }
+            skippedBtn.innerHTML = '<i class="fas fa-ban"></i> Mark Skipped';
+            skippedBtn.style.display = 'flex'; // Always show skipped button
         } else {
-            markCompletedBtn.textContent = 'Mark as Completed';
+            markCompletedBtn.innerHTML = '<i class="fas fa-check-circle"></i> Mark Completion';
             markCompletedBtn.style.display = 'flex';
             markScheduledBtn.style.display = 'none';
+            
+            // Show skipped option
+            let skippedBtn = document.getElementById('mark-skipped-btn');
+            if (!skippedBtn) {
+                skippedBtn = document.createElement('button');
+                skippedBtn.id = 'mark-skipped-btn';
+                skippedBtn.className = 'status-action-btn skipped';
+                markCompletedBtn.parentElement.appendChild(skippedBtn);
+                skippedBtn.addEventListener('click', () => setDateStatus('skipped'));
+            }
+            skippedBtn.innerHTML = '<i class="fas fa-ban"></i> Mark Skipped';
+            skippedBtn.style.display = 'flex';
         }
 
         dateModal.classList.remove('hidden');
@@ -692,16 +774,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentCount = state.schedules[activityId][subId][dateStr] || 0;
 
+        // Initialize skipped structure
+        if (!state.skipped[activityId]) {
+            state.skipped[activityId] = {};
+        }
+        if (!state.skipped[activityId][subId]) {
+            state.skipped[activityId][subId] = {};
+        }
+        
+        const currentSkipCount = state.skipped[activityId][subId][dateStr] || 0;
+
         // Set or remove status
         if (status === 'completed') {
             // No confirmation needed - the modal button click is the confirmation
-            // Add one more completion
+            // Add one more completion (doesn't affect skips)
             state.schedules[activityId][subId][dateStr] = currentCount + 1;
+        } else if (status === 'skipped') {
+            // Add one more skip (doesn't affect completions)
+            state.skipped[activityId][subId][dateStr] = currentSkipCount + 1;
         } else if (status === 'planned') {
-            // Clear all completions with confirmation
+            // Clear all - remove both completions and skipped status
             const confirmed = await window.customDialogs.confirm(
-                `Clear all ${currentCount} completion(s) for this date?`,
-                'Clear Completions'
+                `Clear all data for this date?`,
+                'Clear All'
             );
             
             if (!confirmed) {
@@ -709,6 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             delete state.schedules[activityId][subId][dateStr];
+            delete state.skipped[activityId][subId][dateStr];
         }
 
         await saveSchedules();
@@ -719,6 +815,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show success toast
         if (status === 'completed') {
             window.customDialogs.showToast('Completion marked!', 'success', 1500);
+        } else if (status === 'skipped') {
+            window.customDialogs.showToast('Marked as skipped', 'success', 1500);
         }
     };
 

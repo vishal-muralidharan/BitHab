@@ -364,8 +364,9 @@
     50% { transform: scale(1.2); opacity: 0.8; }
 }
 
+/* Remove background colors - only show dots */
 .calendar-day.planned {
-    background: rgba(59, 130, 246, 0.15);
+    /* No background */
 }
 
 .calendar-day.planned .status-indicator {
@@ -373,11 +374,43 @@
 }
 
 .calendar-day.completed {
-    background: rgba(34, 197, 94, 0.15);
+    /* No background */
 }
 
 .calendar-day.completed .status-indicator {
     color: #22c55e;
+}
+
+.calendar-day.skipped {
+    /* No background */
+}
+
+.calendar-day.skipped .status-indicator {
+    color: #ef4444;
+}
+
+/* Red dot indicator for skipped dates */
+.status-indicator.skipped-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    font-size: 0;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+}
+
+.status-indicator.skipped-indicator.multiple {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+    animation: pulse 2s infinite;
+}
+
+/* Group for showing both completion and skip dots */
+.status-indicator-group {
+    display: flex;
+    gap: 3px;
+    align-items: center;
 }
 
 .calendar-day.future {
@@ -679,6 +712,16 @@
 .status-action-btn.completed:hover,
 .status-action-btn.completed.active {
     background: rgba(34, 197, 94, 0.1);
+}
+
+.status-action-btn.skipped {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.status-action-btn.skipped:hover,
+.status-action-btn.skipped.active {
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .status-action-btn.none {
@@ -1087,7 +1130,7 @@
     }
 
     .status-indicator {
-        font-size: 0.85
+        font-size: 0.85;
         font-size: 0.8rem;
         padding: 0.3rem 0.6rem;
     }
