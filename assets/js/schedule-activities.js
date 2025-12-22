@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         activities: [],
         schedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': count } } }
         skipped: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': true } } }
+        cleared: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': true } } } - tracks explicitly cleared dates
         patterns: {}, // { activityId: { subActivityId: { type, days/dates } } }
         selectedActivityId: null,
         selectedSubActivityId: null,
@@ -112,7 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 !subactivitySection.contains(e.target) && 
                 !setScheduleBtn.contains(e.target) &&
                 !e.target.closest('.modal') &&
-                !e.target.closest('.calendar-day')) {
+                !e.target.closest('.modal-content') &&
+                !e.target.closest('.calendar-day') &&
+                !e.target.closest('.toast') &&
+                !e.target.closest('.custom-modal-overlay') &&
+                !e.target.closest('.custom-modal') &&
+                !e.target.closest('.custom-modal-btn') &&
+                !e.target.closest('.status-action-btn') &&
+                !e.target.closest('#custom-modal-container') &&
+                !e.target.closest('#custom-toast-container') &&
+                !e.target.closest('.date-modal-content') &&
+                !e.target.closest('.date-status-actions')) {
                 // Only deselect if something was selected
                 if (state.selectedActivityId || state.selectedSubActivityId) {
                     state.selectedActivityId = null;
@@ -171,11 +182,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = userDoc.data();
                 state.schedules = data.activitySchedules || {};
                 state.skipped = data.activitySkipped || {};
+                state.cleared = data.activityCleared || {};
                 state.patterns = data.activityPatterns || {};
             }
             
-            // Sync with main calendar logs
-            await syncWithMainCalendar();
+            // Only sync from main calendar on first load if no schedules exist
+            // This prevents overwriting user's cleared data
+            const hasExistingData = Object.keys(state.schedules).length > 0 || 
+                                    Object.keys(state.cleared).length > 0;
+            if (!hasExistingData) {
+                await syncWithMainCalendar();
+            }
         } catch (error) {
             console.error('Error loading schedules:', error);
         }
@@ -207,7 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const loggedIds = logs[dateStr];
                     if (loggedIds.includes(activity.id)) {
                         // Main activity was completed on this date - set to 1 if not already set
-                        if (!state.schedules[activity.id].main[dateStr]) {
+                        // Skip if this date was explicitly cleared
+                        const isCleared = state.cleared[activity.id]?.main?.[dateStr];
+                        if (!state.schedules[activity.id].main[dateStr] && !isCleared) {
                             state.schedules[activity.id].main[dateStr] = 1;
                         }
                     }
@@ -219,7 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (!state.schedules[activity.id][sub.id]) {
                                     state.schedules[activity.id][sub.id] = {};
                                 }
-                                if (!state.schedules[activity.id][sub.id][dateStr]) {
+                                // Skip if this date was explicitly cleared
+                                const isCleared = state.cleared[activity.id]?.[sub.id]?.[dateStr];
+                                if (!state.schedules[activity.id][sub.id][dateStr] && !isCleared) {
                                     state.schedules[activity.id][sub.id][dateStr] = 1;
                                 }
                             }
@@ -237,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await db.collection('users').doc(userId).set({
                 activitySchedules: state.schedules,
                 activitySkipped: state.skipped,
+                activityCleared: state.cleared,
                 activityPatterns: state.patterns,
                 lastUpdated: Date.now()
             }, { merge: true });
@@ -351,6 +373,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const activity = state.activities.find(a => a.id === state.selectedActivityId);
+        if (!activity) {
+            activityStats.innerHTML = `
+                <div class="stat-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Select an activity to view progress</p>
+                </div>
+            `;
+            return;
+        }
+        
         const activitySchedules = state.schedules[state.selectedActivityId] || {};
         const subActId = state.selectedSubActivityId || 'main';
         const schedule = activitySchedules[subActId] || {};
@@ -951,9 +983,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // No confirmation needed - the modal button click is the confirmation
             // Add one more completion (doesn't affect skips)
             state.schedules[activityId][subId][dateStr] = currentCount + 1;
+            // Remove from cleared list if it was there
+            if (state.cleared[activityId]?.[subId]?.[dateStr]) {
+                delete state.cleared[activityId][subId][dateStr];
+            }
         } else if (status === 'skipped') {
             // Add one more skip (doesn't affect completions)
             state.skipped[activityId][subId][dateStr] = currentSkipCount + 1;
+            // Remove from cleared list if it was there
+            if (state.cleared[activityId]?.[subId]?.[dateStr]) {
+                delete state.cleared[activityId][subId][dateStr];
+            }
         } else if (status === 'planned') {
             // Clear all - remove both completions and skipped status
             const confirmed = await window.customDialogs.confirm(
@@ -967,6 +1007,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             delete state.schedules[activityId][subId][dateStr];
             delete state.skipped[activityId][subId][dateStr];
+            
+            // Mark this date as explicitly cleared so sync won't re-add it
+            if (!state.cleared[activityId]) {
+                state.cleared[activityId] = {};
+            }
+            if (!state.cleared[activityId][subId]) {
+                state.cleared[activityId][subId] = {};
+            }
+            state.cleared[activityId][subId][dateStr] = true;
         }
 
         await saveSchedules();
@@ -979,6 +1028,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.customDialogs.showToast('Completion marked!', 'success', 1500);
         } else if (status === 'skipped') {
             window.customDialogs.showToast('Marked as skipped', 'success', 1500);
+        } else if (status === 'planned') {
+            window.customDialogs.showToast('Date cleared', 'success', 1500);
         }
     };
 
