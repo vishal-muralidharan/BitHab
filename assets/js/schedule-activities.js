@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await waitForAuth();
             await Promise.all([loadActivities(), loadSchedules()]);
             renderActivitySelector();
+            renderStats();
             setupEventListeners();
         } catch (error) {
             console.error('Initialization error:', error);
@@ -282,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         renderSubActivities();
         renderCalendar();
+        renderStats();
     };
 
     const renderSubActivities = () => {
@@ -363,44 +365,139 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const currentMonthKey = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
         
-        // Filter scheduled dates for this month (after start date and on/before today)
+        // Get skipped data
+        const skipped = state.skipped[actId]?.[subId] || {};
+        
+        // Calculate this month stats
         const scheduledDates = getScheduledDates(currentMonthKey).filter(date => {
             const dateObj = new Date(date + 'T00:00:00');
             return (!startDate || dateObj >= startDate) && dateObj <= today;
         });
         
-        // Filter completed dates for this month (after start date and on/before today)
-        const completedDates = Object.keys(schedule).filter(date => {
-            if (!date.startsWith(currentMonthKey) || !schedule[date] || schedule[date] === 0) return false;
-            const dateObj = new Date(date + 'T00:00:00');
-            return (!startDate || dateObj >= startDate) && dateObj <= today;
-        });
-
-        const allScheduledDates = getAllScheduledDatesCount();
-        
-        // Count only completions between start date and today - sum up all completion counts
-        const allCompletedCount = Object.keys(schedule).reduce((sum, date) => {
-            if (!schedule[date] || schedule[date] === 0) return sum;
+        // Count completions this month (sum of all completion counts)
+        const thisMonthCompletions = Object.keys(schedule).reduce((sum, date) => {
+            if (!date.startsWith(currentMonthKey) || !schedule[date] || schedule[date] === 0) return sum;
             const dateObj = new Date(date + 'T00:00:00');
             if ((!startDate || dateObj >= startDate) && dateObj <= today) {
-                return sum + (typeof schedule[date] === 'number' ? schedule[date] : 1);
+                return sum + Number(schedule[date]);
             }
             return sum;
         }, 0);
         
-        // Count unique completion dates for percentage
-        const allCompletedDates = Object.keys(schedule).filter(date => {
-            if (!schedule[date] || schedule[date] === 0) return false;
+        // Count skips this month (sum of all skip counts)
+        const thisMonthSkips = Object.keys(skipped).reduce((sum, date) => {
+            if (!date.startsWith(currentMonthKey) || !skipped[date] || skipped[date] === 0) return sum;
             const dateObj = new Date(date + 'T00:00:00');
-            return (!startDate || dateObj >= startDate) && dateObj <= today;
-        }).length;
+            if ((!startDate || dateObj >= startDate) && dateObj <= today) {
+                return sum + Number(skipped[date]);
+            }
+            return sum;
+        }, 0);
         
-        const completionRate = allScheduledDates > 0 ? Math.round((allCompletedDates / allScheduledDates) * 100) : 0;
+        // This month scheduled includes pattern dates + manual completions + skips
+        let thisMonthScheduled = scheduledDates.length;
+        const thisMonthDates = new Set(scheduledDates);
+        
+        // Add manual completions/skips not in pattern
+        Object.keys(schedule).forEach(date => {
+            if (!date.startsWith(currentMonthKey)) return;
+            const dateObj = new Date(date + 'T00:00:00');
+            if (dateObj > today) return;
+            const count = Number(schedule[date]);
+            if (!thisMonthDates.has(date) && count > 0) {
+                thisMonthScheduled++;
+                thisMonthDates.add(date);
+            }
+            // Additional completions beyond first
+            if (count > 1) {
+                thisMonthScheduled += (count - 1);
+            }
+        });
+        
+        Object.keys(skipped).forEach(date => {
+            if (!date.startsWith(currentMonthKey)) return;
+            const dateObj = new Date(date + 'T00:00:00');
+            if (dateObj > today) return;
+            const count = Number(skipped[date]);
+            if (!thisMonthDates.has(date) && count > 0) {
+                thisMonthScheduled++;
+                thisMonthDates.add(date);
+            }
+            // Additional skips beyond first
+            if (count > 1) {
+                thisMonthScheduled += (count - 1);
+            }
+        });
+
+        // Count unique days recorded this month (days with completions or skips)
+        const thisMonthRecordedDates = new Set();
+        Object.keys(schedule).forEach(date => {
+            if (date.startsWith(currentMonthKey) && schedule[date] > 0) {
+                const dateObj = new Date(date + 'T00:00:00');
+                if (dateObj <= today) {
+                    thisMonthRecordedDates.add(date);
+                }
+            }
+        });
+        Object.keys(skipped).forEach(date => {
+            if (date.startsWith(currentMonthKey) && skipped[date] > 0) {
+                const dateObj = new Date(date + 'T00:00:00');
+                if (dateObj <= today) {
+                    thisMonthRecordedDates.add(date);
+                }
+            }
+        });
+        const thisMonthDaysRecorded = thisMonthRecordedDates.size;
+
+        // Total completions = number of green dots (sum of completion counts)
+        const allCompletedCount = Object.keys(schedule).reduce((sum, date) => {
+            if (!schedule[date] || schedule[date] === 0) return sum;
+            const dateObj = new Date(date + 'T00:00:00');
+            if ((!startDate || dateObj >= startDate) && dateObj <= today) {
+                return sum + Number(schedule[date]);
+            }
+            return sum;
+        }, 0);
+        
+        // Total skipped = number of red dots (sum of skip counts)
+        const allSkippedCount = Object.keys(skipped).reduce((sum, date) => {
+            if (!skipped[date] || skipped[date] === 0) return sum;
+            const dateObj = new Date(date + 'T00:00:00');
+            if ((!startDate || dateObj >= startDate) && dateObj <= today) {
+                return sum + Number(skipped[date]);
+            }
+            return sum;
+        }, 0);
+        
+        // Count scheduled dates with nothing marked (blue circles)
+        let unmarkedScheduledCount = 0;
+        if (pattern && pattern.startDate) {
+            const patternStartDate = new Date(pattern.startDate + 'T00:00:00');
+            const currentDate = new Date(patternStartDate);
+            
+            while (currentDate <= today) {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                if (isDateScheduled(dateStr)) {
+                    const hasCompletion = schedule[dateStr] && schedule[dateStr] > 0;
+                    const hasSkip = skipped[dateStr] && skipped[dateStr] > 0;
+                    if (!hasCompletion && !hasSkip) {
+                        unmarkedScheduledCount++;
+                    }
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+        
+        // Total scheduled = greens + reds + unmarked scheduled days
+        const allScheduledDates = allCompletedCount + allSkippedCount + unmarkedScheduledCount;
+        
+        const completionRate = allScheduledDates > 0 ? Math.round((allCompletedCount / allScheduledDates) * 100) : 0;
 
         // If no schedule pattern exists, show different information
         if (allScheduledDates === 0) {
             const totalCompletions = Object.keys(schedule).reduce((sum, date) => {
-                return sum + (schedule[date] && schedule[date] !== 0 ? (typeof schedule[date] === 'number' ? schedule[date] : 1) : 0);
+                const count = schedule[date];
+                return sum + (count && count !== 0 ? Number(count) : 0);
             }, 0);
             
             activityStats.innerHTML = `
@@ -434,15 +531,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="stat-label">
                     <i class="fas fa-calendar-check"></i> This Month
                 </span>
-                <span class="stat-value">${completedDates.length}/${scheduledDates.length}</span>
+                <span class="stat-value">${thisMonthDaysRecorded} days recorded</span>
             </div>
             
             <div class="stat-row">
                 <span class="stat-label">
                     <i class="fas fa-check-circle"></i> Total Completions
                 </span>
-                <span class="stat-value">${allCompletedCount}</span>
+                <span class="stat-value">${allCompletedCount}/${allScheduledDates}</span>
             </div>
+            
+            ${allSkippedCount > 0 ? `
+            <div class="stat-row">
+                <span class="stat-label">
+                    <i class="fas fa-ban"></i> Total Skipped
+                </span>
+                <span class="stat-value">${allSkippedCount}</span>
+            </div>
+            ` : ''}
             
             <div class="stat-row">
                 <span class="stat-label">
@@ -482,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         let html = `
             <div class="calendar-header">
@@ -509,13 +616,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const completionCount = getDateStatus(state.selectedActivityId, subId, dateStr);
             const scheduled = isDateScheduled(dateStr);
             const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-            const isPast = new Date(dateStr + 'T00:00:00') <= today;
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const isPast = dateObj < today;
+            const isPastOrToday = dateObj <= today;
 
             let classes = 'calendar-day';
             if (completionCount > 0) classes += ' completed';
             else if (scheduled) classes += ' planned';
             if (isToday) classes += ' today';
-            if (scheduled && !isPast) classes += ' future';
+            if (scheduled && !isPastOrToday) classes += ' future';
 
             // Check if date is skipped
             const actId = state.selectedActivityId;
@@ -528,17 +637,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let statusIndicator = '';
             if (completionCount > 0 && skipCount > 0) {
-                // Show both green and red dots
-                statusIndicator = `<span class="status-indicator-group">
-                    <span class="status-indicator dot ${completionCount > 1 ? 'multiple' : ''}" title="${completionCount} completion${completionCount > 1 ? 's' : ''}"></span>
-                    <span class="status-indicator skipped-indicator ${skipCount > 1 ? 'multiple' : ''}" title="${skipCount} skipped"></span>
+                // Show multiple green dots and multiple red dots
+                const greenDots = Array(Math.min(completionCount, 3)).fill('<span class="status-indicator dot"></span>').join('');
+                const redDots = Array(Math.min(skipCount, 3)).fill('<span class="status-indicator skipped-indicator"></span>').join('');
+                statusIndicator = `<span class="status-indicator-group" title="${completionCount} completion${completionCount > 1 ? 's' : ''}, ${skipCount} skipped">
+                    ${greenDots}${redDots}
                 </span>`;
             } else if (completionCount > 0) {
-                // Show green dot for completed dates
-                statusIndicator = `<span class="status-indicator dot ${completionCount > 1 ? 'multiple' : ''}" title="${completionCount} completion${completionCount > 1 ? 's' : ''}"></span>`;
+                // Show multiple green dots (max 3 visible)
+                const dots = Array(Math.min(completionCount, 3)).fill('<span class="status-indicator dot"></span>').join('');
+                statusIndicator = `<span class="status-indicator-group" title="${completionCount} completion${completionCount > 1 ? 's' : ''}">${dots}</span>`;
             } else if (skipCount > 0) {
-                // Show red dot for skipped dates
-                statusIndicator = `<span class="status-indicator skipped-indicator ${skipCount > 1 ? 'multiple' : ''}" title="${skipCount} skipped"></span>`;
+                // Show multiple red dots (max 3 visible)
+                const dots = Array(Math.min(skipCount, 3)).fill('<span class="status-indicator skipped-indicator"></span>').join('');
+                statusIndicator = `<span class="status-indicator-group" title="${skipCount} skipped">${dots}</span>`;
             } else if (scheduled) {
                 // Show blue circle for scheduled dates
                 statusIndicator = '<span class="status-indicator">○</span>';
@@ -658,26 +770,68 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
+        // Add skipped dates to the total scheduled count
+        const skipped = state.skipped[actId]?.[subId] || {};
+        Object.keys(skipped).forEach(dateStr => {
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            if (dateObj > today) return; // Skip future dates
+            
+            const skipCount = skipped[dateStr];
+            if (skipCount && skipCount > 0) {
+                if (!countedDates.has(dateStr)) {
+                    // This date wasn't already counted, add it
+                    totalScheduled++;
+                    countedDates.add(dateStr);
+                }
+                
+                // Each skip beyond the first counts as additional scheduled
+                if (skipCount > 1) {
+                    totalScheduled += (skipCount - 1);
+                }
+            }
+        });
+        
         return totalScheduled;
     };
 
     const handleDayClick = async (dateStr) => {
-        if (!state.selectedActivityId) return;
+        try {
+            if (!state.selectedActivityId) {
+                if (window.customDialogs) {
+                    await window.customDialogs.alert('Please select an activity first.', 'No Activity Selected');
+                } else {
+                    alert('Please select an activity first.');
+                }
+                return;
+            }
 
-        const activity = state.activities.find(a => a.id === state.selectedActivityId);
-        const subId = state.selectedSubActivityId || 'main';
-        const scheduled = isDateScheduled(dateStr);
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const clickedDate = new Date(dateStr + 'T00:00:00');
-        
-        if (clickedDate > today) {
-            await window.customDialogs.alert('Cannot mark completion for future dates.', 'Future Date');
-            return;
-        }
+            const activity = state.activities.find(a => a.id === state.selectedActivityId);
+            if (!activity) {
+                if (window.customDialogs) {
+                    await window.customDialogs.alert('Activity not found.', 'Error');
+                } else {
+                    alert('Activity not found.');
+                }
+                return;
+            }
+            
+            const subId = state.selectedSubActivityId || 'main';
+            const scheduled = isDateScheduled(dateStr);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const clickedDate = new Date(dateStr + 'T00:00:00');
+            
+            if (clickedDate > today) {
+                if (window.customDialogs) {
+                    await window.customDialogs.alert('Cannot mark completion for future dates.', 'Future Date');
+                } else {
+                    alert('Cannot mark completion for future dates.');
+                }
+                return;
+            }
 
-        state.currentDate = dateStr;
+            state.currentDate = dateStr;
         const completionCount = getDateStatus(state.selectedActivityId, subId, dateStr) || 0;
         const formattedDate = formatDateForDisplay(dateStr);
 
@@ -743,6 +897,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         dateModal.classList.remove('hidden');
+    } catch (error) {
+        console.error('Error in handleDayClick:', error);
+        if (window.customDialogs) {
+            await window.customDialogs.alert('An error occurred. Please try again.', 'Error');
+        } else {
+            alert('An error occurred: ' + error.message);
+        }
+    }
     };
     
     const changeMonth = (delta) => {
