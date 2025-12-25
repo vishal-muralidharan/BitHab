@@ -701,17 +701,20 @@ body.dark .reminder-item:hover {
 }
 
 .sub-goal-item::before {
-    content: '•';
-    font-size: 2rem;
-    line-height: 1;
+    content: '';
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
+    border-radius: 50%;
     margin-left: 1.5rem;
     margin-right: 0.75rem;
-    color: #ef4444;
+    background-color: #ef4444;
     flex-shrink: 0;
 }
 
 .sub-goal-item.completed::before {
-    color: #22c55e;
+    background-color: #22c55e;
 }
 
 .sub-goal-item:hover {

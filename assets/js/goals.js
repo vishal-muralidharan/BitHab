@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
         goals: [], // [{id, name, completed, createdAt, subgoals:[{id,name,completed,createdAt}]}]
         ui: {
             expandedGoals: new Set(),
+            completedSectionExpanded: true, // Default to expanded so users see their completed goals
         },
     };
 
@@ -107,7 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await db.collection('users').doc(userId).set({
                 goals: state.goals,
                 goalsUI: {
-                    expandedGoals: expandedGoalsArray
+                    expandedGoals: expandedGoalsArray,
+                    completedSectionExpanded: state.ui?.completedSectionExpanded ?? true
                 },
                 lastUpdated: Date.now(),
                 lastUpdatedBy: 'goals_page'
@@ -148,19 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.goals = loadedData.goals || [];
                 
                 // Load UI state and convert Array back to Set
-                if (!state.ui) state.ui = { expandedGoals: new Set() };
+                if (!state.ui) state.ui = { expandedGoals: new Set(), completedSectionExpanded: true };
                 if (loadedData.goalsUI && Array.isArray(loadedData.goalsUI.expandedGoals)) {
                     state.ui.expandedGoals = new Set(loadedData.goalsUI.expandedGoals);
                 } else {
                     state.ui.expandedGoals = new Set();
                 }
+                // Load completed section expanded state (default to true)
+                state.ui.completedSectionExpanded = loadedData.goalsUI?.completedSectionExpanded ?? true;
                 
                 console.log('Goals loaded from Firebase:', state.goals);
-                console.log('UI state loaded:', { expandedGoals: Array.from(state.ui.expandedGoals) });
+                console.log('UI state loaded:', { expandedGoals: Array.from(state.ui.expandedGoals), completedSectionExpanded: state.ui.completedSectionExpanded });
             } else {
                 console.warn('User document does not exist, creating empty goals array');
                 state.goals = [];
-                if (!state.ui) state.ui = { expandedGoals: new Set() };
+                if (!state.ui) state.ui = { expandedGoals: new Set(), completedSectionExpanded: true };
             }
         } catch (e) {
             console.error("Error loading goals:", e);
@@ -187,9 +191,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeGoals = state.goals.filter(g => !g.completed);
         const completedGoals = state.goals.filter(g => g.completed);
         
-        // Update toggle button visibility
+        // Update toggle button visibility and apply expanded state
         if (toggleCompletedBtn) {
             toggleCompletedBtn.style.display = completedGoals.length > 0 ? 'flex' : 'none';
+            const icon = toggleCompletedBtn.querySelector('.toggle-icon');
+            if (icon) {
+                icon.textContent = state.ui.completedSectionExpanded ? '▲' : '▼';
+            }
+        }
+        
+        // Apply expanded state to completed goals list
+        if (completedGoalList) {
+            if (state.ui.completedSectionExpanded && completedGoals.length > 0) {
+                completedGoalList.classList.add('expanded');
+            } else {
+                completedGoalList.classList.remove('expanded');
+            }
         }
         
         if (activeGoals.length === 0 && completedGoals.length === 0) {
@@ -228,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }));
 
             // Ensure UI state exists
-            if (!state.ui) state.ui = { expandedGoals: new Set() };
+            if (!state.ui) state.ui = { expandedGoals: new Set(), completedSectionExpanded: true };
             if (!state.ui.expandedGoals) state.ui.expandedGoals = new Set();
             
             const isExpanded = state.ui.expandedGoals.has(goal.id);
@@ -312,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             targetList.appendChild(goalItem);
     };
 
-    const handleGoalActions = (e) => {
+    const handleGoalActions = async (e) => {
         const target = e.target;
         
         // Handle Enter key on add subgoal input
@@ -327,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         goal.subgoals.push({ id: `sub_${Date.now()}`, name, completed: false, createdAt: Date.now() });
                         target.value = '';
                         enforceGoalCompletionFromSubgoals(goal);
-                        saveState();
+                        await saveState();
                         renderGoals();
                     }
                 }
@@ -353,9 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     showEditGoalModal(goal);
                 } else if (removeBtn) {
                     e.stopPropagation();
-                    showConfirmation(`Are you sure you want to delete goal "${goal.name}"?`, () => {
+                    showConfirmation(`Are you sure you want to delete goal "${goal.name}"?`, async () => {
                         state.goals = state.goals.filter(g => g.id !== goalId);
-                        saveState();
+                        await saveState();
                         renderGoals();
                     });
                 } else if (target.closest('.goal-caret')) {
@@ -366,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         state.ui.expandedGoals.add(goalId);
                     }
-                    saveState();
+                    await saveState();
                     renderGoals();
                     return;
                 } else if (target.closest('.goal-name-text')) {
@@ -382,15 +399,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         goal.completed = !goal.completed;
                     }
                     
+                    // Save immediately to ensure data is persisted
+                    await saveState();
+                    
                     // Add animation when marking complete/incomplete
                     if (wasCompleted !== goal.completed) {
                         goalItem.classList.add('completing');
                         setTimeout(() => {
-                            saveState();
                             renderGoals();
                         }, 300);
                     } else {
-                        saveState();
                         renderGoals();
                     }
                     return;
@@ -405,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     goal.subgoals.push({ id: `sub_${Date.now()}`, name, completed: false, createdAt: Date.now() });
                     input.value = '';
                     enforceGoalCompletionFromSubgoals(goal);
-                    saveState();
+                    await saveState();
                     renderGoals();
                     return;
                 } else if (target.closest('.sub-goal-item') && !editSubBtn && !deleteSubBtn) {
@@ -417,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (sg) {
                         sg.completed = !sg.completed;
                         enforceGoalCompletionFromSubgoals(goal);
-                        saveState();
+                        await saveState();
                         renderGoals();
                     }
                     return;
@@ -430,17 +448,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         const trimmed = newName.trim();
                         if (trimmed) {
                             sg.name = trimmed;
-                            saveState();
+                            await saveState();
                             renderGoals();
                         }
                     }
                 } else if (deleteSubBtn) {
                     e.stopPropagation();
                     const subId = deleteSubBtn.dataset.id;
-                    showConfirmation('Delete this subgoal?', () => {
+                    showConfirmation('Delete this subgoal?', async () => {
                         goal.subgoals = (goal.subgoals || []).filter(s => s.id !== subId);
                         enforceGoalCompletionFromSubgoals(goal);
-                        saveState();
+                        await saveState();
                         renderGoals();
                     });
                 }
@@ -698,17 +716,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Toggle completed goals section
     const toggleCompletedBtn = document.getElementById('toggle-completed-goals');
     if (toggleCompletedBtn && completedGoalList) {
-        toggleCompletedBtn.addEventListener('click', () => {
-            const isExpanded = completedGoalList.classList.contains('expanded');
-            if (isExpanded) {
-                completedGoalList.classList.remove('expanded');
-            } else {
-                completedGoalList.classList.add('expanded');
-            }
+        toggleCompletedBtn.addEventListener('click', async () => {
+            state.ui.completedSectionExpanded = !state.ui.completedSectionExpanded;
             const icon = toggleCompletedBtn.querySelector('.toggle-icon');
             if (icon) {
-                icon.textContent = isExpanded ? '▼' : '▲';
+                icon.textContent = state.ui.completedSectionExpanded ? '▲' : '▼';
             }
+            if (state.ui.completedSectionExpanded) {
+                completedGoalList.classList.add('expanded');
+            } else {
+                completedGoalList.classList.remove('expanded');
+            }
+            await saveState();
         });
     }
 
