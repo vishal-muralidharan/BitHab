@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let userId = null;
     let db = null;
+    let lastSaveTime = 0; // Track when we last saved to prevent reload race conditions
 
     // DOM Elements
     const setScheduleBtn = document.getElementById('set-schedule-btn');
@@ -254,16 +255,50 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const saveSchedules = async () => {
+        if (!userId) {
+            console.error('Cannot save schedules: userId is null');
+            return false;
+        }
+        if (!db) {
+            console.error('Cannot save schedules: db is not initialized');
+            return false;
+        }
+        
+        const saveTime = Date.now();
+        
+        // Deep clone the data to ensure we're saving the current state
+        const schedulesToSave = JSON.parse(JSON.stringify(state.schedules));
+        const skippedToSave = JSON.parse(JSON.stringify(state.skipped));
+        const clearedToSave = JSON.parse(JSON.stringify(state.cleared));
+        const patternsToSave = JSON.parse(JSON.stringify(state.patterns));
+        
+        console.log('Saving schedules:', { schedules: schedulesToSave, skipped: skippedToSave });
+        
         try {
             await db.collection('users').doc(userId).set({
-                activitySchedules: state.schedules,
-                activitySkipped: state.skipped,
-                activityCleared: state.cleared,
-                activityPatterns: state.patterns,
-                lastUpdated: Date.now()
+                activitySchedules: schedulesToSave,
+                activitySkipped: skippedToSave,
+                activityCleared: clearedToSave,
+                activityPatterns: patternsToSave,
+                lastUpdated: saveTime,
+                lastUpdatedBy: 'schedule_activities_page'
             }, { merge: true });
+            
+            lastSaveTime = saveTime;
+            console.log('Schedules successfully saved to Firebase at', saveTime);
+            
+            // Update BitHabDataSync lastSyncTime to prevent reload race conditions
+            if (window.BitHabDataSync) {
+                window.BitHabDataSync.lastSyncTime = saveTime;
+            }
+            
+            return true;
         } catch (error) {
             console.error('Error saving schedules:', error);
+            if (window.customDialogs) {
+                window.customDialogs.showToast('Failed to save - please try again', 'error', 3000);
+            }
+            return false;
         }
     };
 
@@ -501,27 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return sum;
         }, 0);
         
-        // Count scheduled dates with nothing marked (blue circles)
-        let unmarkedScheduledCount = 0;
-        if (pattern && pattern.startDate) {
-            const patternStartDate = new Date(pattern.startDate + 'T00:00:00');
-            const currentDate = new Date(patternStartDate);
-            
-            while (currentDate <= today) {
-                const dateStr = currentDate.toISOString().split('T')[0];
-                if (isDateScheduled(dateStr)) {
-                    const hasCompletion = schedule[dateStr] && schedule[dateStr] > 0;
-                    const hasSkip = skipped[dateStr] && skipped[dateStr] > 0;
-                    if (!hasCompletion && !hasSkip) {
-                        unmarkedScheduledCount++;
-                    }
-                }
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-        }
-        
-        // Total scheduled = greens + reds + unmarked scheduled days
-        const allScheduledDates = allCompletedCount + allSkippedCount + unmarkedScheduledCount;
+        // Total scheduled = only greens + reds (unmarked scheduled days are NOT counted)
+        // This way, only dates that have been marked (completed or skipped) are considered for calculation
+        const allScheduledDates = allCompletedCount + allSkippedCount;
         
         const completionRate = allScheduledDates > 0 ? Math.round((allCompletedCount / allScheduledDates) * 100) : 0;
 
@@ -987,6 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.cleared[activityId]?.[subId]?.[dateStr]) {
                 delete state.cleared[activityId][subId][dateStr];
             }
+            console.log('Marked completed:', activityId, subId, dateStr, 'count:', state.schedules[activityId][subId][dateStr]);
         } else if (status === 'skipped') {
             // Add one more skip (doesn't affect completions)
             state.skipped[activityId][subId][dateStr] = currentSkipCount + 1;
@@ -994,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.cleared[activityId]?.[subId]?.[dateStr]) {
                 delete state.cleared[activityId][subId][dateStr];
             }
+            console.log('Marked skipped:', activityId, subId, dateStr, 'count:', state.skipped[activityId][subId][dateStr]);
         } else if (status === 'planned') {
             // Clear all - remove both completions and skipped status
             const confirmed = await window.customDialogs.confirm(
@@ -1016,9 +1035,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.cleared[activityId][subId] = {};
             }
             state.cleared[activityId][subId][dateStr] = true;
+            console.log('Cleared date:', activityId, subId, dateStr);
         }
 
-        await saveSchedules();
+        const saved = await saveSchedules();
+        console.log('Save result:', saved);
+        
         renderCalendar();
         renderStats();
         dateModal.classList.add('hidden');
@@ -1061,13 +1083,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Increment completion count directly (no confirmation for quick +/- buttons)
         state.schedules[activityId][subId][dateStr] = currentCount + 1;
-
-        await saveSchedules();
-        renderCalendar();
-        renderStats();
         
-        // Show quick feedback
-        window.customDialogs.showToast('Completion added!', 'success', 1000);
+        console.log('Incremented completion:', activityId, subId, dateStr, 'count:', state.schedules[activityId][subId][dateStr]);
+
+        const saved = await saveSchedules();
+        if (saved) {
+            renderCalendar();
+            renderStats();
+            // Show quick feedback
+            window.customDialogs.showToast('Completion added!', 'success', 1000);
+        }
     };
 
     const decrementCompletion = async (dateStr) => {
@@ -1085,10 +1110,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.schedules[activityId][subId][dateStr] <= 0) {
             delete state.schedules[activityId][subId][dateStr];
         }
+        
+        console.log('Decremented completion:', activityId, subId, dateStr);
 
-        await saveSchedules();
-        renderCalendar();
-        renderStats();
+        const saved = await saveSchedules();
+        if (saved) {
+            renderCalendar();
+            renderStats();
+        }
     };
 
     // Pattern Management

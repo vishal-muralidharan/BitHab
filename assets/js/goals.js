@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let confirmationAction = null;
     let currentEditingGoal = null;
     let currentEditingDraft = null;
+    let lastSaveTime = 0; // Track when we last saved to prevent reload race conditions
 
     // Show loading immediately
     const showLoading = () => {
@@ -97,33 +98,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveState = async () => {
         if (!userId) {
             console.warn('Cannot save goals: userId is null');
-            return;
+            return false;
         }
-        console.log('Saving goals:', state.goals);
+        if (!db) {
+            console.warn('Cannot save goals: db is not initialized');
+            return false;
+        }
+        
+        console.log('Saving goals:', JSON.stringify(state.goals));
         try {
             // Convert Set to Array for storage
             const expandedGoalsArray = state.ui?.expandedGoals ? Array.from(state.ui.expandedGoals) : [];
             
+            // Deep clone the goals to ensure we're saving the current state
+            const goalsToSave = JSON.parse(JSON.stringify(state.goals));
+            
+            const saveTime = Date.now();
+            
             // Save using direct Firestore update with merge
             await db.collection('users').doc(userId).set({
-                goals: state.goals,
+                goals: goalsToSave,
                 goalsUI: {
                     expandedGoals: expandedGoalsArray,
                     completedSectionExpanded: state.ui?.completedSectionExpanded ?? true
                 },
-                lastUpdated: Date.now(),
+                lastUpdated: saveTime,
                 lastUpdatedBy: 'goals_page'
             }, { merge: true });
             
-            console.log('Goals successfully saved to Firebase');
+            // Update last save time to prevent reload race conditions
+            lastSaveTime = saveTime;
             
-            // Notify data sync
+            console.log('Goals successfully saved to Firebase at', saveTime, ':', goalsToSave);
+            
+            // Notify data sync and update its lastSyncTime
             if (window.BitHabDataSync) {
+                window.BitHabDataSync.lastSyncTime = saveTime;
                 window.BitHabDataSync.notifyListeners('data_saved', {
-                    goals: state.goals,
-                    lastUpdatedBy: 'goals_page'
+                    goals: goalsToSave,
+                    lastUpdatedBy: 'goals_page',
+                    lastUpdated: saveTime
                 });
             }
+            
+            return true;
         } catch (e) {
             console.error("Error saving goals:", e);
             if (typeof errorHandler !== 'undefined') {
@@ -134,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'error'
                 });
             }
+            return false;
         }
     };
 
@@ -399,8 +418,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         goal.completed = !goal.completed;
                     }
                     
+                    console.log('Goal completion toggled:', goal.id, 'completed:', goal.completed);
+                    console.log('Current state.goals:', JSON.stringify(state.goals.map(g => ({id: g.id, completed: g.completed}))));
+                    
                     // Save immediately to ensure data is persisted
-                    await saveState();
+                    const saved = await saveState();
+                    console.log('Save result:', saved);
                     
                     // Add animation when marking complete/incomplete
                     if (wasCompleted !== goal.completed) {
@@ -538,7 +561,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Add listener for data updates from other pages
                     window.BitHabDataSync.addListener((event, data) => {
                         try {
-                            if (event === 'data_updated' && data.lastUpdatedBy !== 'goals_page') {
+                            // Skip if this update came from this page
+                            if (data.lastUpdatedBy === 'goals_page') {
+                                return;
+                            }
+                            
+                            // Skip if we just saved (within 3 seconds)
+                            const timeSinceSave = Date.now() - lastSaveTime;
+                            if (timeSinceSave < 3000) {
+                                console.log('Skipping data sync update - recently saved');
+                                return;
+                            }
+                            
+                            if (event === 'data_updated') {
                                 console.log('Data updated from another page, refreshing goals...');
                                 if (data.goals) {
                                     state.goals = data.goals;
@@ -558,9 +593,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Refresh goals when window gets focus
+        // Refresh goals when window gets focus (but not if we just saved)
         window.addEventListener('focus', async () => {
             if (userId) {
+                // Skip reload if we saved within the last 3 seconds to prevent race conditions
+                const timeSinceSave = Date.now() - lastSaveTime;
+                if (timeSinceSave < 3000) {
+                    console.log('Skipping reload on focus - recently saved');
+                    return;
+                }
+                
                 console.log('Window focused, reloading goals...');
                 try {
                     await loadState();
