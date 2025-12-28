@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
         metadata: {
             firstActivityDate: null // Track first ever activity date
         },
+        // Schedule data for syncing with schedule-activities page
+        activitySchedules: {}, // { activityId: { subActivityId: { 'YYYY-MM-DD': count } } }
+        activityPatterns: {}, // { activityId: { subActivityId: { type, days/dates } } }
         ui: {
             currentDate: new Date(),
             selectedActivityId: null,
@@ -440,6 +443,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Check if a sub-activity is scheduled (has a pattern) for a given date
+    const isSubActivityScheduled = (activityId, subActivityId, dateStr) => {
+        const subId = subActivityId || 'main';
+        const pattern = state.activityPatterns[activityId]?.[subId];
+        
+        if (!pattern) return false;
+        
+        // Check if date is before pattern start date
+        if (pattern.startDate) {
+            const patternStart = new Date(pattern.startDate + 'T00:00:00');
+            const checkDate = new Date(dateStr + 'T00:00:00');
+            if (checkDate < patternStart) return false;
+        }
+        
+        const date = new Date(dateStr + 'T00:00:00');
+        const dayOfWeek = date.getDay();
+        const dayOfMonth = date.getDate();
+        
+        if (pattern.type === 'daily') {
+            return true;
+        } else if (pattern.type === 'weekly' && pattern.days) {
+            return pattern.days.includes(dayOfWeek);
+        } else if (pattern.type === 'monthly' && pattern.dates) {
+            return pattern.dates.includes(dayOfMonth);
+        }
+        
+        return false;
+    };
+
+    // Sync a sub-activity completion to schedule-activities (if scheduled)
+    const syncCompletionToScheduleActivities = async (activityId, subActivityId, dateStr) => {
+        try {
+            const subId = subActivityId || 'main';
+            
+            // Check if this sub-activity is scheduled
+            if (!isSubActivityScheduled(activityId, subActivityId, dateStr)) {
+                console.log('Sub-activity not scheduled, skipping sync to schedule-activities');
+                return;
+            }
+            
+            // Check if already has a completion in schedule
+            const currentCount = state.activitySchedules[activityId]?.[subId]?.[dateStr] || 0;
+            if (currentCount > 0) {
+                console.log('Already has completion in schedule-activities, skipping');
+                return;
+            }
+            
+            // Initialize nested structure in local state
+            if (!state.activitySchedules[activityId]) {
+                state.activitySchedules[activityId] = {};
+            }
+            if (!state.activitySchedules[activityId][subId]) {
+                state.activitySchedules[activityId][subId] = {};
+            }
+            
+            // Mark as completed once
+            state.activitySchedules[activityId][subId][dateStr] = 1;
+            
+            // Save to Firebase
+            await db.collection('users').doc(userId).set({
+                activitySchedules: state.activitySchedules,
+                lastUpdated: Date.now(),
+                lastUpdatedBy: 'index_page'
+            }, { merge: true });
+            
+            console.log('Synced completion to schedule-activities:', activityId, subId, dateStr);
+        } catch (error) {
+            console.error('Error syncing completion to schedule-activities:', error);
+        }
+    };
+
     // Create enhanced log structure from legacy subactivity array
     const createEnhancedLogStructure = (subActivityIds) => {
         if (!subActivityIds || !Array.isArray(subActivityIds)) {
@@ -711,6 +785,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.goals = data.goals || [];
                 state.reminders = data.reminders || [];
                 state.metadata = data.metadata || { firstActivityDate: null };
+                
+                // Load schedule data for syncing with schedule-activities page
+                state.activitySchedules = data.activitySchedules || {};
+                state.activityPatterns = data.activityPatterns || {};
                 
                 console.log('Data loaded from Firebase:', {
                     activities: state.activities.length,
@@ -1865,6 +1943,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add (log) the activity
             state.logs[dateStr].push(activity.id);
             await saveLogs();
+            
+            // Sync completion to schedule-activities if this activity is scheduled (main activity without sub-activities)
+            await syncCompletionToScheduleActivities(activityId, null, dateStr);
         }
         
         // Close the activity selection modal
@@ -1912,6 +1993,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add (log) the subactivity
             state.logs[dateStr].push(subActivityId);
             await saveLogs();
+            
+            // Sync completion to schedule-activities if this sub-activity is scheduled
+            await syncCompletionToScheduleActivities(activityId, subActivityId, dateStr);
             
             // Show quick feedback that it was saved
             showQuickNotification(`${subActivity.name} logged!`);

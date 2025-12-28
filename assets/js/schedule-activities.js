@@ -187,13 +187,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.patterns = data.activityPatterns || {};
             }
             
-            // Only sync from main calendar on first load if no schedules exist
-            // This prevents overwriting user's cleared data
-            const hasExistingData = Object.keys(state.schedules).length > 0 || 
-                                    Object.keys(state.cleared).length > 0;
-            if (!hasExistingData) {
-                await syncWithMainCalendar();
-            }
+            // Always sync from main calendar to pick up any new completions
+            // This respects cleared data - won't re-add cleared dates
+            await syncWithMainCalendar();
+            
+            // Also sync schedule completions back to main calendar
+            await syncSchedulesToMainCalendar();
         } catch (error) {
             console.error('Error loading schedules:', error);
         }
@@ -208,6 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const logData = doc.data();
                 logs[doc.id] = logData.loggedSubActivityIds || [];
             });
+
+            let hasChanges = false;
 
             // Sync completions for each activity
             state.activities.forEach(activity => {
@@ -229,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const isCleared = state.cleared[activity.id]?.main?.[dateStr];
                         if (!state.schedules[activity.id].main[dateStr] && !isCleared) {
                             state.schedules[activity.id].main[dateStr] = 1;
+                            hasChanges = true;
                         }
                     }
 
@@ -243,14 +245,174 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const isCleared = state.cleared[activity.id]?.[sub.id]?.[dateStr];
                                 if (!state.schedules[activity.id][sub.id][dateStr] && !isCleared) {
                                     state.schedules[activity.id][sub.id][dateStr] = 1;
+                                    hasChanges = true;
                                 }
                             }
                         });
                     }
                 });
             });
+
+            // Save if any new completions were synced
+            if (hasChanges) {
+                await saveSchedules();
+                console.log('Synced previous logs from main calendar');
+            }
         } catch (error) {
             console.error('Error syncing with main calendar:', error);
+        }
+    };
+
+    // Sync all schedule completions TO the main calendar (index page logs)
+    const syncSchedulesToMainCalendar = async () => {
+        try {
+            // Load existing logs from main calendar
+            const logsSnapshot = await db.collection('users').doc(userId).collection('logs').get();
+            const existingLogs = {};
+            logsSnapshot.forEach(doc => {
+                const logData = doc.data();
+                existingLogs[doc.id] = logData.loggedSubActivityIds || [];
+            });
+
+            // Create mapping of subactivity ID to activity ID
+            const subActivityToActivity = {};
+            state.activities.forEach(activity => {
+                if (activity.subActivities) {
+                    activity.subActivities.forEach(sub => {
+                        subActivityToActivity[sub.id] = activity.id;
+                    });
+                }
+            });
+
+            // Collect all dates that need updating
+            const datesToUpdate = {};
+
+            // Go through all schedule completions
+            Object.keys(state.schedules).forEach(activityId => {
+                const activitySchedule = state.schedules[activityId];
+                
+                Object.keys(activitySchedule).forEach(subId => {
+                    const subSchedule = activitySchedule[subId];
+                    
+                    Object.keys(subSchedule).forEach(dateStr => {
+                        const count = subSchedule[dateStr];
+                        if (count > 0) {
+                            // Determine which ID to sync
+                            const idToSync = subId !== 'main' ? subId : activityId;
+                            
+                            // Check if already in main calendar logs
+                            const existingForDate = existingLogs[dateStr] || [];
+                            if (!existingForDate.includes(idToSync)) {
+                                if (!datesToUpdate[dateStr]) {
+                                    datesToUpdate[dateStr] = new Set(existingForDate);
+                                }
+                                datesToUpdate[dateStr].add(idToSync);
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Update logs for each date that has new completions
+            const batch = db.batch();
+            let batchCount = 0;
+
+            for (const dateStr of Object.keys(datesToUpdate)) {
+                const loggedIds = Array.from(datesToUpdate[dateStr]);
+                
+                // Create enhanced log structure
+                const activitiesGrouped = {};
+                loggedIds.forEach(id => {
+                    const parentActivityId = subActivityToActivity[id] || id;
+                    if (!activitiesGrouped[parentActivityId]) {
+                        activitiesGrouped[parentActivityId] = {
+                            subActivities: [],
+                            loggedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                    }
+                    if (subActivityToActivity[id]) {
+                        activitiesGrouped[parentActivityId].subActivities.push(id);
+                    }
+                });
+
+                const logRef = db.collection('users').doc(userId).collection('logs').doc(dateStr);
+                batch.set(logRef, {
+                    loggedSubActivityIds: loggedIds,
+                    activities: activitiesGrouped,
+                    migrated: true
+                });
+                batchCount++;
+            }
+
+            if (batchCount > 0) {
+                await batch.commit();
+                console.log(`Synced ${batchCount} dates from schedule to main calendar`);
+            }
+        } catch (error) {
+            console.error('Error syncing schedules to main calendar:', error);
+        }
+    };
+
+    // Sync a sub-activity completion TO the main calendar (index page logs)
+    const syncCompletionToMainCalendar = async (activityId, subActivityId, dateStr, isCompleted) => {
+        try {
+            // Get the log document for this date
+            const logRef = db.collection('users').doc(userId).collection('logs').doc(dateStr);
+            const logDoc = await logRef.get();
+            
+            let loggedIds = [];
+            if (logDoc.exists) {
+                const data = logDoc.data();
+                loggedIds = data.loggedSubActivityIds || [];
+            }
+            
+            // Determine which ID to sync - use subActivityId if it's a real sub-activity, otherwise use activityId
+            const idToSync = subActivityId !== 'main' ? subActivityId : activityId;
+            
+            if (isCompleted) {
+                // Add to logs if not already present
+                if (!loggedIds.includes(idToSync)) {
+                    loggedIds.push(idToSync);
+                    
+                    // Create enhanced log structure
+                    const activitiesGrouped = {};
+                    const subActivityToActivity = {};
+                    
+                    // Create mapping of subactivity ID to activity ID
+                    state.activities.forEach(activity => {
+                        if (activity.subActivities) {
+                            activity.subActivities.forEach(sub => {
+                                subActivityToActivity[sub.id] = activity.id;
+                            });
+                        }
+                    });
+                    
+                    // Group logged subactivities by their parent activity
+                    loggedIds.forEach(id => {
+                        const parentActivityId = subActivityToActivity[id] || id;
+                        if (!activitiesGrouped[parentActivityId]) {
+                            activitiesGrouped[parentActivityId] = {
+                                subActivities: [],
+                                loggedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+                        }
+                        if (subActivityToActivity[id]) {
+                            activitiesGrouped[parentActivityId].subActivities.push(id);
+                        }
+                    });
+                    
+                    await logRef.set({
+                        loggedSubActivityIds: loggedIds,
+                        activities: activitiesGrouped,
+                        migrated: true
+                    });
+                    
+                    console.log('Synced completion to main calendar:', idToSync, dateStr);
+                }
+            }
+            // Note: We don't remove from main calendar when clearing in schedule - that's a separate decision
+        } catch (error) {
+            console.error('Error syncing completion to main calendar:', error);
         }
     };
 
@@ -1005,6 +1167,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 delete state.cleared[activityId][subId][dateStr];
             }
             console.log('Marked completed:', activityId, subId, dateStr, 'count:', state.schedules[activityId][subId][dateStr]);
+            
+            // Sync first completion to main calendar
+            if (currentCount === 0) {
+                await syncCompletionToMainCalendar(activityId, subId, dateStr, true);
+            }
         } else if (status === 'skipped') {
             // Add one more skip (doesn't affect completions)
             state.skipped[activityId][subId][dateStr] = currentSkipCount + 1;
@@ -1085,6 +1252,11 @@ document.addEventListener('DOMContentLoaded', () => {
         state.schedules[activityId][subId][dateStr] = currentCount + 1;
         
         console.log('Incremented completion:', activityId, subId, dateStr, 'count:', state.schedules[activityId][subId][dateStr]);
+
+        // Sync first completion to main calendar
+        if (currentCount === 0) {
+            await syncCompletionToMainCalendar(activityId, subId, dateStr, true);
+        }
 
         const saved = await saveSchedules();
         if (saved) {
