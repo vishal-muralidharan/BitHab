@@ -17,6 +17,7 @@ import DeepFocus from './pages/DeepFocus';
 import ScheduleActivities from './pages/ScheduleActivities';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navigate } from 'react-router-dom';
 
 function PrivateRoute({ children }) {
@@ -32,10 +33,11 @@ function PrivateRoute({ children }) {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Auth routes without Layout */}
-          <Route path="/login" element={<Login />} />
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth routes without Layout */}
+            <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
           <Route path="/*" element={

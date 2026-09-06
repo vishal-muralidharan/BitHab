@@ -1,8 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Header() {
   const { logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -37,8 +39,8 @@ export default function Header() {
         </div>
       </nav>
       <div className="header-actions">
-        <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
-          <i className="fas fa-moon"></i>
+        <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
+          <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>
         <button id="logout-btn" className="header-btn" aria-label="Logout" onClick={handleLogout}>Logout</button>
       </div>
