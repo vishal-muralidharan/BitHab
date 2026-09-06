@@ -1,0 +1,466 @@
+/* Notes Page - Inline Editing */
+
+.notes-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Page Header - Centered */
+.page-header {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    margin: 0 0 0.75rem 0;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Toolbar - Centered Layout */
+.notes-toolbar {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.toolbar-left {
+    position: static;
+}
+
+.toolbar-right {
+    display: flex;
+}
+
+/* Note Type Toggle - Centered Pill */
+.toolbar-left {
+    background: var(--bg-secondary);
+    padding: 0.5rem;
+    border-radius: 50px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.note-type-btn {
+    padding: 0.75rem 4rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 160px;
+    justify-content: center;
+}
+
+.note-type-btn:hover {
+    color: var(--text-primary);
+}
+
+.note-type-btn.active {
+    background: var(--accent-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+}
+
+/* Filter buttons - Below toggle */
+.toolbar-right {
+    position: static;
+    display: flex !important;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.filter-btn {
+    padding: 0.625rem 1.25rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-btn:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent-primary);
+}
+
+.filter-btn.active {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+/* Add Note Button - Left side */
+.add-note-wrapper {
+    position: static;
+}
+
+.btn-primary {
+    padding: 0.625rem 1.25rem;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+}
+
+.filter-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Notes Grid - Masonry Layout */
+.notes-grid {
+    column-count: 3;
+    column-gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .notes-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 640px) {
+    .notes-grid {
+        column-count: 1;
+    }
+}
+
+/* Note Card */
+.note-card {
+    display: inline-block;
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    break-inside: avoid;
+    transition: all 0.2s;
+}
+
+.note-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.note-card.dragging {
+    opacity: 0.5;
+}
+
+/* Note Header */
+.note-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.note-identifier {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Date Display for Daily Notes */
+.note-date-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.note-date-display:hover {
+    border-color: var(--accent-primary);
+}
+
+.note-date-display i {
+    color: var(--accent-primary);
+    font-size: 0.85rem;
+}
+
+.note-date-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.note-date-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.note-title-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.note-title-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* Note Actions */
+.note-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.favorite-note-btn,
+.delete-note-btn {
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.favorite-note-btn:hover,
+.delete-note-btn:hover {
+    background: var(--bg-primary);
+}
+
+.favorite-note-btn .fas.fa-star {
+    color: #fbbf24;
+}
+
+.favorite-note-btn .far.fa-star {
+    color: var(--text-secondary);
+}
+
+.delete-note-btn:hover {
+    color: #ef4444;
+}
+
+/* Note Content - Custom Scrollbar */
+.note-content-input {
+    width: 100%;
+    min-height: 80px;
+    max-height: 300px;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: none;
+    overflow-y: hidden;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.note-content-input.has-scroll {
+    overflow-y: auto;
+}
+
+.note-content-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.note-content-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Custom Scrollbar */
+.note-content-input::-webkit-scrollbar {
+    width: 8px;
+}
+
+.note-content-input::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.note-content-input::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.note-content-input::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+/* Firefox */
+.note-content-input {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--bg-secondary);
+}
+
+/* Drag Indicator */
+.drag-indicator {
+    height: 3px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+    margin: 0.5rem 0;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--text-tertiary);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin: 0;
+    max-width: 400px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .notes-container {
+        padding: 1rem;
+    }
+
+    .notes-toolbar {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .add-note-wrapper {
+        position: static;
+        order: -1;
+        width: 100%;
+    }
+    
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toolbar-left {
+        width: 100%;
+        max-width: 400px;
+        justify-content: center;
+    }
+    
+    .toolbar-right {
+        position: static;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .page-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .note-type-btn {
+        font-size: 0.9rem;
+        padding: 0.625rem 1.5rem;
+    }
+    
+    .btn-primary {
+        font-size: 0.9rem;
+        padding: 0.625rem 1.25rem;
+    }
+}

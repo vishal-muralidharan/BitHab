@@ -1,0 +1,780 @@
+/* Deep Work (overlay) styling – self-contained, minimal black design to match reference image */
+
+/* Fullscreen dark canvas */
+.deep-work-mode {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background: #000000;
+  color: #ffffff;
+  /* Respect mobile safe areas to avoid hidden content */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: auto; /* allow scroll if content exceeds viewport */
+}
+.deep-work-mode.hidden { display: none; }
+
+/* Header: title on left, close on right */
+.deep-work-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+}
+.deep-work-goal { 
+  font-size: 16px; 
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.deep-work-goal i {
+  color: currentColor;
+}
+.deep-work-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.exit-deep-work {
+  width: 32px; 
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.exit-deep-work:hover { 
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.exit-deep-work i {
+  color: currentColor;
+  pointer-events: none;
+}
+
+/* Main content centered */
+.deep-work-content {
+  flex: 1;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  text-align: center;
+  gap: 2rem;
+  /* Avoid forcing content under fixed header heights on small screens */
+  min-height: auto;
+}
+
+/* Current time (smaller, positioned at top) */
+.deep-work-current-time { 
+  margin-bottom: 40px;
+}
+.current-time-display {
+  display: inline-flex; 
+  gap: 4px; 
+  align-items: baseline;
+  font-size: 44px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+}
+.current-hours, .current-minutes { 
+  font-size: 44px; 
+  font-weight: 300;
+}
+.current-ampm { 
+  font-size: 26px; 
+  font-weight: 300;
+  margin-left: 4px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.current-separator { 
+  font-size: 32px; 
+  color: rgba(255, 255, 255, 0.6);
+}
+.current-ampm { font-size: 12px; text-transform: uppercase; opacity: 0.6; }
+.current-separator { font-size: clamp(28px, 6vw, 42px); opacity: 0.7; }
+
+/* Big session timer */
+.deep-work-timer {
+  font-size: 96px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin-bottom: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Thin progress bar and percentage */
+.deep-work-progress-container { 
+  width: 100%; 
+  max-width: 400px;
+  margin-bottom: 2rem;
+}
+.progress-bar-wrapper { 
+  width: 100%; 
+  position: relative; 
+}
+.progress-bar { 
+  height: 2px; 
+  background: rgba(255, 255, 255, 0.2); 
+  border-radius: 1px; 
+  overflow: hidden; 
+  margin-bottom: 12px;
+}
+.progress-fill { 
+  height: 100%; 
+  width: 0%; 
+  background: #ffffff; 
+  transition: width 0.3s ease; 
+}
+.progress-percentage { 
+  text-align: center;
+  color: #00ff41;
+  font-size: 16px;
+  font-weight: 400;
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+/* Controls: 2-button design - rectangular, minimalistic, same size */
+.deep-work-timer-controls {
+  display: flex; 
+  gap: 1.5rem; 
+  justify-content: center; 
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.deep-work-control-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 120px;
+  height: 60px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent; 
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer; 
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.btn-text {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* State Colors */
+.deep-work-control-btn.start-state {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.deep-work-control-btn.pause-state {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.deep-work-control-btn.stop-state {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.deep-work-control-btn.reset-state {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Hover effects */
+.deep-work-control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.deep-work-control-btn.start-state:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+.deep-work-control-btn.pause-state:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b;
+}
+
+.deep-work-control-btn.stop-state:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.deep-work-control-btn:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.deep-work-control-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: transparent !important;
+}
+
+/* Target duration block */
+.deep-work-target { 
+  width: 100%; 
+  max-width: 640px;
+  margin-top: 1rem;
+}
+.target-selector { 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.target-label { 
+  color: rgba(255, 255, 255, 0.7); 
+  font-size: 14px;
+  font-weight: 400;
+}
+.time-inputs { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+}
+.time-input {
+  width: 60px; 
+  padding: 12px; 
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent; 
+  color: #ffffff; 
+  text-align: center;
+  font-size: 16px;
+  font-weight: 400;
+}
+.time-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+.time-separator { 
+  color: rgba(255, 255, 255, 0.7); 
+  font-size: 14px;
+  font-weight: 400;
+}
+.save-target-btn {
+  padding: 12px 20px; 
+  border-radius: 6px; 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent; 
+  color: rgba(255, 255, 255, 0.8); 
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+.save-target-btn:hover { 
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Small screens */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 80px; /* Space for bottom navigation */
+  }
+  
+  .deep-work-mode {
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 80px) env(safe-area-inset-left, 0px);
+  }
+  
+  .deep-work-header {
+    padding: 15px 20px;
+  }
+  
+  .deep-work-content {
+  padding: 0 20px;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+  
+  .deep-work-current-time {
+    margin-bottom: 1rem;
+  }
+  
+  .current-time-display {
+    font-size: 28px;
+  }
+  
+  .current-hours, .current-minutes { 
+    font-size: 28px; 
+  }
+  
+  .current-ampm { 
+    font-size: 18px; 
+  }
+  
+  .current-separator { 
+    font-size: 28px; 
+  }
+  
+  .deep-work-timer {
+    font-size: 80px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .deep-work-progress-container { 
+  max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+  
+  .deep-work-timer-controls {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .deep-work-control-btn {
+    width: 100px;
+    height: 50px;
+  }
+  
+  .btn-icon {
+    font-size: 1rem;
+  }
+  
+  .btn-text {
+    font-size: 9px;
+  }
+  
+  .deep-work-control-btn { 
+    min-width: 80px;
+    padding: 12px 18px;
+    font-size: 12px;
+  }
+  
+  .deep-work-target {
+    margin-top: 1rem;
+  max-width: 100%;
+  }
+  
+  .time-inputs {
+    gap: 8px;
+  }
+  
+  .time-input {
+    width: 55px;
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 540px) {
+  .deep-work-content {
+  padding: 0 15px;
+    gap: 1rem;
+  }
+  
+  .deep-work-timer {
+    font-size: 72px;
+    margin-bottom: 1rem;
+  }
+  
+  .current-time-display {
+    font-size: 24px;
+  }
+  
+  .current-hours, .current-minutes { 
+    font-size: 24px; 
+  }
+  
+  .current-ampm { 
+    font-size: 16px; 
+  }
+  
+  .current-separator { 
+    font-size: 24px; 
+  }
+  
+  .deep-work-progress-container { 
+  max-width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .deep-work-timer-controls {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .deep-work-control-btn {
+    width: 90px;
+    height: 45px;
+  }
+  
+  .btn-icon {
+    font-size: 0.9rem;
+  }
+  
+  .btn-text {
+    font-size: 8px;
+  }
+  
+  .time-input {
+    width: 50px;
+    padding: 10px;
+    font-size: 13px;
+  }
+  
+  .deep-work-target {
+  margin-top: 0.75rem;
+  max-width: 100%;
+  }
+  
+  .target-label {
+    font-size: 12px;
+  }
+  
+  .save-target-btn {
+    padding: 10px 16px;
+    font-size: 11px;
+  }
+}
+
+/* Minimalistic subjects and tasks display */
+.deep-work-subjects-tasks {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.deep-work-section {
+  position: absolute;
+  max-width: 180px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 300;
+}
+
+.deep-work-section.subjects {
+  left: 30px;
+  text-align: left;
+}
+
+.deep-work-section.tasks {
+  right: 30px;
+  text-align: right;
+}
+
+.deep-work-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 8px;
+}
+
+.deep-work-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deep-work-list li {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.deep-work-list li:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.6);
+}
+
+.deep-work-section.tasks .deep-work-list li {
+  border-left: none;
+  border-right: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.deep-work-section.tasks .deep-work-list li:hover {
+  border-right-color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 768px) {
+  .deep-work-section {
+    max-width: 140px;
+    font-size: 11px;
+  }
+  
+  .deep-work-section.subjects {
+    left: 15px;
+  }
+  
+  .deep-work-section.tasks {
+    right: 15px;
+  }
+  
+  .deep-work-section h4 {
+    font-size: 10px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  
+  .deep-work-list {
+    gap: 8px;
+  }
+  
+  .deep-work-list li {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+}
+
+/* Tablet responsive adjustments */
+@media (max-width: 1024px) {
+  .deep-work-header {
+    padding: 16px 20px;
+  }
+  
+  .deep-work-content {
+    padding: 0 20px;
+    gap: 1.5rem;
+  }
+  
+  .countdown-display {
+    font-size: clamp(80px, 18vw, 120px);
+  }
+  
+  .deep-work-target-time {
+    font-size: 20px;
+  }
+  
+  .deep-work-subjects-tasks {
+    display: none; /* Hide side panels on tablets */
+  }
+}
+
+/* Mobile phone responsive adjustments */
+@media (max-width: 768px) {
+  .deep-work-mode {
+    overflow-y: auto;
+  }
+  
+  .deep-work-header {
+    padding: 12px 16px;
+    padding-right: 56px;
+    position: relative;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .deep-work-goal {
+    font-size: 14px;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: flex-start;
+    line-height: 1.35;
+  }
+
+  .deep-work-header-right {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+  }
+  
+  .deep-work-content {
+    padding: 0 16px 20px;
+    gap: 1rem;
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+  
+  .deep-work-current-time {
+    margin-bottom: 20px;
+  }
+  
+  .current-time-display {
+    font-size: 32px;
+  }
+  
+  .current-hours, .current-minutes {
+    font-size: 32px;
+  }
+  
+  .current-ampm {
+    font-size: 20px;
+  }
+  
+  .countdown-display {
+    font-size: clamp(60px, 15vw, 80px);
+  }
+  
+  .countdown-colon {
+    font-size: clamp(60px, 15vw, 80px);
+  }
+  
+  .deep-work-target-time {
+    font-size: 16px;
+    margin-top: 16px;
+  }
+  
+  .target-time-display {
+    font-size: 28px;
+  }
+  
+  .deep-work-controls {
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  
+  .control-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-width: 80px;
+  }
+  
+  .deep-work-subjects-tasks {
+    position: static;
+    transform: none;
+    width: 100%;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+    align-self: stretch;
+    align-items: stretch;
+  }
+  
+  .deep-work-section {
+    position: static;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .deep-work-section.tasks {
+    text-align: left;
+  }
+  
+  .deep-work-section h4 {
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  
+  .deep-work-list {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .deep-work-list li {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-left: 2px solid rgba(255, 255, 255, 0.3);
+    border-right: none;
+  }
+  
+  .deep-work-section.tasks .deep-work-list li {
+    border-left: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Ensure no overlapping */
+  .deep-work-content > * {
+    flex-shrink: 0;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 480px) {
+  .deep-work-header {
+    padding: 10px 12px;
+    padding-right: 48px;
+  }
+  
+  .deep-work-goal {
+    font-size: 12px;
+  }
+
+  .deep-work-header-right {
+    top: 10px;
+    right: 12px;
+  }
+  
+  .exit-deep-work {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  .deep-work-content {
+    padding: 0 12px 16px;
+    padding-top: 16px;
+  }
+  
+  .current-time-display {
+    font-size: 24px;
+  }
+  
+  .current-hours, .current-minutes {
+    font-size: 24px;
+  }
+  
+  .countdown-display {
+    font-size: 50px;
+  }
+  
+  .countdown-colon {
+    font-size: 50px;
+  }
+  
+  .target-time-display {
+    font-size: 24px;
+  }
+  
+  .control-btn {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-width: 70px;
+  }
+}
+
+/* Utility to ensure overlay sits above focus header */
+.focus-header + .deep-work-mode { z-index: 2001; }
+

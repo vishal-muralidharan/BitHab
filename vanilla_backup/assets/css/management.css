@@ -1,0 +1,834 @@
+/* Styles for management pages (activities.html, goals.html) */
+.management-column {
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: clamp(1rem, 2vw, 2rem);
+    /* Remove all height constraints and flexbox */
+    width: 95%; /* Increased from 100% to utilize more screen width */
+    max-width: 1600px; /* Increased from 1200px for wider screens */
+    margin: 0 auto; /* Center the column */
+}
+
+.management-column h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 1rem; /* Add spacing since we removed flexbox gap */
+  padding: 0 1rem;
+}
+
+.goal-list, 
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0; /* Add top/bottom margin for spacing */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* Override any global constraints */
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    flex: none !important;
+}
+
+/* Override any global constraints - more specific selector */
+.management-column .activity-list,
+.management-column .goal-list {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    flex: none !important;
+}
+
+/* Goal items with color-coded borders */
+.goal-item {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid #ef4444; /* Red for pending (default) */
+    box-shadow: var(--shadow);
+}
+
+/* Container to group goal with its subgoals */
+.goal-with-subgoals {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid #ef4444;
+    box-shadow: var(--shadow);
+    margin-bottom: 0.5rem;
+}
+
+.goal-with-subgoals.completed {
+    border-left-color: #22c55e;
+}
+
+.goal-with-subgoals.in-progress {
+    border-left-color: #f59e0b;
+}
+
+.goal-with-subgoals .goal-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.goal-with-subgoals:hover {
+    background: var(--bg-hover);
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.goal-item:hover {
+    background: var(--bg-hover);
+    transform: translateX(4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.add-item-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.add-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-primary);
+  border: 1px solid var(--bg-primary);
+  color: var(--text-primary);
+  padding: 0.8em 1em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.add-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.1);
+}
+
+.add-input::placeholder {
+  color: var(--text-primary);
+  opacity: 0.6;
+}
+
+.add-btn {
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+    opacity: 0.7;
+}
+
+.add-btn:hover {
+    transform: scale(1.1);
+    opacity: 1;
+    background: var(--bg-hover);
+}
+
+/* Streak information styles */
+.streak-info {
+    display: flex;
+    gap: 1rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: calc(var(--radius) / 2);
+    font-size: 0.85rem;
+}
+
+.current-streak, .longest-streak {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.current-streak {
+    color: var(--accent-primary);
+}
+
+.longest-streak {
+    color: var(--text-muted);
+}
+
+.add-btn {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition), color var(--transition);
+    opacity: 0.7;
+}
+
+.add-btn:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.sub-add-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.3em 0.8em;
+}
+
+/* Tablet optimization */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .management-column {
+        padding: clamp(0.75rem, 1.5vw, 1.5rem);
+        width: 92%;
+    }
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 80px; /* Space for bottom navigation */
+    }
+    
+    .management-column {
+        padding: clamp(0.75rem, 2vw, 1.25rem);
+        width: 94%;
+        margin-bottom: 2rem; /* Extra space at bottom */
+    }
+    
+    .management-column h2 {
+        padding: 0 clamp(0.25rem, 1vw, 0.5rem);
+        font-size: clamp(1.1rem, 3vw, 1.25rem);
+    }
+    
+    .add-item-form {
+        gap: clamp(0.5rem, 1.5vw, 0.75rem);
+        margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
+    }
+    
+    .add-input {
+        padding: clamp(0.4em, 1.5vw, 0.6em) clamp(0.6em, 2vw, 0.8em);
+        min-height: 44px; /* Touch-friendly input */
+    }
+    
+    /* Touch-friendly buttons */
+    .add-btn,
+    .goal-item button,
+    .activity-item button {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Edit buttons and modals */
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.edit-form label {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.edit-form input[type="text"], 
+.edit-form input[type="color"] {
+    padding: 0.5rem;
+    border: 1px solid var(--bg-primary);
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.edit-form input[type="color"] {
+    width: 60px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.btn-confirm, .btn-cancel {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color var(--transition);
+}
+
+.btn-confirm {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: var(--accent-hover);
+}
+
+.btn-cancel {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.btn-cancel:hover {
+    background: var(--bg-hover);
+}
+
+.activity-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+/* Reminder-specific styles */
+.reminder-form {
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reminder-form .add-input {
+    margin-bottom: 0;
+}
+
+.reminder-datetime {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.datetime-btn {
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    padding: 0.8em 1em;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color var(--transition);
+}
+
+.datetime-btn:hover {
+    background: var(--accent-hover);
+}
+
+.selected-datetime {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.datetime-picker-content {
+    min-width: 350px;
+    max-width: 400px;
+}
+
+.reminder-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.reminder-form-section label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.datetime-picker-content .modal-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius);
+    width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.datetime-picker-content .modal-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.22);
+}
+
+.datetime-picker-content .modal-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.75;
+}
+
+.add-reminder-main-btn {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.3s ease;
+    width: 100%;
+    margin-bottom: 1rem;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+}
+
+.add-reminder-main-btn:hover,
+.add-reminder-main-btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+    filter: brightness(1.08);
+}
+
+.add-reminder-main-btn:focus-visible {
+    outline: 2px solid rgba(var(--accent-primary-rgb), 0.35);
+    outline-offset: 3px;
+}
+
+.datetime-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.date-section,
+.time-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.date-section label,
+.time-section label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.quick-date-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-btn {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--bg-hover);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+}
+
+.quick-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.quick-btn.selected {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.datetime-input {
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-primary);
+    color: var(--text-primary);
+    padding: 0.8em 1em;
+    border-radius: var(--radius);
+    width: 100%;
+}
+
+.datetime-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* Goal completion styles for management pages */
+.goal-item.completed {
+    border-left-color: #22c55e; /* Green for completed */
+    opacity: 0.8;
+}
+
+.goal-item.completed .goal-name-text {
+    text-decoration: line-through;
+}
+
+.goal-with-subgoals.completed .goal-name-text {
+    text-decoration: line-through;
+}
+
+.goal-item.completed .goal-caret,
+.goal-with-subgoals.completed .goal-caret,
+.goal-item.completed .activity-actions,
+.goal-with-subgoals.completed .activity-actions {
+    text-decoration: none;
+}
+
+.goal-item.in-progress {
+    border-left-color: #f59e0b; /* Orange for in-progress */
+}
+
+.goal-item.pending {
+    border-left-color: #ef4444; /* Red for pending */
+}
+
+/* Completed goals section */
+.completed-goals-section {
+    margin-top: 2rem;
+}
+
+.toggle-completed-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--bg-primary);
+    color: var(--text-secondary);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.toggle-completed-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.toggle-completed-btn .toggle-icon {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.toggle-completed-btn .completed-goals-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+#completed-goal-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+#completed-goal-list.expanded {
+    max-height: 5000px;
+    opacity: 1;
+}
+
+#completed-goal-list .goal-item,
+#completed-goal-list .goal-with-subgoals {
+    margin-bottom: 0.5rem;
+}
+
+/* Fade animation for goals being completed/uncompleted */
+@keyframes subtleFade {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.goal-item.completing,
+.goal-with-subgoals.completing {
+    animation: subtleFade 0.3s ease forwards;
+}
+
+.reminder-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reminder-item {
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition);
+    border-left: 4px solid #22c55e; /* Green for upcoming reminders */
+    box-shadow: var(--shadow);
+}
+
+.reminder-item.expired {
+    opacity: 0.9;
+    border-left-color: #ef4444; /* Red for expired */
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.reminder-item.expired .reminder-text {
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.reminder-item.expired .reminder-datetime {
+    color: #ef4444;
+    opacity: 0.8;
+}
+
+.reminder-item:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.12);
+}
+
+body.dark .reminder-item:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.reminder-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.reminder-text {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.reminder-datetime {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.reminder-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* --- Subgoals UI (Goals page) - Activities-style dropdown --- */
+.goal-item .goal-main { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.goal-item .goal-main > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+}
+
+.goal-item .goal-name-text,
+.goal-with-subgoals .goal-name-text {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.goal-with-subgoals .goal-main > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+}
+
+.subgoal-container {
+    margin: 0.75rem 0 0 0;
+    list-style: none;
+}
+
+.subgoal-add-container {
+    margin: 0.5rem 0 0 0;
+    list-style: none;
+}
+
+.sub-goal-list { 
+    list-style: none; 
+    margin: 0; 
+    padding: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.5rem; 
+    width: 100%;
+}
+
+.sub-goal-item { 
+    display: flex; 
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.sub-goal-item::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    min-height: 10px;
+    border-radius: 50%;
+    margin-left: 1.5rem;
+    margin-right: 0.75rem;
+    background-color: #ef4444;
+    flex-shrink: 0;
+}
+
+.sub-goal-item.completed::before {
+    background-color: #22c55e;
+}
+
+.sub-goal-item:hover {
+    background: rgba(var(--accent-primary-rgb, 59, 130, 246), 0.05);
+}
+
+.sub-goal-item > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex: 1;
+    min-width: 0;
+}
+
+.sub-goal-item:hover { 
+    background: var(--bg-hover); 
+    transform: translateX(4px);
+}
+
+.sub-goal-item .color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sub-goal-item .completed-text {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.sub-goal-item .activity-actions { 
+    margin-left: auto; 
+    display: inline-flex; 
+    gap: 0.25rem; 
+}
+
+.sub-add-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    margin: 0;
+    padding: 0;
+}
+
+.sub-add-row .add-subgoal-input { 
+    flex: 1; 
+    padding: 0.5rem 0.6rem; 
+    border-radius: 8px; 
+    border: 1px solid var(--bg-hover); 
+    background: var(--bg-primary); 
+    color: var(--text-primary); 
+}
+
+.sub-add-row .add-btn {
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+    opacity: 0.7;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-add-row .add-btn:hover {
+    transform: scale(1.1);
+    opacity: 1;
+    background: var(--bg-hover);
+}
+
+/* Schedule Activities Button */
+.schedule-link-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-size: 0.95rem;
+}
+
+.schedule-link-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .schedule-link-btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
