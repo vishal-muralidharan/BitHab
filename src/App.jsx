@@ -16,30 +16,34 @@ import Analytics from './pages/Analytics';
 import DeepFocus from './pages/DeepFocus';
 import ScheduleActivities from './pages/ScheduleActivities';
 
+import { AuthProvider } from './context/AuthContext';
+
 function App() {
   return (
-    <BrowserRouter>
-      <Layout>
+    <AuthProvider>
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/reminders" element={<Reminders />} />
+            <Route path="/focus" element={<Focus />} />
+            <Route path="/themes" element={<Themes />} />
+            <Route path="/lists" element={<Lists />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/deep-focus" element={<DeepFocus />} />
+            <Route path="/schedule-activities" element={<ScheduleActivities />} />
+          </Routes>
+        </Layout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/goals" element={<Goals />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/reminders" element={<Reminders />} />
-          <Route path="/focus" element={<Focus />} />
-          <Route path="/themes" element={<Themes />} />
-          <Route path="/lists" element={<Lists />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/deep-focus" element={<DeepFocus />} />
-          <Route path="/schedule-activities" element={<ScheduleActivities />} />
+          {/* Auth routes without Layout */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
-      </Layout>
-      <Routes>
-        {/* Auth routes without Layout */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
