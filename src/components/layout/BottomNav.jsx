@@ -1,6 +1,19 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function BottomNav() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out', error);
+    }
+  }
+
   return (
     <nav className="bottom-nav">
       <div className="bottom-nav-content">
@@ -40,7 +53,7 @@ export default function BottomNav() {
               <i className="fas fa-list"></i>
               <span>Lists</span>
             </Link>
-            <button className="more-dropdown-item logout-item" id="logout-bottom-nav">
+            <button className="more-dropdown-item logout-item" id="logout-bottom-nav" onClick={handleLogout}>
               <i className="fas fa-sign-out-alt"></i>
               <span>Logout</span>
             </button>

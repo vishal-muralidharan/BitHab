@@ -1,6 +1,19 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Failed to log out', error);
+    }
+  }
+
   return (
     <header className="header">
       <Link to="/" className="logo-link">
@@ -27,7 +40,7 @@ export default function Header() {
         <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode">
           <i className="fas fa-moon"></i>
         </button>
-        <button id="logout-btn" className="header-btn" aria-label="Logout">Logout</button>
+        <button id="logout-btn" className="header-btn" aria-label="Logout" onClick={handleLogout}>Logout</button>
       </div>
     </header>
   );
