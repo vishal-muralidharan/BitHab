@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -34,6 +36,9 @@ export default function Register() {
           <img src="/assets/images/logo-transparent-light.png" alt="BitHab Logo" className="logo-light" />
           <img src="/assets/images/logo-transparent-dark.png" alt="BitHab Logo" className="logo-dark" />
         </h1>
+        <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
+          <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+        </button>
       </header>
       <div id="auth-container">
         <div className="auth-form-wrapper">
