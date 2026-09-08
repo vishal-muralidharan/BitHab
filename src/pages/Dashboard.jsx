@@ -1,11 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useActivities } from '../context/ActivityContext';
 import { useGoals } from '../context/GoalContext';
+import { useNotes } from '../context/NoteContext';
+import { useReminders } from '../context/ReminderContext';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { activities, loading: activitiesLoading } = useActivities();
   const { goals, loading: goalsLoading } = useGoals();
+  const { notes, loading: notesLoading } = useNotes();
+  const { reminders, loading: remindersLoading } = useReminders();
 
   return (
     <>
@@ -47,8 +51,19 @@ export default function Dashboard() {
                             </svg>
                         </button>
                     </div>
-                    <div id="notes-preview" className="notes-preview">
-                        
+                    <div id="notes-preview" className="notes-preview" style={{display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px'}}>
+                        {notesLoading ? (
+                          <div style={{ padding: '1rem', textAlign: 'center' }}>Loading notes...</div>
+                        ) : notes.length === 0 ? (
+                          <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No notes yet.</div>
+                        ) : (
+                          notes.slice(0, 3).map(note => (
+                            <div key={note.id} style={{backgroundColor: 'var(--surface-color)', padding: '10px', borderRadius: '6px', border: '1px solid #333'}}>
+                              <div style={{fontWeight: 'bold', fontSize: '0.9rem'}}>{note.title || 'Untitled'}</div>
+                              <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{note.content}</div>
+                            </div>
+                          ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -114,8 +129,24 @@ export default function Dashboard() {
                             </svg>
                         </button>
                     </div>
-                    <div id="reminders-preview" className="reminders-preview">
-                        
+                    <div id="reminders-preview" className="reminders-preview" style={{padding: '10px'}}>
+                        <ul style={{listStyle: 'none', padding: 0, margin: 0}}>
+                          {remindersLoading ? (
+                            <li style={{ padding: '1rem', textAlign: 'center' }}>Loading reminders...</li>
+                          ) : reminders.length === 0 ? (
+                            <li style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No reminders set.</li>
+                          ) : (
+                            reminders.filter(r => !r.completed).slice(0, 3).map(reminder => (
+                              <li key={reminder.id} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: '1px solid #333'}}>
+                                <i className="far fa-circle" style={{color: 'var(--text-secondary)'}}></i>
+                                <div>
+                                  <div style={{fontSize: '0.9rem'}}>{reminder.text}</div>
+                                  {reminder.time && <div style={{fontSize: '0.75rem', color: 'var(--primary-color)'}}>{new Date(`2000-01-01T${reminder.time}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>}
+                                </div>
+                              </li>
+                            ))
+                          )}
+                        </ul>
                     </div>
                 </div>
             </div>
