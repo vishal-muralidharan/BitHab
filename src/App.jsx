@@ -18,6 +18,8 @@ import ScheduleActivities from './pages/ScheduleActivities';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ActivityProvider } from './context/ActivityContext';
+import { GoalProvider } from './context/GoalContext';
 import { Navigate } from 'react-router-dom';
 
 function PrivateRoute({ children }) {
@@ -33,8 +35,10 @@ function PrivateRoute({ children }) {
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <BrowserRouter>
+      <ActivityProvider>
+        <GoalProvider>
+          <ThemeProvider>
+            <BrowserRouter>
           <Routes>
             {/* Auth routes without Layout */}
             <Route path="/login" element={<Login />} />
@@ -60,8 +64,10 @@ function App() {
             </PrivateRoute>
           } />
         </Routes>
-      </BrowserRouter>
-      </ThemeProvider>
+            </BrowserRouter>
+          </ThemeProvider>
+        </GoalProvider>
+      </ActivityProvider>
     </AuthProvider>
   );
 }
