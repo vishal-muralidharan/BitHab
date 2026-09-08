@@ -9,7 +9,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, signInWithGoogle } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -25,6 +25,18 @@ export default function Register() {
       navigate('/');
     } catch (err) {
       setError('Failed to create an account: ' + err.message);
+    }
+    setLoading(false);
+  }
+
+  async function handleGoogleSignup() {
+    try {
+      setError('');
+      setLoading(true);
+      await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError('Failed to sign up with Google: ' + err.message);
     }
     setLoading(false);
   }
@@ -48,7 +60,7 @@ export default function Register() {
           </h2>
           {error && <div className="error-message" style={{ display: 'block' }}>{error}</div>}
 
-          <button id="google-signin-btn" className="google-signin-btn">
+          <button id="google-signin-btn" className="google-signin-btn" onClick={handleGoogleSignup} disabled={loading}>
               <img src="/assets/images/google-logo.svg" alt="Google" className="google-logo" />
               Continue with Google
           </button>

@@ -8,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signInWithGoogle } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -21,6 +21,18 @@ export default function Login() {
       navigate('/');
     } catch (err) {
       setError('Failed to log in: ' + err.message);
+    }
+    setLoading(false);
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      setError('');
+      setLoading(true);
+      await signInWithGoogle();
+      navigate('/');
+    } catch (err) {
+      setError('Failed to log in with Google: ' + err.message);
     }
     setLoading(false);
   }
@@ -45,7 +57,7 @@ export default function Login() {
           {error && <div className="error-message" style={{ display: 'block' }}>{error}</div>}
 
           <div id="login-view">
-            <button id="google-signin-btn" className="google-signin-btn">
+            <button id="google-signin-btn" className="google-signin-btn" onClick={handleGoogleLogin} disabled={loading}>
                 <img src="/assets/images/google-logo.svg" alt="Google" className="google-logo" />
                 Continue with Google
             </button>
