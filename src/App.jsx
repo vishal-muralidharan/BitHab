@@ -22,6 +22,7 @@ import { ActivityProvider } from './context/ActivityContext';
 import { GoalProvider } from './context/GoalContext';
 import { NoteProvider } from './context/NoteContext';
 import { ReminderProvider } from './context/ReminderContext';
+import { ScheduleProvider } from './context/ScheduleContext';
 import { Navigate } from 'react-router-dom';
 
 function PrivateRoute({ children }) {
@@ -41,8 +42,9 @@ function App() {
         <GoalProvider>
           <NoteProvider>
             <ReminderProvider>
-              <ThemeProvider>
-                <BrowserRouter>
+              <ScheduleProvider>
+                <ThemeProvider>
+                  <BrowserRouter>
           <Routes>
             {/* Auth routes without Layout */}
             <Route path="/login" element={<Login />} />
@@ -68,8 +70,9 @@ function App() {
             </PrivateRoute>
           } />
         </Routes>
-                </BrowserRouter>
-              </ThemeProvider>
+                  </BrowserRouter>
+                </ThemeProvider>
+              </ScheduleProvider>
             </ReminderProvider>
           </NoteProvider>
         </GoalProvider>
