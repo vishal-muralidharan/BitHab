@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useActivities } from '../context/ActivityContext';
 
 export default function Focus() {
-  const { activities } = useActivities();
+  const { activities, logFocusSession } = useActivities();
   const [selectedActivity, setSelectedActivity] = useState('');
   const [time, setTime] = useState(0); // in seconds
   const [isActive, setIsActive] = useState(false);
@@ -47,11 +47,16 @@ export default function Focus() {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
-  const logSession = () => {
-    // In a full implementation, this would save to a FocusContext or Activity context
-    setIsActive(false);
-    setSessionLogged(true);
-    console.log(`Logged ${formatTime(time)} for ${selectedActivity || 'Uncategorized'}`);
+  const logSession = async () => {
+    try {
+      await logFocusSession(selectedActivity || 'uncategorized', time);
+      setIsActive(false);
+      setSessionLogged(true);
+      console.log(`Logged ${formatTime(time)} for ${selectedActivity || 'Uncategorized'}`);
+    } catch (error) {
+      console.error("Failed to log session:", error);
+      alert("Failed to save focus session.");
+    }
   };
 
   return (
