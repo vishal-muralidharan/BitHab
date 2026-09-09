@@ -10,6 +10,7 @@ export default function ScheduleActivities() {
   
   const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [toastMessage, setToastMessage] = useState('');
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -32,9 +33,18 @@ export default function ScheduleActivities() {
     
     if (isScheduled) {
       await unscheduleActivity(selectedActivityId, dateStr);
+      showToast('Activity removed from schedule');
     } else {
       await scheduleActivity(selectedActivityId, dateStr);
+      showToast('Activity scheduled successfully');
     }
+  };
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    setTimeout(() => {
+      setToastMessage('');
+    }, 2000);
   };
 
   const renderCalendar = () => {
@@ -160,6 +170,25 @@ export default function ScheduleActivities() {
           </div>
         </div>
       </div>
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'var(--primary-color)',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '20px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          zIndex: 1000,
+          animation: 'fadein 0.3s, fadeout 0.3s 1.7s'
+        }}>
+          {toastMessage}
+        </div>
+      )}
     </>
   );
 }
