@@ -27,7 +27,14 @@ export function ListProvider({ children }) {
         const docSnap = await getDoc(userDocRef);
         
         if (docSnap.exists() && docSnap.data().lists) {
-          setLists(docSnap.data().lists);
+          const rawLists = docSnap.data().lists || [];
+          const normalized = rawLists.map(l => ({
+            ...l,
+            title: l.title || 'Untitled List',
+            type: l.type || 'checklist',
+            items: Array.isArray(l.items) ? l.items : []
+          }));
+          setLists(normalized);
         } else {
           setLists([]);
         }
@@ -58,10 +65,11 @@ export function ListProvider({ children }) {
     }
   }
 
-  function addList(title) {
+  function addList(title, type = 'checklist') {
     const newList = {
       id: `list-${Date.now()}`,
       title,
+      type: type || 'checklist',
       items: [], // Array of { id, text, completed }
       createdAt: Date.now()
     };
