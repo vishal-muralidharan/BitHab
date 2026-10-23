@@ -37,6 +37,7 @@ Execute these commands in the terminal for rapid, reliable feedback:
 
 | Verification Type | Command | Scope & Purpose |
 | :--- | :--- | :--- |
+| **Unit & Integration Tests** | `npm test` | Runs `vitest run` executing 24 test suites across all context providers, layout navigation components, and page views. |
 | **Static Code Analysis** | `npm run lint` | Runs `oxlint` across all files to detect syntax errors, unused variables, React hook dependency bugs, and impure render functions. |
 | **Production Build** | `npm run build` | Compiles client application using `vite build` to guarantee bundle integrity and import resolution. |
 | **Local Dev Server** | `npm run dev` | Launches local Vite development server on `http://localhost:5173/`. |
@@ -80,9 +81,10 @@ For user-facing UI and interactive controls:
 
 Before considering module verification complete:
 ```text
-[ ] 1. npm run lint executed and passed with 0 errors.
-[ ] 2. npm run build executed and compiled cleanly without bundling failures.
-[ ] 3. No stray console.error statements or unhandled promise rejections in browser.
-[ ] 4. Clean workspace state verified via git status.
-[ ] 5. Ready for atomic commit via atomic-commits skill.
+[ ] 1. npm test executed with all unit and integration tests passing.
+[ ] 2. npm run lint executed and passed with 0 errors.
+[ ] 3. npm run build executed and compiled cleanly without bundling failures.
+[ ] 4. No stray console.error statements or unhandled promise rejections in browser.
+[ ] 5. Clean workspace state verified via git status.
+[ ] 6. Ready for atomic commit via atomic-commits skill.
 ```
