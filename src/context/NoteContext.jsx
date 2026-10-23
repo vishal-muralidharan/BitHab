@@ -27,7 +27,18 @@ export function NoteProvider({ children }) {
         const docSnap = await getDoc(userDocRef);
         
         if (docSnap.exists() && docSnap.data().notes) {
-          setNotes(docSnap.data().notes);
+          const rawNotes = docSnap.data().notes || [];
+          const normalized = rawNotes.map(n => ({
+            ...n,
+            title: n.title || (n.type === 'daily' ? n.date : 'Untitled'),
+            date: n.date || (n.type === 'daily' ? new Date().toISOString().split('T')[0] : null),
+            content: n.content || n.note || '',
+            type: n.type || 'daily',
+            favorite: n.favorite !== undefined ? !!n.favorite : !!n.isFavorite,
+            isFavorite: n.favorite !== undefined ? !!n.favorite : !!n.isFavorite,
+            updatedAt: n.updatedAt || Date.now()
+          }));
+          setNotes(normalized);
         } else {
           setNotes([]);
         }
@@ -59,24 +70,33 @@ export function NoteProvider({ children }) {
     }
   }
 
-  function addNote(title, content, type = 'general') {
+  function addNote(titleOrDate, content = '', type = 'daily') {
+    const todayStr = new Date().toISOString().split('T')[0];
     const newNote = {
-      id: 'note-' + Date.now(),
-      title: title || 'Untitled Note',
+      id: 'note_' + Date.now(),
+      type: type,
+      title: type === 'general' ? (titleOrDate || 'Untitled') : todayStr,
+      date: type === 'daily' ? (titleOrDate || todayStr) : null,
       content: content || '',
-      type: type, // 'general' or 'daily'
+      favorite: false,
       isFavorite: false,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
     
-    return saveNotes([...notes, newNote]);
+    return saveNotes([newNote, ...notes]);
   }
 
   function updateNote(noteId, updates) {
     const updatedNotes = notes.map(n => {
       if (n.id === noteId) {
-        return { ...n, ...updates, updatedAt: Date.now() };
+        return { 
+          ...n, 
+          ...updates, 
+          favorite: updates.favorite !== undefined ? updates.favorite : (updates.isFavorite !== undefined ? updates.isFavorite : n.favorite),
+          isFavorite: updates.favorite !== undefined ? updates.favorite : (updates.isFavorite !== undefined ? updates.isFavorite : n.isFavorite),
+          updatedAt: Date.now() 
+        };
       }
       return n;
     });
@@ -86,7 +106,8 @@ export function NoteProvider({ children }) {
   function toggleFavorite(noteId) {
     const updatedNotes = notes.map(n => {
       if (n.id === noteId) {
-        return { ...n, isFavorite: !n.isFavorite, updatedAt: Date.now() };
+        const nextFav = !n.favorite;
+        return { ...n, favorite: nextFav, isFavorite: nextFav, updatedAt: Date.now() };
       }
       return n;
     });
