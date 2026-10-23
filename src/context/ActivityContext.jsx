@@ -102,8 +102,61 @@ export function ActivityProvider({ children }) {
     return saveActivities([...activities, newActivity]);
   }
 
+  function editActivity(activityId, newName) {
+    const updatedActivities = activities.map(a => 
+      a.id === activityId ? { ...a, name: newName } : a
+    );
+    return saveActivities(updatedActivities);
+  }
+
   function deleteActivity(activityId) {
     const updatedActivities = activities.filter(a => a.id !== activityId);
+    return saveActivities(updatedActivities);
+  }
+
+  function addSubActivity(activityId, name, color = '#3B82F6') {
+    const newSub = {
+      id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      name,
+      color: color || '#3B82F6'
+    };
+    const updatedActivities = activities.map(a => {
+      if (a.id === activityId) {
+        return {
+          ...a,
+          subActivities: [...(a.subActivities || []), newSub]
+        };
+      }
+      return a;
+    });
+    return saveActivities(updatedActivities);
+  }
+
+  function editSubActivity(activityId, subId, newName, newColor) {
+    const updatedActivities = activities.map(a => {
+      if (a.id === activityId) {
+        return {
+          ...a,
+          subActivities: (a.subActivities || []).map(sub => 
+            sub.id === subId ? { ...sub, name: newName, color: newColor || sub.color } : sub
+          )
+        };
+      }
+      return a;
+    });
+    return saveActivities(updatedActivities);
+  }
+
+  function deleteSubActivity(activityId, subId) {
+    const updatedActivities = activities.map(a => {
+      if (a.id === activityId) {
+        return {
+          ...a,
+          subActivities: (a.subActivities || []).filter(sub => sub.id !== subId)
+        };
+      }
+      return a;
+    });
     return saveActivities(updatedActivities);
   }
 
@@ -112,7 +165,11 @@ export function ActivityProvider({ children }) {
     focusLogs,
     loading,
     addActivity,
+    editActivity,
     deleteActivity,
+    addSubActivity,
+    editSubActivity,
+    deleteSubActivity,
     saveActivities,
     logFocusSession
   };
