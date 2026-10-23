@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -6,6 +6,8 @@ export default function Header() {
   const { logout } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMoreActive = location.pathname === '/themes' || location.pathname === '/lists';
 
   async function handleLogout() {
     try {
@@ -25,16 +27,16 @@ export default function Header() {
         </h1>
       </Link>
       <nav className="header-nav">
-        <Link to="/activities" className="nav-item">Activities</Link>
-        <Link to="/goals" className="nav-item">Goals</Link>
-        <Link to="/notes" className="nav-item">Notes</Link>
-        <Link to="/reminders" className="nav-item">Reminders</Link>
-        <Link to="/focus" className="nav-item">Focus</Link>
+        <NavLink to="/activities" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Activities</NavLink>
+        <NavLink to="/goals" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Goals</NavLink>
+        <NavLink to="/notes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Notes</NavLink>
+        <NavLink to="/reminders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Reminders</NavLink>
+        <NavLink to="/focus" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Focus</NavLink>
         <div className="more-dropdown">
-          <button className="more-btn nav-item" aria-label="More options">More</button>
+          <button className={`more-btn nav-item ${isMoreActive ? 'active' : ''}`} aria-label="More options">More</button>
           <div className="more-dropdown-content">
-            <Link to="/themes">Themes</Link>
-            <Link to="/lists">Lists</Link>
+            <NavLink to="/themes" className={({ isActive }) => isActive ? 'active' : ''}>Themes</NavLink>
+            <NavLink to="/lists" className={({ isActive }) => isActive ? 'active' : ''}>Lists</NavLink>
           </div>
         </div>
       </nav>
