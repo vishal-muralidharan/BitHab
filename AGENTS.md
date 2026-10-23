@@ -157,6 +157,7 @@ Always run verification commands to validate changes:
 
 | Verification | Command | Purpose |
 | :--- | :--- | :--- |
+| **Unit & Integration Tests** | `npm test` | Runs `vitest run` executing 24 test suites across all context providers, layout components, and pages. |
 | **Static Code Analysis** | `npm run lint` | Runs `oxlint` across all files to detect syntax errors, unused variables, and React hook bugs (must be 0 errors). |
 | **Production Build** | `npm run build` | Compiles application using `vite build` to guarantee bundle integrity and import resolution. |
 | **Local Dev Server** | `npm run dev` | Launches local Vite development server on `http://localhost:5173/`. |
