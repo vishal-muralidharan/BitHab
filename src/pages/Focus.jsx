@@ -212,6 +212,7 @@ export default function Focus() {
                     >
                       <span style={{ color: isSelected ? 'var(--primary-color)' : 'var(--text-primary)', fontWeight: isSelected ? '600' : '400' }}>{s}</span>
                       <button 
+                        aria-label="Delete subject"
                         onClick={(e) => { e.stopPropagation(); handleDeleteSubject(s); }}
                         style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.6 }}
                       >
@@ -297,6 +298,7 @@ export default function Focus() {
                         </span>
                       </div>
                       <button 
+                        aria-label="Delete task"
                         onClick={() => handleDeleteTask(t)}
                         style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.6 }}
                       >
