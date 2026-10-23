@@ -64,7 +64,6 @@ export default function Reminders() {
     try {
       await addReminder(text.trim(), date, time);
       setText('');
-      setShowAddModal(false);
     } catch (error) {
       console.error("Failed to add reminder:", error);
     }
