@@ -3,7 +3,6 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Focus from '../../src/pages/Focus';
 import { AuthProvider } from '../../src/context/AuthContext';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as firestore from 'firebase/firestore';
 
 describe('Focus Page', () => {
   beforeEach(() => {

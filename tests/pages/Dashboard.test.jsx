@@ -8,7 +8,6 @@ import { NoteProvider } from '../../src/context/NoteContext';
 import { ReminderProvider } from '../../src/context/ReminderContext';
 import { ScheduleProvider } from '../../src/context/ScheduleContext';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as firestore from 'firebase/firestore';
 
 function renderDashboard() {
   return render(
