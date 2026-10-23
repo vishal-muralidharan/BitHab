@@ -27,7 +27,18 @@ export function ReminderProvider({ children }) {
         const docSnap = await getDoc(userDocRef);
         
         if (docSnap.exists() && docSnap.data().reminders) {
-          setReminders(docSnap.data().reminders);
+          const rawReminders = docSnap.data().reminders || [];
+          const normalized = rawReminders.map(r => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            return {
+              ...r,
+              text: r.text || '',
+              date: r.date || todayStr,
+              time: r.time || '09:00',
+              completed: !!r.completed
+            };
+          });
+          setReminders(normalized);
         } else {
           setReminders([]);
         }
@@ -59,16 +70,36 @@ export function ReminderProvider({ children }) {
     }
   }
 
-  function addReminder(text, time) {
+  function addReminder(text, date, time) {
+    const today = new Date();
+    const defaultDate = date || today.toISOString().split('T')[0];
+    const defaultTime = time || '09:00';
+
     const newReminder = {
-      id: 'reminder-' + Date.now(),
+      id: 'reminder_' + Date.now(),
       text: text,
-      time: time || null, // Optional time
+      date: defaultDate,
+      time: defaultTime,
       completed: false,
       createdAt: Date.now()
     };
     
     return saveReminders([...reminders, newReminder]);
+  }
+
+  function editReminder(reminderId, newText, newDate, newTime) {
+    const updatedReminders = reminders.map(r => {
+      if (r.id === reminderId) {
+        return {
+          ...r,
+          text: newText,
+          date: newDate || r.date,
+          time: newTime || r.time
+        };
+      }
+      return r;
+    });
+    return saveReminders(updatedReminders);
   }
 
   function toggleCompleted(reminderId) {
@@ -90,6 +121,7 @@ export function ReminderProvider({ children }) {
     reminders,
     loading,
     addReminder,
+    editReminder,
     deleteReminder,
     toggleCompleted,
     saveReminders
