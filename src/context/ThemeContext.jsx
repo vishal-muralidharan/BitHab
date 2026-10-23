@@ -173,26 +173,35 @@ export function ThemeProvider({ children }) {
     const { currentUser } = useAuth();
     
     // Default fallback
-    const [currentTheme, setCurrentTheme] = useState('oceanic-depths');
-    const [isDarkMode, setIsDarkMode] = useState(true);
-
-    // Initial Load from LocalStorage
-    useEffect(() => {
+    const [currentTheme, setCurrentTheme] = useState(() => {
         try {
             const cached = window.localStorage.getItem(STORAGE_KEY);
             if (cached) {
                 const parsed = JSON.parse(cached);
                 if (parsed.currentTheme && THEMES[parsed.currentTheme]) {
-                    setCurrentTheme(parsed.currentTheme);
-                }
-                if (typeof parsed.isDarkMode === 'boolean') {
-                    setIsDarkMode(parsed.isDarkMode);
+                    return parsed.currentTheme;
                 }
             }
         } catch (e) {
             console.error('Failed to load theme from local cache', e);
         }
-    }, []);
+        return 'oceanic-depths';
+    });
+
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        try {
+            const cached = window.localStorage.getItem(STORAGE_KEY);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (typeof parsed.isDarkMode === 'boolean') {
+                    return parsed.isDarkMode;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load theme mode from local cache', e);
+        }
+        return true;
+    });
 
     // Firebase Sync
     useEffect(() => {
