@@ -6,11 +6,16 @@ import { useSchedule } from '../context/ScheduleContext';
 export default function ScheduleActivities() {
   const navigate = useNavigate();
   const { activities, loading: activitiesLoading } = useActivities();
-  const { schedules, loading: scheduleLoading, scheduleActivity, unscheduleActivity } = useSchedule();
+  const { schedules, logs, scheduleActivity, unscheduleActivity } = useSchedule();
   
   const [selectedActivityId, setSelectedActivityId] = useState(null);
+  const [selectedSubActivityId, setSelectedSubActivityId] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [toastMessage, setToastMessage] = useState('');
+
+  const selectedActivity = activities.find(a => a.id === selectedActivityId);
+  const hasSubActivities = selectedActivity?.subActivities && selectedActivity.subActivities.length > 0;
+  const effectiveScheduledId = selectedSubActivityId || selectedActivityId;
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -24,18 +29,16 @@ export default function ScheduleActivities() {
   };
 
   const handleDateClick = async (day) => {
-    if (!selectedActivityId) return;
+    if (!effectiveScheduledId) return;
     
-    // Format YYYY-MM-DD
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    
-    const isScheduled = (schedules[dateStr] || []).includes(selectedActivityId);
+    const isScheduled = (schedules[dateStr] || []).includes(effectiveScheduledId);
     
     if (isScheduled) {
-      await unscheduleActivity(selectedActivityId, dateStr);
+      await unscheduleActivity(effectiveScheduledId, dateStr);
       showToast('Activity removed from schedule');
     } else {
-      await scheduleActivity(selectedActivityId, dateStr);
+      await scheduleActivity(effectiveScheduledId, dateStr);
       showToast('Activity scheduled successfully');
     }
   };
@@ -47,69 +50,93 @@ export default function ScheduleActivities() {
     }, 2000);
   };
 
+  // Calculate activity progress
+  let totalScheduled = 0;
+  let totalCompleted = 0;
+  if (effectiveScheduledId) {
+    Object.entries(schedules).forEach(([dateStr, scheduledIds]) => {
+      if (scheduledIds.includes(effectiveScheduledId)) {
+        totalScheduled++;
+        if ((logs[dateStr] || []).includes(effectiveScheduledId)) {
+          totalCompleted++;
+        }
+      }
+    });
+  }
+  const completionRate = totalScheduled > 0 ? Math.round((totalCompleted / totalScheduled) * 100) : 0;
+
   const renderCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
     
     const days = [];
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    // Weekday headers
     const headers = weekDays.map(day => (
-      <div key={`header-${day}`} style={{textAlign: 'center', fontWeight: 'bold', padding: '10px 0', color: 'var(--text-secondary)'}}>
+      <div key={`header-${day}`} className="weekday" style={{ textAlign: 'center', fontWeight: 'bold', padding: '10px 0', color: 'var(--text-secondary)' }}>
         {day}
       </div>
     ));
 
-    // Empty slots for days before the 1st
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
     }
 
-    // Actual days
+    const today = new Date();
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      const isScheduled = selectedActivityId && (schedules[dateStr] || []).includes(selectedActivityId);
-      
-      const today = new Date();
+      const isScheduled = effectiveScheduledId && (schedules[dateStr] || []).includes(effectiveScheduledId);
+      const isLogged = effectiveScheduledId && (logs[dateStr] || []).includes(effectiveScheduledId);
       const isToday = today.getDate() === i && today.getMonth() === month && today.getFullYear() === year;
       
       days.push(
         <div 
           key={`day-${i}`} 
-          className={`calendar-day ${isScheduled ? 'scheduled' : ''} ${isToday ? 'today' : ''}`}
+          className={`calendar-day ${isScheduled ? 'scheduled' : ''} ${isToday ? 'today' : ''} ${isLogged ? 'completed' : ''}`}
           onClick={() => handleDateClick(i)}
           style={{
-            padding: '15px 5px', 
+            padding: '12px 5px', 
             textAlign: 'center', 
-            border: '1px solid #333', 
-            cursor: selectedActivityId ? 'pointer' : 'default',
-            backgroundColor: isScheduled ? 'var(--primary-color)' : (isToday ? '#333' : 'transparent'),
-            color: isScheduled ? 'white' : 'var(--text-primary)',
-            borderRadius: '4px',
-            transition: 'background-color 0.2s'
+            border: '1px solid var(--border-color)', 
+            cursor: effectiveScheduledId ? 'pointer' : 'default',
+            backgroundColor: isScheduled ? 'var(--primary-color-alpha)' : (isToday ? 'var(--surface-color)' : 'transparent'),
+            borderColor: isScheduled ? 'var(--primary-color)' : 'var(--border-color)',
+            color: isScheduled ? 'var(--primary-color)' : 'var(--text-primary)',
+            borderRadius: '6px',
+            position: 'relative',
+            transition: 'all 0.2s'
           }}
         >
-          {i}
+          <span>{i}</span>
+          {isScheduled && (
+            <div style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              backgroundColor: isLogged ? '#10b981' : 'var(--primary-color)',
+              margin: '3px auto 0'
+            }}></div>
+          )}
         </div>
       );
     }
 
     return (
-      <div style={{marginTop: '20px'}}>
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
-          <button onClick={handlePrevMonth} style={{background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '10px'}}>
-            <i className="fas fa-chevron-left"></i>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <button onClick={handlePrevMonth} className="calendar-nav-btn" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '1.25rem', cursor: 'pointer', padding: '0.5rem' }}>
+            ‹
           </button>
-          <h2 style={{margin: 0}}>{currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' })}</h2>
-          <button onClick={handleNextMonth} style={{background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: '10px'}}>
-            <i className="fas fa-chevron-right"></i>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+            {currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+          </h2>
+          <button onClick={handleNextMonth} className="calendar-nav-btn" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '1.25rem', cursor: 'pointer', padding: '0.5rem' }}>
+            ›
           </button>
         </div>
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px'}}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
           {headers}
           {days}
         </div>
@@ -128,44 +155,113 @@ export default function ScheduleActivities() {
         </div>
         
         <div className="schedule-controls">
-          <p className="section-label" style={{marginBottom: '10px'}}>Select an activity to schedule:</p>
-          <div id="activity-grid" className="activity-grid" style={{display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '30px'}}>
+          <p className="section-label" style={{ marginBottom: '0.75rem', fontWeight: '600' }}>
+            Select an activity to schedule:
+          </p>
+          <div id="activity-grid" className="activity-grid" style={{ marginBottom: '1.5rem' }}>
             {activitiesLoading ? (
-              <p>Loading activities...</p>
+              <p style={{ opacity: 0.7 }}>Loading activities...</p>
             ) : activities.length === 0 ? (
-              <p style={{color: 'var(--text-secondary)'}}>No activities to schedule.</p>
+              <p style={{ color: 'var(--text-secondary)' }}>No activities created yet.</p>
             ) : (
-              activities.map(activity => (
-                <button
-                  key={activity.id}
-                  onClick={() => setSelectedActivityId(activity.id)}
-                  style={{
-                    padding: '10px 15px',
-                    borderRadius: '8px',
-                    border: selectedActivityId === activity.id ? '2px solid var(--primary-color)' : '1px solid #444',
-                    backgroundColor: selectedActivityId === activity.id ? 'var(--primary-color-alpha)' : '#222',
-                    color: 'white',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {activity.name}
-                </button>
-              ))
+              activities.map(activity => {
+                const isSelected = selectedActivityId === activity.id;
+                return (
+                  <div
+                    key={activity.id}
+                    className={`activity-card ${isSelected ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedActivityId(activity.id);
+                      setSelectedSubActivityId(null);
+                    }}
+                  >
+                    <div className="activity-card-color" style={{ backgroundColor: 'var(--primary-color)' }}></div>
+                    <div className="activity-card-content">
+                      <div className="activity-card-name">{activity.name}</div>
+                      {activity.subActivities && activity.subActivities.length > 0 && (
+                        <div className="activity-card-meta">
+                          {activity.subActivities.length} sub-activities
+                        </div>
+                      )}
+                    </div>
+                    {isSelected && (
+                      <i className="fas fa-check-circle activity-card-check"></i>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
+
+          {/* Subactivities Section */}
+          {hasSubActivities && (
+            <div id="subactivity-section" className="subactivity-section" style={{ marginBottom: '1.5rem' }}>
+              <p className="section-label">Select a sub-activity (or schedule whole activity):</p>
+              <div id="subactivity-grid" className="subactivity-grid">
+                {selectedActivity.subActivities.map(sub => {
+                  const isSubSelected = selectedSubActivityId === sub.id;
+                  return (
+                    <div
+                      key={sub.id}
+                      className={`subactivity-card activity-card ${isSubSelected ? 'selected' : ''}`}
+                      onClick={() => setSelectedSubActivityId(isSubSelected ? null : sub.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="activity-card-color" style={{ backgroundColor: sub.color || '#3B82F6' }}></div>
+                      <div className="activity-card-content">
+                        <div className="activity-card-name">{sub.name}</div>
+                      </div>
+                      {isSubSelected && (
+                        <i className="fas fa-check-circle activity-card-check"></i>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="schedule-layout">
           <div className="schedule-calendar-section">
-            <div id="schedule-calendar-container" className="schedule-calendar-container" style={{backgroundColor: 'var(--surface-color)', padding: '20px', borderRadius: '12px'}}>
-              {!selectedActivityId ? (
-                <div style={{textAlign: 'center', padding: '40px', color: 'var(--text-secondary)'}}>
-                  <i className="fas fa-hand-pointer" style={{fontSize: '2rem', marginBottom: '10px'}}></i>
+            <div id="schedule-calendar-container" className="schedule-calendar-container">
+              {!effectiveScheduledId ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                  <i className="fas fa-hand-pointer" style={{ fontSize: '2rem', marginBottom: '10px' }}></i>
                   <p>Select an activity above to view or set its schedule</p>
                 </div>
               ) : (
                 renderCalendar()
               )}
+            </div>
+          </div>
+
+          <div className="schedule-stats-section" style={{ marginTop: '1.5rem' }}>
+            <div className="stats-card">
+              <h3>Activity Progress</h3>
+              <div id="activity-stats" className="activity-stats">
+                {!effectiveScheduledId ? (
+                  <div className="stat-placeholder">
+                    <i className="fas fa-chart-line"></i>
+                    <p>Select an activity to view progress</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', padding: '10px 0' }}>
+                    <div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Scheduled Days</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{totalScheduled}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Completed Days</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{totalCompleted}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Completion Rate</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>{completionRate}%</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -183,8 +279,7 @@ export default function ScheduleActivities() {
           padding: '10px 20px',
           borderRadius: '20px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          zIndex: 1000,
-          animation: 'fadein 0.3s, fadeout 0.3s 1.7s'
+          zIndex: 1000
         }}>
           {toastMessage}
         </div>
