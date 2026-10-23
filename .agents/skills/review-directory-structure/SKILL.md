@@ -30,7 +30,10 @@ The BitHab repository is organized into distinct layers separating client-side R
 │       ├── review-responsive-design/ # Mobile-first dvh, layout, and touch targets
 │       ├── sync-skills-and-docs/     # Continuous guideline & documentation sync
 │       └── targeted-module-testing/  # Verification, linting & build health checks
-├── public/                           # Static assets served as-is (favicons, manifests)
+├── config/                           # Build-time deployment configurations
+│   ├── firebase-config.js            # Legacy client config fallback
+│   └── generate-firebase-config.js   # Netlify Firebase credential generator & Vite bundler
+├── public/                           # Static assets served as-is (favicons, manifests, _redirects)
 ├── src/                              # Client-side React 19 application
 │   ├── assets/                       # Static media, icons, and stylesheets
 │   │   ├── css/                      # Modular Vanilla CSS stylesheets
@@ -84,6 +87,7 @@ The BitHab repository is organized into distinct layers separating client-side R
 ├── .oxlintrc.json                    # Oxlint static analysis configuration
 ├── AGENTS.md                         # Agent development guidelines and pipeline rules
 ├── index.html                        # Application HTML entry point
+├── netlify.toml                      # Netlify build command, publish directory, and redirect config
 ├── package.json                      # Project dependencies and script definitions
 ├── package-lock.json                 # Locked dependency tree
 ├── README.md                         # Project documentation and feature map
@@ -98,7 +102,7 @@ The root directory must remain strictly curated. Only the following essential pl
 
 1. **Directives & Version Control:** `.gitignore`, `AGENTS.md`, `README.md`
 2. **Package & Tooling:** `package.json`, `package-lock.json`, `.oxlintrc.json`
-3. **Application Entry & Bundler:** `index.html`, `vite.config.js`
+3. **Application Entry & Deployment:** `index.html`, `vite.config.js`, `netlify.toml`
 
 **Strict Prohibitions:**
 * Never create loose scratch scripts or temporary files directly in the root directory.

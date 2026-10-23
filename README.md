@@ -36,7 +36,7 @@ BitHab is a modern, responsive personal habit and productivity tracking web appl
 | `npm run dev` | Starts Vite local development server on `http://localhost:5173/` |
 | `npm test` | Runs complete unit and integration test suite via Vitest (24 test suites) |
 | `npm run lint` | Runs static code analysis via `oxlint` (0 errors) |
-| `npm run build` | Compiles production bundle using `vite build` into `dist/` |
+| `npm run build` | Generates Firebase credentials and compiles production bundle into `dist/` |
 | `npm run preview` | Previews production compiled bundle locally |
 
 ---
@@ -46,7 +46,8 @@ BitHab is a modern, responsive personal habit and productivity tracking web appl
 ```text
 BitHab/
 ├── .agents/skills/            # Agent development guidelines and workflow skills
-├── public/assets/             # Static assets (images, icons)
+├── config/                    # Build-time Firebase configuration & Netlify bundler
+├── public/                    # Static assets (images, icons, _redirects)
 ├── src/
 │   ├── assets/css/            # Vanilla CSS design tokens and theme stylesheets
 │   ├── components/layout/     # Shell navigation (Header, MobileTopbar, BottomNav, Layout)

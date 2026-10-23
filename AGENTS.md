@@ -25,7 +25,7 @@ Every development task in this repository must strictly adhere to the following 
 ### Rule 3: Architecture & Directory Placement
 * **Skill Reference:** [.agents/skills/review-directory-structure/SKILL.md](file:///.agents/skills/review-directory-structure/SKILL.md)
 * **Rule:** Every new or moved file must be positioned strictly within its designated architectural layer (`src/pages/` for route views, `src/components/layout/` for shell navigation, `src/context/` for state providers, `src/assets/css/` for stylesheets, `src/config/` for platform integrations).
-* **Root Cleanliness Policy:** The root directory is strictly reserved for `.gitignore`, `AGENTS.md`, `README.md`, `package.json`, `package-lock.json`, `.oxlintrc.json`, `index.html`, and `vite.config.js`. Loose scripts or secondary files must never reside in the root.
+* **Root Cleanliness Policy:** The root directory is strictly reserved for `.gitignore`, `AGENTS.md`, `README.md`, `package.json`, `package-lock.json`, `.oxlintrc.json`, `index.html`, `vite.config.js`, and `netlify.toml`. Loose scripts or secondary files must never reside in the root.
 
 ### Rule 4: File & Folder Naming Conventions
 * **Skill Reference:** [.agents/skills/file-folder-naming/SKILL.md](file:///.agents/skills/file-folder-naming/SKILL.md)
