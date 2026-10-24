@@ -165,6 +165,15 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
     - High-contrast green primary button (`#10b981`, `#ffffff` text) to "Enter Fullscreen".
     - Clean translucent secondary button to "Return to Focus".
 
+### Rule 15: Themes Gallery & Dual-Pill Preview Architecture
+* **Themes Gallery (`/themes`):**
+  - Begins directly with `.current-theme-section` displaying "Current Theme" and active theme name with a left accent border (`border-left: 4px solid var(--primary-color)`). Redundant visible page titles are hidden via `.visually-hidden` so the gallery starts directly beneath the 90px desktop header.
+  - Desktop 3x2 grid (`grid-template-columns: repeat(3, 1fr)`) displaying all 6 themes in 2 rows without requiring vertical viewport scrolling on standard desktop viewports.
+  - Each theme card displays two floating, vertical rounded pill capsules (`.theme-preview.dark-preview` and `.theme-preview.light-preview`) with rounded corners (`12px`), dark/light theme backgrounds, uppercase mode labels (`DARK`, `LIGHT`), and 3 color bars (`primary`, `secondary`, `surface`).
+  - Active theme card displays an accent border matching the theme (`border-color: var(--primary-color)`), a green circular checkmark badge (`.theme-card.active::after`) in the top-right corner, active theme title in primary accent color, and a green action button (`background: var(--success-color)`).
+  - Inactive theme cards display theme title in default text color (`var(--text-primary)`) and button in `var(--primary-color)`.
+  - Responsive reflows: 2 columns on tablet (`<= 1024px`), 1 column on mobile (`<= 768px`) with `padding-bottom: 80px` for bottom navigation clearance.
+
 ---
 
 ## 4. Pre-Commit Design System Checklist
@@ -181,4 +190,5 @@ Before committing any UI or styling changes, verify:
 [ ] 8. Dashboard column cards end on the exact same bottom baseline with zero dead space.
 [ ] 9. Card headers maintain compact spacing (margin-bottom: 0.25rem; padding-bottom: 0.35rem;).
 [ ] 10. Form dividers use z-index badge layering to avoid line bleed-through.
+[ ] 11. Themes gallery displays 3x2 grid with dual-pill capsules and active card green badge/button.
 ```
