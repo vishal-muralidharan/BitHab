@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -14,42 +14,60 @@ export function GoalProvider({ children }) {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const normalizeGoals = useCallback((rawGoals) => {
+    if (!Array.isArray(rawGoals)) return [];
+    return rawGoals.map(g => ({
+      ...g,
+      name: g.name || g.title || 'Unnamed Goal',
+      title: g.title || g.name || 'Unnamed Goal',
+      completed: typeof g.completed === 'boolean' 
+        ? g.completed 
+        : (g.current !== undefined && g.target !== undefined && g.current >= g.target),
+      subgoals: Array.isArray(g.subgoals) ? g.subgoals : []
+    }));
+  }, []);
+
   useEffect(() => {
-    async function loadGoals() {
-      if (!currentUser) {
-        setGoals([]);
-        setLoading(false);
-        return;
-      }
-      
+    if (!currentUser) {
+      setGoals([]);
+      setLoading(false);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    let isMounted = true;
+
+    // Initial fetch via getDoc (supports tests and immediate cache hits)
+    async function initialFetch() {
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(userDocRef);
-        
-        if (docSnap.exists() && docSnap.data().goals) {
-          const rawGoals = docSnap.data().goals || [];
-          const normalized = rawGoals.map(g => ({
-            ...g,
-            name: g.name || g.title || 'Unnamed Goal',
-            title: g.title || g.name || 'Unnamed Goal',
-            completed: typeof g.completed === 'boolean' 
-              ? g.completed 
-              : (g.current !== undefined && g.target !== undefined && g.current >= g.target),
-            subgoals: Array.isArray(g.subgoals) ? g.subgoals : []
-          }));
-          setGoals(normalized);
-        } else {
-          setGoals([]);
+        if (isMounted && docSnap && docSnap.exists() && docSnap.data().goals) {
+          setGoals(normalizeGoals(docSnap.data().goals));
         }
       } catch (error) {
-        console.error("Error loading goals:", error);
+        console.error("Error loading goals initial fetch:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    
-    loadGoals();
-  }, [currentUser]);
+    initialFetch();
+
+    // Real-time onSnapshot subscription for live updates without re-login
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (isMounted && docSnap && docSnap.exists() && docSnap.data().goals) {
+        setGoals(normalizeGoals(docSnap.data().goals));
+      }
+      if (isMounted) setLoading(false);
+    }, (error) => {
+      console.error("Error in GoalContext onSnapshot listener:", error);
+      if (isMounted) setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [currentUser, normalizeGoals]);
 
   async function saveGoals(newGoals) {
     if (!currentUser) return;

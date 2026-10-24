@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -14,39 +14,57 @@ export function ListProvider({ children }) {
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const normalizeLists = useCallback((rawLists) => {
+    if (!Array.isArray(rawLists)) return [];
+    return rawLists.map(l => ({
+      ...l,
+      title: l.title || 'Untitled List',
+      type: l.type || 'checklist',
+      items: Array.isArray(l.items) ? l.items : []
+    }));
+  }, []);
+
   useEffect(() => {
-    async function loadLists() {
-      if (!currentUser) {
-        setLists([]);
-        setLoading(false);
-        return;
-      }
-      
+    if (!currentUser) {
+      setLists([]);
+      setLoading(false);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    let isMounted = true;
+
+    // Initial fetch via getDoc
+    async function initialFetch() {
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(userDocRef);
-        
-        if (docSnap.exists() && docSnap.data().lists) {
-          const rawLists = docSnap.data().lists || [];
-          const normalized = rawLists.map(l => ({
-            ...l,
-            title: l.title || 'Untitled List',
-            type: l.type || 'checklist',
-            items: Array.isArray(l.items) ? l.items : []
-          }));
-          setLists(normalized);
-        } else {
-          setLists([]);
+        if (isMounted && docSnap && docSnap.exists() && docSnap.data().lists) {
+          setLists(normalizeLists(docSnap.data().lists));
         }
       } catch (error) {
-        console.error("Error loading lists:", error);
+        console.error("Error loading lists initial fetch:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    
-    loadLists();
-  }, [currentUser]);
+    initialFetch();
+
+    // Real-time onSnapshot subscription
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (isMounted && docSnap && docSnap.exists() && docSnap.data().lists) {
+        setLists(normalizeLists(docSnap.data().lists));
+      }
+      if (isMounted) setLoading(false);
+    }, (error) => {
+      console.error("Error in ListContext onSnapshot listener:", error);
+      if (isMounted) setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [currentUser, normalizeLists]);
 
   async function saveLists(newLists) {
     if (!currentUser) return;

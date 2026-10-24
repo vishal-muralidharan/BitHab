@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -14,43 +14,59 @@ export function ReminderProvider({ children }) {
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const normalizeReminders = useCallback((rawReminders) => {
+    if (!Array.isArray(rawReminders)) return [];
+    const todayStr = new Date().toISOString().split('T')[0];
+    return rawReminders.map(r => ({
+      ...r,
+      text: r.text || '',
+      date: r.date || todayStr,
+      time: r.time || '09:00',
+      completed: !!r.completed
+    }));
+  }, []);
+
   useEffect(() => {
-    async function loadReminders() {
-      if (!currentUser) {
-        setReminders([]);
-        setLoading(false);
-        return;
-      }
-      
+    if (!currentUser) {
+      setReminders([]);
+      setLoading(false);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    let isMounted = true;
+
+    // Initial fetch via getDoc
+    async function initialFetch() {
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(userDocRef);
-        
-        if (docSnap.exists() && docSnap.data().reminders) {
-          const rawReminders = docSnap.data().reminders || [];
-          const normalized = rawReminders.map(r => {
-            const todayStr = new Date().toISOString().split('T')[0];
-            return {
-              ...r,
-              text: r.text || '',
-              date: r.date || todayStr,
-              time: r.time || '09:00',
-              completed: !!r.completed
-            };
-          });
-          setReminders(normalized);
-        } else {
-          setReminders([]);
+        if (isMounted && docSnap && docSnap.exists() && docSnap.data().reminders) {
+          setReminders(normalizeReminders(docSnap.data().reminders));
         }
       } catch (error) {
-        console.error("Error loading reminders:", error);
+        console.error("Error loading reminders initial fetch:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    
-    loadReminders();
-  }, [currentUser]);
+    initialFetch();
+
+    // Real-time onSnapshot subscription
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (isMounted && docSnap && docSnap.exists() && docSnap.data().reminders) {
+        setReminders(normalizeReminders(docSnap.data().reminders));
+      }
+      if (isMounted) setLoading(false);
+    }, (error) => {
+      console.error("Error in ReminderContext onSnapshot listener:", error);
+      if (isMounted) setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [currentUser, normalizeReminders]);
 
   async function saveReminders(newReminders) {
     if (!currentUser) return;

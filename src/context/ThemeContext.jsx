@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../config/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 
 const THEMES = {
@@ -203,25 +203,41 @@ export function ThemeProvider({ children }) {
         return true;
     });
 
-    // Firebase Sync
+    // Firebase Real-time Sync
     useEffect(() => {
         if (!currentUser) return;
 
-        async function syncThemeFromDb() {
+        const userRef = doc(db, 'users', currentUser.uid);
+        let isMounted = true;
+
+        async function initialFetch() {
             try {
-                const userRef = doc(db, 'users', currentUser.uid);
                 const snapshot = await getDoc(userRef);
-                if (snapshot.exists() && snapshot.data().themePreferences) {
+                if (isMounted && snapshot.exists() && snapshot.data().themePreferences) {
                     const prefs = snapshot.data().themePreferences;
                     if (prefs.currentTheme) setCurrentTheme(prefs.currentTheme);
                     if (prefs.isDarkMode !== undefined) setIsDarkMode(prefs.isDarkMode);
                 }
             } catch (e) {
-                console.error('Failed to load theme from Firestore', e);
+                console.error('Failed to load theme initial fetch from Firestore', e);
             }
         }
+        initialFetch();
 
-        syncThemeFromDb();
+        const unsubscribe = onSnapshot(userRef, (snapshot) => {
+            if (isMounted && snapshot.exists() && snapshot.data().themePreferences) {
+                const prefs = snapshot.data().themePreferences;
+                if (prefs.currentTheme) setCurrentTheme(prefs.currentTheme);
+                if (prefs.isDarkMode !== undefined) setIsDarkMode(prefs.isDarkMode);
+            }
+        }, (err) => {
+            console.error('Error in ThemeContext onSnapshot listener', err);
+        });
+
+        return () => {
+            isMounted = false;
+            if (typeof unsubscribe === 'function') unsubscribe();
+        };
     }, [currentUser]);
 
     // Apply CSS whenever theme changes

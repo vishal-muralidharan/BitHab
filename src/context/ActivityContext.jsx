@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -15,35 +15,52 @@ export function ActivityProvider({ children }) {
   const [focusLogs, setFocusLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Load activities from Firebase
+  // Load activities from Firebase with real-time onSnapshot listener
   useEffect(() => {
-    async function loadActivities() {
-      if (!currentUser) {
-        setActivities([]);
-        setLoading(false);
-        return;
-      }
-      
+    if (!currentUser) {
+      setActivities([]);
+      setFocusLogs([]);
+      setLoading(false);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    let isMounted = true;
+
+    // Initial fetch via getDoc
+    async function initialFetch() {
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(userDocRef);
-        
-        if (docSnap.exists()) {
+        if (isMounted && docSnap && docSnap.exists()) {
           const data = docSnap.data();
-          if (data.activities) setActivities(data.activities);
-          if (data.focusLogs) setFocusLogs(data.focusLogs);
-        } else {
-          setActivities([]);
-          setFocusLogs([]);
+          if (data.activities) setActivities(Array.isArray(data.activities) ? data.activities : []);
+          if (data.focusLogs) setFocusLogs(Array.isArray(data.focusLogs) ? data.focusLogs : []);
         }
       } catch (error) {
-        console.error("Error loading activities:", error);
+        console.error("Error loading activities initial fetch:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    
-    loadActivities();
+    initialFetch();
+
+    // Real-time onSnapshot subscription
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (isMounted && docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.activities) setActivities(Array.isArray(data.activities) ? data.activities : []);
+        if (data.focusLogs) setFocusLogs(Array.isArray(data.focusLogs) ? data.focusLogs : []);
+      }
+      if (isMounted) setLoading(false);
+    }, (error) => {
+      console.error("Error in ActivityContext onSnapshot listener:", error);
+      if (isMounted) setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, [currentUser]);
 
   // Save activities to Firebase

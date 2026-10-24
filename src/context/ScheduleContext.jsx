@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -19,31 +19,50 @@ export function ScheduleProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadScheduleData() {
-      if (!currentUser) {
-        setSchedules({});
-        setLogs({});
-        setLoading(false);
-        return;
-      }
-      
+    if (!currentUser) {
+      setSchedules({});
+      setLogs({});
+      setLoading(false);
+      return;
+    }
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    let isMounted = true;
+
+    // Initial fetch via getDoc
+    async function initialFetch() {
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(userDocRef);
-        
-        if (docSnap.exists()) {
+        if (isMounted && docSnap && docSnap.exists()) {
           const data = docSnap.data();
-          if (data.schedules) setSchedules(data.schedules);
-          if (data.logs) setLogs(data.logs);
+          if (data.schedules && typeof data.schedules === 'object') setSchedules(data.schedules);
+          if (data.logs && typeof data.logs === 'object') setLogs(data.logs);
         }
       } catch (error) {
-        console.error("Error loading schedule data:", error);
+        console.error("Error loading schedule data initial fetch:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
-    
-    loadScheduleData();
+    initialFetch();
+
+    // Real-time onSnapshot subscription
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      if (isMounted && docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.schedules && typeof data.schedules === 'object') setSchedules(data.schedules);
+        if (data.logs && typeof data.logs === 'object') setLogs(data.logs);
+      }
+      if (isMounted) setLoading(false);
+    }, (error) => {
+      console.error("Error in ScheduleContext onSnapshot listener:", error);
+      if (isMounted) setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, [currentUser]);
 
   async function saveScheduleData(newSchedules, newLogs) {
