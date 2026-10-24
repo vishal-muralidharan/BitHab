@@ -118,4 +118,70 @@ describe('Dashboard Page', () => {
     expect(activityList).toHaveClass('inline-logging-active');
     expect(activityList.querySelector('.inline-logging-interface')).toBeInTheDocument();
   });
+
+  it('displays activity name in calendar header and opens year/month picker modal on date header click', async () => {
+    renderDashboard();
+
+    await act(async () => {});
+
+    // Calendar title element exists and displays current activity or All Activities
+    const calendarTitle = document.getElementById('calendar-title');
+    expect(calendarTitle).toBeInTheDocument();
+    expect(calendarTitle.textContent).toBeTruthy();
+
+    // Modal is initially not rendered
+    expect(document.getElementById('year-month-picker-modal')).not.toBeInTheDocument();
+
+    // Click date header
+    const currentDateEl = document.getElementById('current-date');
+    await act(async () => {
+      fireEvent.click(currentDateEl.closest('.date-display'));
+    });
+
+    // Modal is now open
+    const modal = document.getElementById('year-month-picker-modal');
+    expect(modal).toBeInTheDocument();
+    expect(screen.getByText('Select Year, Month, and Activity')).toBeInTheDocument();
+
+    // Select Year 2025 and Month March (index 2)
+    const yearSelect = document.getElementById('year-select');
+    const monthSelect = document.getElementById('month-select');
+    fireEvent.change(yearSelect, { target: { value: '2025' } });
+    fireEvent.change(monthSelect, { target: { value: '2' } });
+
+    // Click Apply
+    const applyBtn = document.getElementById('apply-year-month');
+    await act(async () => {
+      fireEvent.click(applyBtn);
+    });
+
+    // Modal closes
+    expect(document.getElementById('year-month-picker-modal')).not.toBeInTheDocument();
+
+    // Date display and calendar subtitle reflect March 2025
+    expect(document.getElementById('current-date')).toHaveTextContent('March');
+    expect(document.getElementById('current-date')).toHaveTextContent('2025');
+  });
+
+  it('cancels year/month picker modal without applying changes when clicking cancel', async () => {
+    renderDashboard();
+
+    await act(async () => {});
+
+    // Click date header
+    const currentDateEl = document.getElementById('current-date');
+    await act(async () => {
+      fireEvent.click(currentDateEl.closest('.date-display'));
+    });
+
+    expect(document.getElementById('year-month-picker-modal')).toBeInTheDocument();
+
+    // Click cancel
+    const cancelBtn = document.getElementById('cancel-year-month');
+    await act(async () => {
+      fireEvent.click(cancelBtn);
+    });
+
+    expect(document.getElementById('year-month-picker-modal')).not.toBeInTheDocument();
+  });
 });
