@@ -234,6 +234,12 @@
     display: flex;               /* Center content horizontally and vertically */
     align-items: center;         /* Vertical centering */
     justify-content: center;     /* Horizontal centering */
+    text-transform: none;
+}
+
+.center-column .date-display {
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .current-date-colored {
@@ -241,6 +247,7 @@
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: 0.5px;
+    text-transform: none;
 }
 
 /* Calendar takes most of center column */

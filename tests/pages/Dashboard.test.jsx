@@ -51,7 +51,13 @@ describe('Dashboard Page', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Reminders' })).toBeInTheDocument();
 
     expect(screen.getByPlaceholderText('Write your note for this day')).toBeInTheDocument();
-    expect(document.getElementById('current-date')).toHaveTextContent('Today');
+    const today = new Date();
+    const expectedMonth = today.toLocaleDateString('en-US', { month: 'long' });
+    const expectedYear = today.getFullYear();
+    const currentDateEl = document.getElementById('current-date');
+    expect(currentDateEl).toHaveTextContent(expectedMonth);
+    expect(currentDateEl).toHaveTextContent(String(expectedYear));
+    expect(currentDateEl.textContent).not.toMatch(/^Today,/);
   });
 
   it('types and saves a daily note in the home notes editor on blur', async () => {

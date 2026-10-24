@@ -110,20 +110,15 @@ export default function Dashboard() {
   // Format date display
   const formatDateHeader = (ds) => {
     try {
+      if (!ds) return '';
       const [year, month, day] = ds.split('-').map(Number);
       const date = new Date(year, month - 1, day);
-      const formatted = date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      if (ds === todayStr) {
-        return `Today, ${formatted}`;
-      }
-      return formatted;
+      if (isNaN(date.getTime())) return ds;
+      const monthName = date.toLocaleDateString('en-US', { month: 'long' });
+      const dayNum = date.getDate();
+      const yearNum = date.getFullYear();
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+      return `${monthName} ${dayNum}, ${yearNum}, ${weekday}`;
     } catch {
       return ds;
     }
