@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -10,8 +10,8 @@ export function useNotes() {
 }
 
 function normalizeNote(n) {
-  const isDaily = n.type === 'daily' || Boolean(n.date && !n.title);
-  const dateStr = n.date || (isDaily ? new Date().toISOString().split('T')[0] : null);
+  const isDaily = n.type === 'daily' || Boolean(n.date && !n.title) || (/^\d{4}-\d{2}-\d{2}$/.test(n.id) && !n.title);
+  const dateStr = n.date || (/^\d{4}-\d{2}-\d{2}$/.test(n.id) ? n.id : (isDaily ? new Date().toISOString().split('T')[0] : null));
   const id = n.id || (dateStr ? `note_${dateStr}` : `note_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
   const content = n.content || n.note || '';
   const title = n.title || (isDaily ? (dateStr || 'Daily Note') : 'Untitled Note');
@@ -37,12 +37,14 @@ function extractNotes(rawNotes) {
   if (typeof rawNotes === 'object' && rawNotes !== null) {
     return Object.entries(rawNotes).map(([dateStr, noteVal]) => {
       const content = typeof noteVal === 'string' ? noteVal : (noteVal?.content || noteVal?.note || '');
+      const fav = typeof noteVal === 'object' ? Boolean(noteVal?.favorite || noteVal?.isFavorite) : false;
       return normalizeNote({
         id: `note_${dateStr}`,
         type: 'daily',
         date: dateStr,
         title: dateStr,
-        content
+        content,
+        favorite: fav
       });
     });
   }
@@ -51,14 +53,29 @@ function extractNotes(rawNotes) {
 
 function mergeNotes(primary, secondary) {
   const map = new Map();
-  secondary.forEach(n => {
-    const key = n.type === 'daily' && n.date ? `daily_${n.date}` : n.id;
-    map.set(key, n);
-  });
-  primary.forEach(n => {
-    const key = n.type === 'daily' && n.date ? `daily_${n.date}` : n.id;
-    map.set(key, n);
-  });
+  // Insert secondary source first
+  if (Array.isArray(secondary)) {
+    secondary.forEach(n => {
+      if (!n) return;
+      const key = n.type === 'daily' && n.date ? `daily_${n.date}` : n.id;
+      map.set(key, n);
+    });
+  }
+  // Overlay primary
+  if (Array.isArray(primary)) {
+    primary.forEach(n => {
+      if (!n) return;
+      const key = n.type === 'daily' && n.date ? `daily_${n.date}` : n.id;
+      const existing = map.get(key);
+      if (existing) {
+        const content = n.content && n.content.trim() ? n.content : (existing.content || '');
+        const favorite = n.favorite || existing.favorite;
+        map.set(key, { ...existing, ...n, content, favorite });
+      } else {
+        map.set(key, n);
+      }
+    });
+  }
   return Array.from(map.values());
 }
 
@@ -77,13 +94,110 @@ export function NoteProvider({ children }) {
     const userDocRef = doc(db, 'users', currentUser.uid);
     let isMounted = true;
 
-    // Initial fetch via getDoc
+    // Helper to read legacy/vanilla subcollections: /users/{userId}/notes and /users/{userId}/generalNotes
+    async function fetchSubcollections() {
+      const subNotes = [];
+      try {
+        const dailyCol = collection(db, 'users', currentUser.uid, 'notes');
+        const dailySnap = await getDocs(dailyCol);
+        if (dailySnap && !dailySnap.empty) {
+          dailySnap.forEach(d => {
+            const data = d.data() || {};
+            const content = data.content || data.note || '';
+            const dateStr = data.date || d.id;
+            subNotes.push(normalizeNote({
+              id: d.id,
+              type: 'daily',
+              date: dateStr,
+              title: dateStr,
+              content,
+              favorite: data.favorite !== undefined ? Boolean(data.favorite) : Boolean(data.isFavorite),
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt
+            }));
+          });
+        }
+      } catch (err) {
+        console.warn("Error reading daily notes subcollection:", err);
+      }
+
+      try {
+        const generalCol = collection(db, 'users', currentUser.uid, 'generalNotes');
+        const genSnap = await getDocs(generalCol);
+        if (genSnap && !genSnap.empty) {
+          genSnap.forEach(d => {
+            const data = d.data() || {};
+            const content = data.content || data.note || '';
+            const title = data.title || 'Untitled Note';
+            subNotes.push(normalizeNote({
+              id: d.id,
+              type: 'general',
+              title,
+              content,
+              favorite: data.favorite !== undefined ? Boolean(data.favorite) : Boolean(data.isFavorite),
+              createdAt: data.createdAt,
+              updatedAt: data.updatedAt
+            }));
+          });
+        }
+      } catch (err) {
+        console.warn("Error reading general notes subcollection:", err);
+      }
+
+      return subNotes;
+    }
+
+    // Initial fetch via getDoc and subcollections
     async function initialFetch() {
       try {
-        const docSnap = await getDoc(userDocRef);
-        if (isMounted && docSnap && docSnap.exists() && docSnap.data().notes) {
-          const parsed = extractNotes(docSnap.data().notes);
-          setNotes(prev => mergeNotes(prev, parsed));
+        const [docSnap, subNotes] = await Promise.all([
+          getDoc(userDocRef),
+          fetchSubcollections()
+        ]);
+
+        let rootNotes = [];
+        if (docSnap && docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.notes) {
+            rootNotes = extractNotes(data.notes);
+          }
+          if (data.dailyNotes && typeof data.dailyNotes === 'object') {
+            rootNotes = mergeNotes(rootNotes, extractNotes(data.dailyNotes));
+          }
+          if (data.generalNotes && typeof data.generalNotes === 'object') {
+            rootNotes = mergeNotes(rootNotes, extractNotes(data.generalNotes));
+          }
+        }
+
+        if (isMounted) {
+          const combined = mergeNotes(rootNotes, subNotes);
+          setNotes(prev => {
+            const merged = mergeNotes(combined, prev);
+            return JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged;
+          });
+          // If subcollection or legacy notes exist and root doc didn't have them all, sync to root doc
+          if (combined.length > 0 && combined.length > rootNotes.length) {
+            try {
+              const sanitized = combined.map(n => ({
+                id: n.id || String(Date.now()),
+                type: n.type || 'daily',
+                title: n.title ? String(n.title).trim() : '',
+                date: n.date || null,
+                content: n.content ? String(n.content).trim() : '',
+                favorite: Boolean(n.favorite),
+                isFavorite: Boolean(n.isFavorite),
+                createdAt: n.createdAt || Date.now(),
+                updatedAt: Date.now()
+              }));
+              await setDoc(userDocRef, {
+                notes: sanitized,
+                lastUpdated: Date.now(),
+                lastUpdatedBy: 'notes_sync'
+              }, { merge: true });
+            } catch (syncErr) {
+              console.warn("Error syncing merged notes to user doc:", syncErr);
+            }
+          }
         }
       } catch (error) {
         console.error("Error loading notes initial fetch:", error);
@@ -95,11 +209,23 @@ export function NoteProvider({ children }) {
 
     // Real-time onSnapshot listener on root user doc
     const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
-      if (isMounted && docSnap && docSnap.exists() && docSnap.data().notes) {
-        const parsed = extractNotes(docSnap.data().notes);
-        setNotes(prev => JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed);
+      if (!isMounted) return;
+      if (docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        let parsed = [];
+        if (data.notes) {
+          parsed = extractNotes(data.notes);
+        } else if (data.dailyNotes || data.generalNotes) {
+          parsed = mergeNotes(extractNotes(data.dailyNotes || {}), extractNotes(data.generalNotes || {}));
+        }
+        if (parsed.length > 0) {
+          setNotes(prev => {
+            const merged = mergeNotes(parsed, prev);
+            return JSON.stringify(prev) === JSON.stringify(merged) ? prev : merged;
+          });
+        }
       }
-      if (isMounted) setLoading(false);
+      setLoading(false);
     }, (error) => {
       console.error("Error in NoteContext onSnapshot listener:", error);
       if (isMounted) setLoading(false);
@@ -137,7 +263,7 @@ export function NoteProvider({ children }) {
       
       setNotes(sanitizedNotes);
 
-      // Best-effort dual-write for daily notes to subcollection for legacy compatibility
+      // Best-effort dual-write to subcollections for full backward compatibility
       for (const note of sanitizedNotes) {
         if (note.type === 'daily' && note.date) {
           try {
@@ -147,6 +273,21 @@ export function NoteProvider({ children }) {
               content: note.content,
               date: note.date,
               type: 'daily',
+              favorite: Boolean(note.favorite),
+              updatedAt: Date.now()
+            }, { merge: true });
+          } catch {
+            // Ignore subcollection write errors
+          }
+        } else if (note.type === 'general' && note.id) {
+          try {
+            const subRef = doc(db, 'users', currentUser.uid, 'generalNotes', note.id);
+            await setDoc(subRef, {
+              title: note.title || 'Untitled Note',
+              note: note.content,
+              content: note.content,
+              type: 'general',
+              favorite: Boolean(note.favorite),
               updatedAt: Date.now()
             }, { merge: true });
           } catch {
@@ -165,7 +306,7 @@ export function NoteProvider({ children }) {
     const newNote = {
       id: 'note_' + Date.now(),
       type: type,
-      title: type === 'general' ? (titleOrDate || 'Untitled') : todayStr,
+      title: type === 'general' ? (titleOrDate || 'Untitled Note') : todayStr,
       date: type === 'daily' ? (titleOrDate || todayStr) : null,
       content: content || '',
       favorite: false,
@@ -208,13 +349,22 @@ export function NoteProvider({ children }) {
     const noteToDelete = notes.find(n => n.id === noteId);
     const updatedNotes = notes.filter(n => n.id !== noteId);
 
-    // If deleting a daily note, also remove from subcollection
-    if (currentUser && noteToDelete && noteToDelete.type === 'daily' && noteToDelete.date) {
-      try {
-        const subRef = doc(db, 'users', currentUser.uid, 'notes', noteToDelete.date);
-        await deleteDoc(subRef);
-      } catch {
-        // Ignore subcollection delete error
+    // If deleting a note, also remove from respective subcollection
+    if (currentUser && noteToDelete) {
+      if (noteToDelete.type === 'daily' && noteToDelete.date) {
+        try {
+          const subRef = doc(db, 'users', currentUser.uid, 'notes', noteToDelete.date);
+          await deleteDoc(subRef);
+        } catch {
+          // Ignore subcollection delete error
+        }
+      } else if (noteToDelete.type === 'general' && noteToDelete.id) {
+        try {
+          const subRef = doc(db, 'users', currentUser.uid, 'generalNotes', noteToDelete.id);
+          await deleteDoc(subRef);
+        } catch {
+          // Ignore subcollection delete error
+        }
       }
     }
 

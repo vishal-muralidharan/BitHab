@@ -153,4 +153,57 @@ describe('NoteContext', () => {
     expect(screen.getByText('Today note from legacy map')).toBeInTheDocument();
     expect(screen.getByText('Tomorrow note from legacy map')).toBeInTheDocument();
   });
+
+  it('loads notes from legacy daily and general subcollections and synchronizes them', async () => {
+    vi.spyOn(firestore, 'getDocs').mockImplementation((col) => {
+      const path = col.path || '';
+      if (path.includes('generalNotes')) {
+        return Promise.resolve({
+          empty: false,
+          forEach: (cb) => {
+            cb({
+              id: 'gen_note_1',
+              data: () => ({
+                title: 'General Idea',
+                content: 'Brainstorming notes from subcollection',
+                type: 'general',
+                favorite: true
+              })
+            });
+          }
+        });
+      }
+      if (path.includes('notes')) {
+        return Promise.resolve({
+          empty: false,
+          forEach: (cb) => {
+            cb({
+              id: '2026-10-24',
+              data: () => ({
+                note: 'Daily journal from subcollection',
+                date: '2026-10-24',
+                favorite: false
+              })
+            });
+          }
+        });
+      }
+      return Promise.resolve({ empty: true, forEach: vi.fn() });
+    });
+
+    render(
+      <AuthProvider>
+        <NoteProvider>
+          <NoteConsumer />
+        </NoteProvider>
+      </AuthProvider>
+    );
+
+    await act(async () => {});
+
+    expect(screen.getByTestId('notes-count')).toHaveTextContent('2');
+    expect(screen.getByText('General Idea')).toBeInTheDocument();
+    expect(screen.getByText('Brainstorming notes from subcollection')).toBeInTheDocument();
+    expect(screen.getByText('Daily journal from subcollection')).toBeInTheDocument();
+  });
 });
