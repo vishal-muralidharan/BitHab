@@ -14,8 +14,12 @@ export default function Dashboard() {
   const { reminders, loading: remindersLoading } = useReminders();
   const { logs, toggleActivityLog } = useSchedule();
 
+  // Today reference
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
-  const [selectedDateStr, setSelectedDateStr] = useState(null);
+  const [selectedDateStr, setSelectedDateStr] = useState(todayStr);
 
   const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [activitiesExpanded, setActivitiesExpanded] = useState(false);
@@ -23,10 +27,6 @@ export default function Dashboard() {
   const [remindersExpanded, setRemindersExpanded] = useState(false);
 
   const calendarRef = useRef(null);
-
-  // Today reference
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const effectiveNoteDate = selectedDateStr || todayStr;
 
   // Month navigation
@@ -427,45 +427,30 @@ export default function Dashboard() {
         <div 
           className={`activities-component ${selectedDateStr ? 'inline-logging-open' : ''}`} 
           onClick={(e) => {
-            if (selectedDateStr) return;
-            if (e.target.closest('.show-all-btn, .activity-item, .pill, .activity-group-title, button')) return;
+            if (e.target.closest('.show-all-btn, .activity-item, .pill, .activity-group-title, .inline-logging-interface, button')) return;
             navigate('/activities');
           }}
           style={{ cursor: selectedDateStr ? 'default' : 'pointer' }}
         >
           <div className="section-header">
             <h2>Activities</h2>
-            {selectedDateStr ? (
-              <button 
-                className="show-all-btn close-logging-btn" 
-                id="activities-show-all" 
-                title="Close logging and show all activities"
-                onClick={(e) => {
-                  e.stopPropagation();
+            <button 
+              className={`show-all-btn ${activitiesExpanded ? 'expanded' : ''}`} 
+              id="activities-show-all" 
+              title={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (selectedDateStr) {
                   setSelectedDateStr(null);
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            ) : (
-              (activities.length > 3 || activitiesExpanded) && (
-                <button 
-                  className={`show-all-btn ${activitiesExpanded ? 'expanded' : ''}`} 
-                  id="activities-show-all" 
-                  title={activitiesExpanded ? 'Collapse' : 'Show all'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActivitiesExpanded(!activitiesExpanded);
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-                  </svg>
-                </button>
-              )
-            )}
+                } else {
+                  setActivitiesExpanded(!activitiesExpanded);
+                }
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+              </svg>
+            </button>
           </div>
           <div id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${activitiesExpanded ? 'expanded' : ''}`}>
             {selectedDateStr ? (

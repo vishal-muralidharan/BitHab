@@ -89,22 +89,13 @@ describe('Dashboard Page', () => {
     expect(screen.getByTestId('notes-page')).toBeInTheDocument();
   });
 
-  it('renders activities list by default, switches to inline logging on calendar date click, and unselects on outside click', async () => {
+  it('renders inline logging interface for today by default on load, unselects on outside click, and switches date on calendar click', async () => {
     renderDashboard();
 
     await act(async () => {});
 
     const activityList = document.getElementById('activity-list');
-    expect(activityList).not.toHaveClass('inline-logging-active');
-    expect(activityList.querySelector('.inline-logging-interface')).not.toBeInTheDocument();
-
-    // Click a calendar day
-    const dayCell = document.querySelector('.calendar-day:not(.other-month)');
-    await act(async () => {
-      fireEvent.click(dayCell);
-    });
-
-    // Logging state is active for selected date
+    // On load, today is selected by default and inline logging is active
     expect(activityList).toHaveClass('inline-logging-active');
     expect(activityList.querySelector('.inline-logging-interface')).toBeInTheDocument();
 
@@ -116,5 +107,15 @@ describe('Dashboard Page', () => {
     // Date is unselected, logging state undone, and all activities are shown
     expect(activityList).not.toHaveClass('inline-logging-active');
     expect(activityList.querySelector('.inline-logging-interface')).not.toBeInTheDocument();
+
+    // Click a calendar day
+    const dayCell = document.querySelector('.calendar-day:not(.other-month)');
+    await act(async () => {
+      fireEvent.click(dayCell);
+    });
+
+    // Logging state is active again for the clicked date
+    expect(activityList).toHaveClass('inline-logging-active');
+    expect(activityList.querySelector('.inline-logging-interface')).toBeInTheDocument();
   });
 });
