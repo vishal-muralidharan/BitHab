@@ -314,11 +314,11 @@ export default function Goals() {
               <label>Subgoals:</label>
               <div id="edit-subgoal-list" className="subgoal-list" style={{ maxHeight: '35vh', overflow: 'auto', padding: '0.25rem' }}>
                 {editSubgoalsVal.map(sg => (
-                  <div key={sg.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #333' }}>
+                  <div key={sg.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)' }}>
                     <span>{sg.name}</span>
                     <button 
                       onClick={() => removeSubgoalInModal(sg.id)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--danger-color, #ef4444)', cursor: 'pointer' }}
                     >
                       <i className="fas fa-trash"></i>
                     </button>

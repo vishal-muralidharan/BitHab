@@ -164,7 +164,7 @@ export default function Notes() {
                         className="favorite-note-btn" 
                         title="Toggle favorite"
                         onClick={() => toggleFavorite(note.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: note.favorite ? '#eab308' : 'var(--text-secondary)' }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: note.favorite ? 'var(--warning-color, #eab308)' : 'var(--text-secondary)' }}
                       >
                         <i className={favIcon}></i>
                       </button>

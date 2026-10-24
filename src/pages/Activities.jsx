@@ -197,7 +197,7 @@ export default function Activities() {
                       {activity.subActivities.map(sub => (
                         <li key={sub.id} className="sub-activity-item" data-id={sub.id}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em', flex: 1 }}>
-                            <span className="color-dot" style={{ backgroundColor: sub.color || '#888' }}></span>
+                            <span className="color-dot" style={{ backgroundColor: sub.color || 'var(--primary-color)' }}></span>
                             <span>{sub.name}</span>
                           </div>
                           <div className="activity-actions">

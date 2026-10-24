@@ -439,7 +439,7 @@ export default function DeepFocus() {
           background: '#000000', color: '#ffffff', padding: '40px',
           borderRadius: '12px', zIndex: 5000, textAlign: 'center',
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.8)',
-          border: '2px solid #28a745', maxWidth: '420px', width: '90%',
+          border: '2px solid var(--success-color, #28a745)', maxWidth: '420px', width: '90%',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}>
           <div style={{ fontSize: '48px', marginBottom: '20px', lineHeight: 1 }}>🎉</div>
@@ -454,9 +454,9 @@ export default function DeepFocus() {
             onClick={() => setShowCompleteDialog(false)}
             style={{
               padding: '14px 28px', border: 'none', borderRadius: '8px', 
-              background: '#28a745', color: '#ffffff', cursor: 'pointer', 
+              background: 'var(--success-color, #28a745)', color: '#ffffff', cursor: 'pointer', 
               fontSize: '16px', fontWeight: 600, width: '120px',
-              boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
+              boxShadow: '0 4px 12px rgba(46, 160, 67, 0.3)'
             }}
           >
             OK

@@ -115,7 +115,7 @@ export default function ScheduleActivities() {
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              backgroundColor: isLogged ? '#10b981' : 'var(--primary-color)',
+              backgroundColor: isLogged ? 'var(--success-color, #10b981)' : 'var(--primary-color)',
               margin: '3px auto 0'
             }}></div>
           )}
@@ -253,7 +253,7 @@ export default function ScheduleActivities() {
                     </div>
                     <div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Completed Days</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{totalCompleted}</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success-color, #10b981)' }}>{totalCompleted}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Completion Rate</div>
