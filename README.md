@@ -6,7 +6,7 @@ BitHab is a modern, responsive personal habit and productivity tracking web appl
 
 ## Features
 
-- **Dashboard:** Interactive calendar matrix, inline activity logging with date-filtered pills, daily notes quick-editor, and goals/reminders tracking.
+- **Dashboard:** Interactive calendar matrix with date selection, outside-click date dismissal, inline activity logging with date-filtered pills, daily notes quick-editor, and goals/reminders tracking.
 - **Activities & Scheduling:** Hierarchical activities and sub-activities with customizable color palettes and monthly scheduling calendar.
 - **Goals Tracking:** Main goals with subgoals, completion percentage tracking, and legacy schema normalization.
 - **Reminders:** Scheduled time-based reminders with quick date selectors, datetime picker modal, active status detection, and modal editing.

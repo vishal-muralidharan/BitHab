@@ -131,6 +131,12 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
   - Active reminders: Clean card surface with subtle accent left border (`border-left: 3px solid var(--primary-color)` or `#10b981`).
   - Expired reminders: Muted red left border (`border-left: 3px solid #ef4444`), dimmed opacity (`0.75`), and an "Expired" status badge.
 
+### Rule 13: Calendar Date Selection & Outside Click Dismissal
+* **Default State:** By default, no calendar date is selected (`selectedDateStr = null`). The Activities card displays the normal activities list (`activitiesToShow.map(...)`) with filter click handlers and expand/collapse button.
+* **Date Selection:** Clicking a calendar day selects that date (`selectedDateStr`), renders a selection ring on the day cell, updates the header to show the selected date, switches the Activities card to the inline logging interface (showing pills for that specific date), and displays that date's note in the Notes card.
+* **Outside Click Dismissal:** Clicking outside the calendar view (`calendarRef`) on the document (except when clicking active logging pills or typing inside the notes editor) automatically unselects the date, closes the inline logging interface, and restores all activities in the Activities card.
+* **Header Close Button:** During inline logging mode, the Activities card header renders a close (`✕`) button (`.close-logging-btn`) to allow immediate manual closure without clicking outside.
+
 ---
 
 ## 4. Pre-Commit Design System Checklist
