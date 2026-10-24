@@ -97,6 +97,25 @@ For user-facing UI and interactive controls:
    - Verify responsive behavior on desktop and mobile viewports.
    - Check the browser console to confirm **0 unhandled runtime exceptions**.
 
+### Step 4: Feature-Specific Verification Patterns
+
+#### 1. Dashboard Desktop Viewport & Modal Picker Verification
+* **Fixed Viewport Lock:** On desktop viewports (`>= 1024px`), confirm the dashboard page cannot scroll down into dead space (`height: calc(100vh - 90px); overflow: hidden;`). Expanding a card triggers `.expanded-active` and restores vertical scrolling.
+* **Calendar Weekday Centering:** Inspect `.calendar-view .weekday` to confirm weekday headers (`Sun` through `Sat`) are vertically and horizontally centered between the header bottom divider and weekday row divider (`height: 38px; display: flex; align-items: center; justify-content: center;`).
+* **Calendar Header Active Activity Title:** Confirm `#calendar-title` displays the active activity name (or "All Activities") and `.calendar-subtitle` displays the current month and year.
+* **Month/Year/Activity Modal (`#year-month-picker-modal`):**
+  - Click `#current-date` or `.calendar-title-container` to open the modal.
+  - Verify `#year-select` has ±5 years, `#month-select` has 12 months, and `#activity-select` lists all activities.
+  - Test applying changes via `#apply-year-month`: confirm calendar view and activity dot filtering update.
+  - Test cancelling via `#cancel-year-month`, backdrop click, and `Escape` key.
+  - Verify mobile reflow: on `< 480px`, dropdowns stack vertically with 100% width and 44px touch targets.
+
+#### 2. Deep Focus Compulsory Fullscreen & Timer Controls Verification
+* **Compulsory Fullscreen Prompt:** Navigate to `/deep-focus` in a windowed browser state; verify `#fullscreen-prompt` backdrop blocks interaction.
+* **Fullscreen Entry:** Click "Enter Fullscreen" (`#enter-fullscreen-btn`); verify HTML5 fullscreen engages and the overlay closes.
+* **Auto-Pause on Exit:** While the timer is active, exit fullscreen (press `Escape`); verify the timer automatically pauses and the `#fullscreen-prompt` modal immediately re-appears.
+* **Traffic-Light Timer Buttons:** Verify START is Green (`#10b981`), PAUSE is Yellow (`#f59e0b`) with dark text, and STOP is Red (`#ef4444`) with white text.
+
 ---
 
 ## 6. Testing Quality Checklist
@@ -110,6 +129,8 @@ Before considering module verification complete:
 [ ] 5. No stray console.error statements or unhandled promise rejections in browser.
 [ ] 6. Clean workspace state verified via git status.
 [ ] 7. Zero sed commands used during testing, building, or file manipulation.
-[ ] 8. Ready for atomic commit via atomic-commits skill.
+[ ] 8. Dashboard desktop fixed height lock, weekday centering, and #year-month-picker-modal verified.
+[ ] 9. Deep Focus compulsory fullscreen enforcement and traffic-light timer buttons verified.
+[ ] 10. Ready for atomic commit via atomic-commits skill.
 ```
 
