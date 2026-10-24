@@ -45,7 +45,27 @@ Execute these commands in the terminal for rapid, reliable feedback:
 
 ---
 
-## 4. Verification Workflow Steps
+## 4. Canonical Reusable Test User Accounts
+
+To avoid polluting the database with throwaway users, **never register a new account** during manual, subagent, or browser testing if an existing canonical test user can be reused. Always use the canonical credentials below.
+
+### Reusable Test User Registry
+
+| Role / Environment | Email | Password | UID / Notes |
+| :--- | :--- | :--- | :--- |
+| **Primary Browser & Live E2E** | `test@bithab.com` | `Password123!` | Primary persistent test account with seeded activities, goals, synced notes, and theme state. Always check if the browser session is already authenticated with this user before attempting login. |
+| **Secondary Verification Account** | `testuser999@example.com` | `Password123!` | Registered fallback account for multi-user sync checks, dual-tab testing, and auth form validation. |
+| **Vitest & JSDOM Mock User** | `test@bithab.local` | `secret123` | Default mock user returned in [tests/setup.js](file:///Users/VM/Projects%20-%20Curr/BitHab/tests/setup.js) (`uid: 'test-user-123'`). |
+| **Auth Pages Test Mock User** | `user@example.com` | `secret123` | Mock user for [tests/pages/AuthPages.test.jsx](file:///Users/VM/Projects%20-%20Curr/BitHab/tests/pages/AuthPages.test.jsx). |
+
+### Test User Reuse Protocol:
+1. **Never Click "Register" By Default:** When opening `http://localhost:5173/`, if redirected to `/login`, do not register a new user. Fill `test@bithab.com` with `Password123!` and click "Login".
+2. **Session Persistence:** Browser sessions retain authentication in IndexedDB (`firebaseLocalStorageDb`). When running browser subagent tasks, inspect if a session is already active before taking any auth actions.
+3. **Seeded Data Integrity:** `test@bithab.com` contains established data structures across activities, goals, and notes. Tests verifying real-time sync or UI changes should leverage this user to verify realistic application state.
+
+---
+
+## 5. Verification Workflow Steps
 
 ### Step 1: Execute Static Analysis (`oxlint`)
 Run the linter to verify code health:
@@ -69,7 +89,8 @@ npm run build
 ### Step 3: Interactive Browser Validation
 For user-facing UI and interactive controls:
 1. Ensure the dev server is active on `http://localhost:5173/`.
-2. Inspect the modified page:
+2. Ensure the browser is logged in using the canonical test account (`test@bithab.com` / `Password123!`).
+3. Inspect the modified page:
    - Verify layout and styling in both Light mode and Dark mode.
    - Verify theme toggle functionality in `Header.jsx`.
    - Verify responsive behavior on desktop and mobile viewports.
@@ -77,14 +98,16 @@ For user-facing UI and interactive controls:
 
 ---
 
-## 5. Testing Quality Checklist
+## 6. Testing Quality Checklist
 
 Before considering module verification complete:
 ```text
 [ ] 1. npm test executed with all unit and integration tests passing.
 [ ] 2. npm run lint executed and passed with 0 errors.
 [ ] 3. npm run build executed and compiled cleanly without bundling failures.
-[ ] 4. No stray console.error statements or unhandled promise rejections in browser.
-[ ] 5. Clean workspace state verified via git status.
-[ ] 6. Ready for atomic commit via atomic-commits skill.
+[ ] 4. Reusable canonical test user (test@bithab.com) used for all live browser verification.
+[ ] 5. No stray console.error statements or unhandled promise rejections in browser.
+[ ] 6. Clean workspace state verified via git status.
+[ ] 7. Ready for atomic commit via atomic-commits skill.
 ```
+
