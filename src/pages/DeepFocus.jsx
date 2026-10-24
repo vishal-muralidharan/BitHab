@@ -347,7 +347,7 @@ export default function DeepFocus() {
         {/* Timer Controls */}
         <div className="deep-work-timer-controls">
           <button 
-            className={`deep-work-control-btn primary-btn ${timerState === 'running' ? 'pause-state' : 'start-state'}`} 
+            className={`deep-work-control-btn ${timerState === 'running' ? 'pause-state' : 'start-state'}`} 
             id="deep-primary-btn"
             onClick={handlePrimaryAction}
           >
@@ -355,7 +355,7 @@ export default function DeepFocus() {
             <span className="btn-text">{primaryText}</span>
           </button>
           <button 
-            className={`deep-work-control-btn secondary-btn ${timerState === 'running' ? 'stop-state' : 'reset-state'}`} 
+            className={`deep-work-control-btn ${timerState === 'running' ? 'stop-state' : 'reset-state'}`} 
             id="deep-secondary-btn"
             onClick={handleSecondaryAction}
             disabled={secondaryDisabled}

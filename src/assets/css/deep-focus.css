@@ -117,7 +117,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Thin progress bar and percentage */
+/* Thin progress bar and percentage - Black & White Predominantly, No Orange */
 .deep-work-progress-container { 
   width: 100%; 
   max-width: 400px;
@@ -127,28 +127,33 @@
   width: 100%; 
   position: relative; 
 }
-.progress-bar { 
-  height: 2px; 
-  background: rgba(255, 255, 255, 0.2); 
-  border-radius: 1px; 
-  overflow: hidden; 
-  margin-bottom: 12px;
+.deep-work-mode .progress-bar { 
+  height: 4px !important; 
+  background: rgba(255, 255, 255, 0.2) !important; 
+  border-radius: 2px !important; 
+  border: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important; 
+  margin-bottom: 12px !important;
+  width: 100% !important;
 }
-.progress-fill { 
-  height: 100%; 
+.deep-work-mode .progress-fill { 
+  height: 100% !important; 
   width: 0%; 
-  background: #ffffff; 
-  transition: width 0.3s ease; 
+  background: #ffffff !important; 
+  border: none !important;
+  border-radius: 2px !important;
+  transition: width 0.3s ease !important; 
 }
-.progress-percentage { 
-  text-align: center;
-  color: #00ff41;
-  font-size: 16px;
-  font-weight: 400;
-  text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+.deep-work-mode .progress-percentage { 
+  text-align: center !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
 }
 
-/* Controls: 2-button design - rectangular, minimalistic, same size */
+/* Controls: Green for Start, Red for Stop, Yellow for Pause, Black & White for Reset */
 .deep-work-timer-controls {
   display: flex; 
   gap: 1.5rem; 
@@ -167,12 +172,13 @@
   width: 120px;
   height: 60px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   background: transparent; 
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer; 
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   position: relative;
+  font-family: inherit;
 }
 
 .btn-icon {
@@ -181,63 +187,94 @@
 }
 
 .btn-text {
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  opacity: 0.8;
 }
 
-/* State Colors */
+/* State Colors - Solid, clear, standard visual feedback */
 .deep-work-control-btn.start-state {
-  border-color: #10b981;
-  color: #10b981;
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+  color: #ffffff !important;
+}
+.deep-work-control-btn.start-state .btn-icon,
+.deep-work-control-btn.start-state .btn-text {
+  color: #ffffff !important;
 }
 
 .deep-work-control-btn.pause-state {
-  border-color: #f59e0b;
-  color: #f59e0b;
+  background: #f59e0b !important;
+  border-color: #f59e0b !important;
+  color: #000000 !important;
+}
+.deep-work-control-btn.pause-state .btn-icon,
+.deep-work-control-btn.pause-state .btn-text {
+  color: #000000 !important;
 }
 
 .deep-work-control-btn.stop-state {
-  border-color: #ef4444;
-  color: #ef4444;
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+.deep-work-control-btn.stop-state .btn-icon,
+.deep-work-control-btn.stop-state .btn-text {
+  color: #ffffff !important;
 }
 
 .deep-work-control-btn.reset-state {
-  border-color: rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.8);
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.deep-work-control-btn.reset-state .btn-icon,
+.deep-work-control-btn.reset-state .btn-text {
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Hover effects */
-.deep-work-control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
 .deep-work-control-btn.start-state:hover {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: #10b981;
+  background: #059669 !important;
+  border-color: #059669 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
 }
 
 .deep-work-control-btn.pause-state:hover {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: #f59e0b;
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
 }
 
 .deep-work-control-btn.stop-state:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.deep-work-control-btn.reset-state:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
 }
 
 .deep-work-control-btn:active {
-  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(0);
 }
 
 .deep-work-control-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
   background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Target duration block */
