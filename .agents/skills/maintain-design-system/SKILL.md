@@ -158,6 +158,12 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
     - Empty states use centered dashed notices (`.empty-notice`).
     - On tablets (`<= 1024px`), panels switch to an aligned 2-column grid (`grid-template-columns: 1fr 1fr; max-width: 600px;`) positioned cleanly below the target duration block.
     - On mobile (`<= 768px`), panels stack vertically with full width.
+  - **Compulsory Fullscreen Modal (`#fullscreen-prompt`):**
+    - Frosted dark backdrop (`rgba(0, 0, 0, 0.88)` with `backdrop-filter: blur(16px)` and `z-index: 10000`).
+    - Centered card (`#0d0d0d`, border `1px solid rgba(255, 255, 255, 0.15)`, radius `16px`).
+    - Glowing emerald icon badge (`rgba(16, 185, 129, 0.1)` background, `#10b981` icon).
+    - High-contrast green primary button (`#10b981`, `#ffffff` text) to "Enter Fullscreen".
+    - Clean translucent secondary button to "Return to Focus".
 
 ---
 

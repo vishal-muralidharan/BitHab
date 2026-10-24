@@ -99,6 +99,12 @@ BitHab stylesheets enforce responsive reflow across three main device tiers:
 * **Tablets (`<= 1024px`):** Side panels reflow into a centered 2-column grid (`grid-template-columns: 1fr 1fr; max-width: 600px`) beneath the target duration block.
 * **Mobile (`<= 768px`):** Side panels stack into a single column (`grid-template-columns: 1fr`) with full container width.
 
+### Deep Focus Compulsory Fullscreen Enforcement
+* **Automatic Fullscreen Entry:** Clicking the Deep Focus button (`#deep-work-toggle`) in `Focus.jsx` directly requests HTML5 Fullscreen (`document.documentElement.requestFullscreen()`) on the user gesture before navigating to `/deep-focus`.
+* **Compulsory Fullscreen Modal (`#fullscreen-prompt`):** If `/deep-focus` is loaded windowed (or direct URL navigation), an enforcement backdrop (`.fullscreen-enforcement-backdrop`, `z-index: 10000`) renders, requiring the user to click "Enter Fullscreen" (`#enter-fullscreen-btn`) or "Return to Focus" (`#skip-fullscreen-btn`).
+* **Active Session Focus Enforcement:** If the user exits fullscreen (e.g. presses `Esc`) while a session is running, the `fullscreenchange` listener immediately auto-pauses the timer to preserve focus integrity and presents the enforcement prompt.
+* **Header Controls:** Deep Focus header provides both a dedicated fullscreen toggle button (`#fullscreen-toggle-btn`) and exit button (`#exit-deep-work`) which safely cleans up fullscreen (`document.exitFullscreen()`) before routing back to `/focus`.
+
 ---
 
 ## 4. Mobile Form Ergonomics & iOS Safari Rules
