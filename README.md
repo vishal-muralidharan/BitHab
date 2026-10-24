@@ -10,7 +10,7 @@ BitHab is a modern, responsive personal habit and productivity tracking web appl
 - **Activities & Scheduling:** Hierarchical activities and sub-activities with customizable color palettes and monthly scheduling calendar.
 - **Goals Tracking:** Main goals with subgoals, completion percentage tracking, and legacy schema normalization.
 - **Reminders:** Scheduled time-based reminders with quick date selectors, datetime picker modal, active status detection, and modal editing.
-- **Notes System:** Daily notes and general thought capture with inline markdown-friendly text editor and favorites filter.
+- **Notes System:** Daily notes and general thought capture with inline markdown-friendly text editor, favorites filter, and multi-source synchronization across legacy subcollections (`/notes`, `/generalNotes`) and root document.
 - **Flexible Lists:** Checklists, todo lists, numbered lists, and bulleted lists.
 - **Focus & Deep Focus:** Digital clock with motivational quotes, task management, countdown session timer, and focus analytics.
 - **Multi-Theme Gallery:** 6 themes (`oceanic-depths`, `evergreen-forest`, `cyberpunk-neon`, `monochrome-minimalist`, `sunrise-coral`, `cherry-blossom`) with seamless Dark and Light mode toggling.

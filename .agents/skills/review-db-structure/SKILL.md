@@ -31,6 +31,19 @@ Firestore Root
     ├── theme: string                       # Active theme ('default', 'ocean', etc.)
     ├── isDarkMode: boolean                 # Dark mode toggle preference
     │
+    ├── /notes/{dateStr}                    # Daily notes subcollection (legacy & dual-write compatibility)
+    │   ├── content / note: string          # Note text
+    │   ├── date: string                    # Date string "YYYY-MM-DD"
+    │   ├── favorite / isFavorite: boolean  # Favorite flag
+    │   └── updatedAt: ISOString
+    │
+    ├── /generalNotes/{noteId}              # General notes subcollection (legacy & dual-write compatibility)
+    │   ├── id: string                      # Unique note ID
+    │   ├── title: string                   # Note title
+    │   ├── content / note: string          # Note text
+    │   ├── favorite / isFavorite: boolean  # Favorite flag
+    │   └── updatedAt: ISOString
+    │
     ├── /logs/{dateStr}                     # Activity daily log subcollection (legacy/subcollection compatibility)
     │   ├── activityIds: Array<string>      # Completed activity/subactivity IDs
     │   └── completed: boolean              # Daily completion flag
@@ -102,10 +115,10 @@ interface Reminder {
 // Quick Selectors: "Today" (offset 0), "Tomorrow" (offset +1), "Next Week" (offset +7).
 ```
 
-### 4. `Note` Schema (With Legacy Object & Subcollection Compatibility)
+### 4. `Note` Schema & Multi-Source Synchronization (Subcollections & Root Doc)
 ```typescript
 interface Note {
-  id: string;                               // Unique note ID
+  id: string;                               // Unique note ID (date string "YYYY-MM-DD" for daily, uuid for general)
   title?: string;                           // Note title (for general notes or date string)
   content: string;                          // Note text content (legacy alias: note)
   type: 'daily' | 'general';                // Daily note (linked to date) or general note
@@ -116,9 +129,14 @@ interface Note {
   updatedAt?: string | number;              // Timestamp
 }
 
-// Legacy format compatibility:
-// Legacy accounts may store notes as an Object map on user doc: { [dateStr]: text }
-// Daily notes are also dual-written to subcollection /users/{userId}/notes/{dateStr} for backward compatibility.
+// Multi-Source Note Loading & Sync Pipeline:
+// 1. Initial Load: NoteContext concurrently reads root user document (docSnap.data().notes,
+//    dailyNotes, generalNotes) and subcollections (/users/{userId}/notes and /users/{userId}/generalNotes).
+// 2. Normalization: Subcollection docs with date IDs (e.g. "2026-10-24") or date fields are normalized
+//    to type 'daily' with date set. General notes are normalized to type 'general'.
+// 3. Merging: Root notes and subcollection notes are merged and deduplicated.
+// 4. Persistence: Subcollection notes are auto-synced back to doc(db, 'users', uid).notes, and
+//    saveNote dual-writes daily notes to /users/{userId}/notes/{date} and general notes to /users/{userId}/generalNotes/{id}.
 ```
 
 ### 5. `List` Schema
