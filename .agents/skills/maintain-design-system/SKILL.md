@@ -139,11 +139,13 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
 
 ### Rule 14: Focus & Deep Focus High-Contrast Aesthetics
 * **Focus Mode (`/focus`):**
-  - Built on a fixed ambient light blue gradient background.
+  - Built on a fixed ambient light blue gradient background (`linear-gradient(135deg, #e3f2fd 0%, #90caf9 25%, #42a5f5 70%, #1976d2 100%)`).
   - Transparent setting for cards (`rgba(255, 255, 255, 0.25)` frosted glass with `backdrop-filter: blur(20px)`), with zero dark backgrounds.
   - The date display (Saturday) is completely transparent with no dark background or box.
   - All text (digital clock, date, section titles, inputs, list items, quotes, icons) is enforced in full black (`#000000`).
-  - Top header is completely unified with the standard navigation topbar (`Header.jsx` on desktop, `MobileTopbar.jsx` on mobile): identical 90px height, BitHab logo, complete center navigation (`Activities`, `Goals`, `Notes`, `Reminders`, `Focus` active, `More`), theme toggle, logout, and integrated Focus action controls (`Analytics` and `Deep Focus`).
+  - Top header is completely unified with the standard navigation topbar (`Header.jsx` on desktop, `MobileTopbar.jsx` on mobile) matching the exact position (`fixed; top: 0; left: 0;`), width (`100%`), height (`90px` on desktop, `72px` on mobile), and thickness (`padding: 1.5rem; clamp(...)`) of other pages, while adopting the page's lightblue frosted theme (`background: rgba(227, 242, 253, 0.75); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.45);`).
+  - High-contrast black text on all nav items (`#000000`), frosted active pill for "Focus" (`rgba(255, 255, 255, 0.6)`), light theme logo (`logo-light`), and frosted action buttons (`Analytics`, `Deep Focus`, `Theme Toggle`, `Logout`).
+  - Mobile bottom navigation (`BottomNav.jsx`) on `/focus` similarly adopts the light blue frosted glass theme (`rgba(227, 242, 253, 0.85)`) for full visual cohesion across screen tiers.
 * **Deep Focus Mode (`/deep-focus`):**
   - Minimalist pure black canvas (`#000000`) with predominantly black-and-white elements (countdown clock `#ffffff`, white progress track and fill, white percentage text).
   - Absolutely zero orange or clashing theme colors (`var(--primary-color)`).
