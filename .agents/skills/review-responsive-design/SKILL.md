@@ -118,6 +118,10 @@ To prevent long URLs, unbroken strings, or task descriptions from blowing out ca
 * All three column containers (`.left-column`, `.center-column`, `.right-column`) enforce `height: 100%; min-height: 0; display: flex; flex-direction: column;`.
 * Contained cards (`.activities-component`, `.notes-component`, `.calendar-view`, `.goals-component`, `.reminders-component`) specify `flex: 1 1 0; min-height: 0; max-height: none;`.
 * **Zero Dead Space Rule:** The bottom of Left Column (Notes card), Center Column (Calendar view card), and Right Column (Reminders card) must terminate on the exact same horizontal baseline, completely utilizing bottom viewport real estate without awkward dead voids.
+* **Desktop Fixed Viewport Height Lock vs Stacked Scrolling:**
+  - On desktop (`>= 1024px`), `body.index-page .page-container` and `body.index-page .main-layout` enforce `height: calc(100vh - 90px); overflow: hidden;`. This guarantees that the default home view is fixed and does not allow users to scroll into dead space below the 3-column baseline.
+  - When user interactions expand content (e.g. expanding notes, activities, or goals), the containers receive `.expanded-active`, unlocking `overflow-y: auto; height: auto; min-height: calc(100vh - 90px);`.
+  - On mobile/tablet (`< 1024px`), content flows naturally in a single column or 2-column grid with mandatory bottom clearance (`padding-bottom: calc(5rem + env(safe-area-inset-bottom, 20px))`).
 
 ### Deep Focus Responsive Reflow
 * **Desktop (`> 1024px`):** Subjects (`top: 85px; left: 32px; width: 230px`) and Tasks (`top: 85px; right: 32px; width: 230px`) are fixed frosted side cards anchored in the upper viewport, completely clear of the central countdown clock and control buttons.
@@ -167,6 +171,9 @@ When rendering modal dialogs (`custom-dialogs.css`, `pattern-modal`, `date-modal
    transform: translate(-50%, -50%);
    max-width: 90vw;
    ```
+4. **Adaptive Controls in Modals:** In dialogs with multiple dropdown selects (such as `#year-month-picker-modal`):
+   - Desktop: Render controls side-by-side using `display: flex; gap: 0.75rem; align-items: center;`.
+   - Small Screens (`< 480px`): Stack controls vertically (`flex-direction: column; align-items: stretch;`) with 100% width select inputs and 44px touch targets.
 
 ---
 
@@ -181,7 +188,7 @@ Before committing any UI code, verify:
 [ ] 5. Touch Targets: Interactive buttons, icon arrows, checkboxes, and calendar cells meet minimum 44x44px hit dimensions.
 [ ] 6. iOS 16px Font Rule: All form inputs use at least 16px font-size to prevent auto-zooming.
 [ ] 7. Portrait Tablet (768–1023px): Header displays desktop navigation cleanly; cards reflow into 2 balanced columns.
-[ ] 8. Desktop (>= 1024px): 3-column grid aligns baseline cards and caps content container width.
+[ ] 8. Desktop (>= 1024px): 3-column grid aligns baseline cards; desktop dashboard locks height: calc(100vh - 90px); overflow: hidden; until .expanded-active.
 [ ] 9. Focus Route Bypassing: /focus, /deep-focus, and /analytics correctly apply focus-mode and expand cleanly with zero logo jump.
-[ ] 10. Modals Bounded: Modals and overlays enforce max-height: 90vh and internal scrolling without clipping.
+[ ] 10. Modals Bounded: Modals and overlays enforce max-height: 90vh, internal scrolling, and responsive flex-column stacking on mobile (< 480px).
 ```
