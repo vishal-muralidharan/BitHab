@@ -202,3 +202,4 @@ Every commit message must follow the Semantic Commit format on **one line only**
 12. **Never pass undefined to Firestore payloads:** Always sanitize payloads with `null` or explicit fallbacks.
 13. **Never obscure mobile content behind BottomNav:** Always ensure adequate bottom padding on mobile page views.
 14. **Never conclude a feature without skill & documentation synchronization:** Every newly introduced component, context, or stylesheet must be audited and registered across `.agents/skills/` and `README.md`.
+15. **Always reuse canonical test users:** Never register new throwaway user accounts during manual or browser testing. Always reuse the canonical test accounts (`test@bithab.com` / `Password123!`) defined in [.agents/skills/targeted-module-testing/SKILL.md](file:///.agents/skills/targeted-module-testing/SKILL.md).
