@@ -283,7 +283,7 @@ input, button, textarea {
 input:focus, button:focus, textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-primary)33;
+  box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb, 88, 166, 255), 0.2);
 }
 
 button {
@@ -324,13 +324,13 @@ button {
 }
 
 .activity-main:hover {
-  background: var(--accent-primary)1A;
+  background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.1);
   transform: translateX(2px);
   box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 .activity-item.selected > .activity-main {
-    background: var(--accent-primary)22;
+    background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.15);
     color: var(--accent-primary);
 }
 
@@ -385,7 +385,7 @@ button {
   list-style: none;
   margin: 0.3em 0 0.3em 1.2em;
   padding-left: 1.2em;
-  border-left: 2px solid var(--accent-primary)22;
+  border-left: 2px solid rgba(var(--accent-primary-rgb, 88, 166, 255), 0.15);
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -418,7 +418,7 @@ button {
 }
 
 .sub-activity-item:hover {
-  background: var(--accent-primary)11;
+  background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.08);
 }
 
 input[type="color"] {

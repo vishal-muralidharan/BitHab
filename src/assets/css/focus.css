@@ -275,8 +275,8 @@
     overflow: visible;
 }
 
-.goal-item,
-.task-item {
+.focus-mode .goal-item,
+.focus-mode .task-item {
     padding: 0.5rem 0.75rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 0.25rem;
@@ -286,8 +286,8 @@
     font-size: 0.9rem;
 }
 
-.goal-item:hover,
-.task-item:hover {
+.focus-mode .goal-item:hover,
+.focus-mode .task-item:hover {
     background: rgba(255, 255, 255, 0.15);
     color: #2c3e50;
 }
@@ -399,9 +399,9 @@
     margin-top: 0.5rem;
 }
 
-.subject-item,
-.goal-item,
-.task-item {
+.focus-mode .subject-item,
+.focus-mode .goal-item,
+.focus-mode .task-item {
     padding: 0.6rem 0.75rem;
     background: rgba(255, 255, 255, 0.15);
     border-radius: 0.4rem;
@@ -417,36 +417,36 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.subject-item:hover,
-.goal-item:hover,
-.task-item:hover {
+.focus-mode .subject-item:hover,
+.focus-mode .goal-item:hover,
+.focus-mode .task-item:hover {
     background: rgba(255, 255, 255, 0.25);
     border-left-color: rgba(74, 144, 226, 0.8);
     transform: translateX(2px);
     border-color: rgba(255, 255, 255, 0.5);
 }
 
-.subject-item:active,
-.goal-item:active,
-.task-item:active {
+.focus-mode .subject-item:active,
+.focus-mode .goal-item:active,
+.focus-mode .task-item:active {
     transform: translateX(1px);
     background: rgba(255, 255, 255, 0.2);
 }
 
 /* Completed task styling */
-.task-item.completed {
+.focus-mode .task-item.completed {
     text-decoration: line-through;
     opacity: 0.6;
     background: rgba(255, 255, 255, 0.1);
     color: #7f8c8d;
 }
 
-.task-item.completed:hover {
+.focus-mode .task-item.completed:hover {
     opacity: 0.8;
     background: rgba(255, 255, 255, 0.15);
 }
 
-.clock-container {
+.focus-mode .clock-container {
     position: relative;
     display: flex;
     align-items: center;
@@ -457,7 +457,7 @@
 }
 
 /* Make the clock fill the middle column and center perfectly */
-.focus-session-column > .clock-container {
+.focus-mode .focus-session-column > .clock-container {
     flex: 1; /* take all available height in the column */
     height: 100%;
     display: flex;
@@ -466,14 +466,14 @@
 }
 
 /* Make sure time display fits in column */
-.time-display {
+.focus-mode .time-display {
     font-size: clamp(4rem, 10vw, 8rem); /* Responsive font size */
     text-align: center;
     width: 100%;
     color: #2c3e50; /* Dark color for visibility */
 }
 
-.date-display {
+.focus-mode .date-display {
     font-size: clamp(0.8rem, 2vw, 1rem);
     text-align: center;
     width: 100%;
@@ -523,9 +523,9 @@
     font-weight: 500;
 }
 
-.goal-input,
-.subject-input,
-.task-input {
+.focus-mode .goal-input,
+.focus-mode .subject-input,
+.focus-mode .task-input {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0.5rem;
@@ -536,22 +536,22 @@
     box-sizing: border-box;
 }
 
-.goal-input:focus,
-.subject-input:focus,
-.task-input:focus {
+.focus-mode .goal-input:focus,
+.focus-mode .subject-input:focus,
+.focus-mode .task-input:focus {
     outline: none;
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.15);
 }
 
-.goal-input::placeholder,
-.subject-input::placeholder,
-.task-input::placeholder {
+.focus-mode .goal-input::placeholder,
+.focus-mode .subject-input::placeholder,
+.focus-mode .task-input::placeholder {
     color: #7f8c8d;
 }
 
 /* Save Buttons */
-.input-with-icon {
+.focus-mode .input-with-icon {
     position: relative;
     display: flex;
     align-items: center;

@@ -884,38 +884,52 @@
 
 /* Remove custom scrollbar styles - no longer needed */
 
-/* Goals styling with red/green colors */
-.goal-item {
+.goals-component .goal-item,
+.main-layout .goal-item {
     margin-bottom: 0.15rem;
     padding: 0.5rem;
     background: var(--bg-primary);
+    border: none;
     border-radius: calc(var(--radius) / 2);
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.33, 1, 0.68, 1);
     border-left: 4px solid #22c55e; /* Green for default */
     font-size: 0.85rem;
     line-height: 1.2;
+    color: var(--text-primary);
 }
 
-.goal-item:hover {
+.goals-component .goal-item span,
+.main-layout .goal-item span {
+    color: var(--text-primary);
+}
+
+.goals-component .goal-item:hover,
+.main-layout .goal-item:hover {
     background: var(--bg-hover);
     transform: translateX(4px);
+    color: var(--text-primary);
 }
 
-.goal-item.completed {
+.goals-component .goal-item.completed,
+.main-layout .goal-item.completed {
     border-left-color: #22c55e; /* Green for completed */
     opacity: 0.8;
 }
 
-.goal-item.completed span {
+.goals-component .goal-item.completed span,
+.main-layout .goal-item.completed span {
     text-decoration: line-through;
+    opacity: 0.7;
 }
 
-.goal-item.in-progress {
+.goals-component .goal-item.in-progress,
+.main-layout .goal-item.in-progress {
     border-left-color: #f59e0b; /* Orange for in-progress */
 }
 
-.goal-item.pending {
+.goals-component .goal-item.pending,
+.main-layout .goal-item.pending {
     border-left-color: #ef4444; /* Red for pending */
 }
 
@@ -1312,7 +1326,7 @@
 }
 
 .calendar-day.selected {
-    background: var(--accent-primary)12;
+    background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.12);
     color: var(--text-primary);
     border-radius: calc(var(--radius) - 10px);
     box-shadow: inset 0 0 0 1px var(--accent-primary);
@@ -1479,7 +1493,7 @@
 }
 
 .calendar-day:not(.empty):hover {
-    background: var(--accent-primary)15;
+    background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.15);
     border-radius: var(--radius);
 }
 
@@ -1494,7 +1508,7 @@
 }
 
 .calendar-day.selected {
-    background: var(--accent-primary)15;
+    background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.15);
     color: var(--text-primary);
     border-radius: calc(var(--radius) - 6px);
     box-shadow: inset 0 0 0 2px var(--accent-primary);

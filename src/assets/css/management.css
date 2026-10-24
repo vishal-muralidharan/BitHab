@@ -42,8 +42,9 @@
 }
 
 /* Goal items with color-coded borders */
-.goal-item {
+.management-column .goal-item {
     background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: var(--radius);
     padding: 1rem;
     transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
@@ -54,6 +55,7 @@
 /* Container to group goal with its subgoals */
 .goal-with-subgoals {
     background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: var(--radius);
     padding: 1rem;
     transition: all 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
@@ -83,7 +85,7 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
-.goal-item:hover {
+.management-column .goal-item:hover {
     background: var(--bg-hover);
     transform: translateX(4px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
@@ -465,31 +467,31 @@
 }
 
 /* Goal completion styles for management pages */
-.goal-item.completed {
+.management-column .goal-item.completed {
     border-left-color: #22c55e; /* Green for completed */
     opacity: 0.8;
 }
 
-.goal-item.completed .goal-name-text {
+.management-column .goal-item.completed .goal-name-text {
     text-decoration: line-through;
 }
 
-.goal-with-subgoals.completed .goal-name-text {
+.management-column .goal-with-subgoals.completed .goal-name-text {
     text-decoration: line-through;
 }
 
-.goal-item.completed .goal-caret,
-.goal-with-subgoals.completed .goal-caret,
-.goal-item.completed .activity-actions,
-.goal-with-subgoals.completed .activity-actions {
+.management-column .goal-item.completed .goal-caret,
+.management-column .goal-with-subgoals.completed .goal-caret,
+.management-column .goal-item.completed .activity-actions,
+.management-column .goal-with-subgoals.completed .activity-actions {
     text-decoration: none;
 }
 
-.goal-item.in-progress {
+.management-column .goal-item.in-progress {
     border-left-color: #f59e0b; /* Orange for in-progress */
 }
 
-.goal-item.pending {
+.management-column .goal-item.pending {
     border-left-color: #ef4444; /* Red for pending */
 }
 
