@@ -10,6 +10,7 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMoreActive = location.pathname === '/themes' || location.pathname === '/lists';
+  const isFocusPage = location.pathname === '/focus';
 
   async function handleLogout() {
     try {
@@ -28,28 +29,32 @@ export default function Header() {
           <img src="/assets/images/logo-transparent-dark.png" alt="BitHab Logo" className="logo-dark" />
         </h1>
       </Link>
-      <nav className="header-nav">
-        <NavLink to="/activities" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Activities</NavLink>
-        <NavLink to="/goals" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Goals</NavLink>
-        <NavLink to="/notes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Notes</NavLink>
-        <NavLink to="/reminders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Reminders</NavLink>
-        <NavLink to="/focus" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Focus</NavLink>
-        <div className="more-dropdown">
-          <button className={`more-btn nav-item ${isMoreActive ? 'active' : ''}`} aria-label="More options">More</button>
-          <div className="more-dropdown-content">
-            <NavLink to="/themes" className={({ isActive }) => isActive ? 'active' : ''}>Themes</NavLink>
-            <NavLink to="/lists" className={({ isActive }) => isActive ? 'active' : ''}>Lists</NavLink>
+
+      {!isFocusPage && (
+        <nav className="header-nav">
+          <NavLink to="/activities" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Activities</NavLink>
+          <NavLink to="/goals" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Goals</NavLink>
+          <NavLink to="/notes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Notes</NavLink>
+          <NavLink to="/reminders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Reminders</NavLink>
+          <NavLink to="/focus" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Focus</NavLink>
+          <div className="more-dropdown">
+            <button className={`more-btn nav-item ${isMoreActive ? 'active' : ''}`} aria-label="More options">More</button>
+            <div className="more-dropdown-content">
+              <NavLink to="/themes" className={({ isActive }) => isActive ? 'active' : ''}>Themes</NavLink>
+              <NavLink to="/lists" className={({ isActive }) => isActive ? 'active' : ''}>Lists</NavLink>
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      )}
+
       <div className="header-actions">
-        {location.pathname === '/focus' && (
+        {isFocusPage ? (
           <>
             <button 
               className="header-btn theme-toggle-btn" 
               id="analytics-toggle"
-              title="Analytics" 
-              aria-label="View analytics"
+              title="Insights" 
+              aria-label="Insights"
               onClick={() => navigate('/analytics')}
             >
               <i className="fas fa-chart-bar" aria-hidden="true"></i>
@@ -58,7 +63,7 @@ export default function Header() {
               className="header-btn theme-toggle-btn" 
               id="deep-work-toggle" 
               title="Deep Focus" 
-              aria-label="Toggle deep focus mode"
+              aria-label="Deep Focus"
               onClick={async () => {
                 try {
                   if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
@@ -73,20 +78,23 @@ export default function Header() {
               <i className="fas fa-spa" aria-hidden="true"></i>
             </button>
           </>
+        ) : (
+          <>
+            <Link 
+              to="/settings" 
+              className="header-btn theme-toggle-btn" 
+              id="settings-toggle" 
+              title="Settings" 
+              aria-label="Settings"
+            >
+              <i className="fas fa-cog" aria-hidden="true"></i>
+            </Link>
+            <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
+              <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+            </button>
+            <button id="logout-btn" className="header-btn" aria-label="Logout" onClick={handleLogout}>Logout</button>
+          </>
         )}
-        <Link 
-          to="/settings" 
-          className="header-btn theme-toggle-btn" 
-          id="settings-toggle" 
-          title="Settings" 
-          aria-label="Settings"
-        >
-          <i className="fas fa-cog" aria-hidden="true"></i>
-        </Link>
-        <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
-          <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-        </button>
-        <button id="logout-btn" className="header-btn" aria-label="Logout" onClick={handleLogout}>Logout</button>
       </div>
     </header>
   );

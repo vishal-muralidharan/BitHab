@@ -99,7 +99,7 @@ describe('Focus Page', () => {
     await act(async () => {});
 
     // Navigate to Deep Focus
-    const deepFocusBtn = screen.getByRole('button', { name: 'Toggle deep focus mode' });
+    const deepFocusBtn = screen.getAllByRole('button', { name: /deep focus/i })[0];
     await act(async () => {
       deepFocusBtn.click();
     });
