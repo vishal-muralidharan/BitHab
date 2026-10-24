@@ -15,14 +15,19 @@ export default function Dashboard() {
   const { logs, toggleActivityLog } = useSchedule();
 
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
-  const [selectedDateStr, setSelectedDateStr] = useState(() => {
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  });
+  const [selectedDateStr, setSelectedDateStr] = useState(null);
 
   const [selectedActivityId, setSelectedActivityId] = useState(null);
+  const [activitiesExpanded, setActivitiesExpanded] = useState(false);
   const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [remindersExpanded, setRemindersExpanded] = useState(false);
+
+  const calendarRef = useRef(null);
+
+  // Today reference
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const effectiveNoteDate = selectedDateStr || todayStr;
 
   // Month navigation
   const prevMonth = () => {
@@ -40,37 +45,68 @@ export default function Dashboard() {
           updateNote(currentDailyNote.id, { content: noteDraft });
         }
       } else if (noteDraft.trim()) {
-        addNote(selectedDateStr, noteDraft.trim(), 'daily');
+        addNote(effectiveNoteDate, noteDraft.trim(), 'daily');
       }
       setIsEditingNote(false);
     }
-    setSelectedDateStr(dateStr);
+    // Toggle date selection: click same date to unselect, or select newly clicked date
+    setSelectedDateStr(prev => prev === dateStr ? null : dateStr);
   };
 
-  // Find daily note for selectedDateStr
-  const currentDailyNote = notes.find(n => n.type === 'daily' && n.date === selectedDateStr);
+  // Find daily note for effectiveNoteDate (selectedDateStr or today)
+  const currentDailyNote = notes.find(n => n.type === 'daily' && n.date === effectiveNoteDate);
   const [noteDraft, setNoteDraft] = useState('');
   const [isEditingNote, setIsEditingNote] = useState(false);
 
-  // Synchronize noteDraft whenever selectedDateStr or currentDailyNote changes (unless currently typing)
+  // Synchronize noteDraft whenever effectiveNoteDate or currentDailyNote changes (unless currently typing)
   useEffect(() => {
     if (!isEditingNote) {
       setNoteDraft(currentDailyNote ? currentDailyNote.content : '');
     }
-  }, [selectedDateStr, currentDailyNote, isEditingNote]);
+  }, [effectiveNoteDate, currentDailyNote, isEditingNote]);
 
   // Keep references for auto-save on unmount/navigation
   const noteDraftRef = useRef(noteDraft);
   const currentDailyNoteRef = useRef(currentDailyNote);
-  const selectedDateStrRef = useRef(selectedDateStr);
+  const effectiveNoteDateRef = useRef(effectiveNoteDate);
   const isEditingNoteRef = useRef(isEditingNote);
 
   useEffect(() => {
     noteDraftRef.current = noteDraft;
     currentDailyNoteRef.current = currentDailyNote;
-    selectedDateStrRef.current = selectedDateStr;
+    effectiveNoteDateRef.current = effectiveNoteDate;
     isEditingNoteRef.current = isEditingNote;
-  }, [noteDraft, currentDailyNote, selectedDateStr, isEditingNote]);
+  }, [noteDraft, currentDailyNote, effectiveNoteDate, isEditingNote]);
+
+  // Unselect date and undo logging state when clicking outside calendar
+  useEffect(() => {
+    if (!selectedDateStr) return;
+
+    const handleOutsideClick = (e) => {
+      // If clicked inside the calendar, allow calendar day clicks and navigation
+      if (calendarRef.current && calendarRef.current.contains(e.target)) {
+        return;
+      }
+
+      // If clicked on an activity pill, allow toggling the log
+      if (e.target.closest('.pill, .subactivity-pill, .pills-container')) {
+        return;
+      }
+
+      // If clicked inside the notes editor, allow writing notes for the selected date
+      if (e.target.closest('.notes-editor, .notes-editor-container')) {
+        return;
+      }
+
+      // Otherwise, unselect date, undo logging state, and show all activities
+      setSelectedDateStr(null);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [selectedDateStr]);
 
   const handleNoteBlur = async () => {
     setIsEditingNote(false);
@@ -81,7 +117,7 @@ export default function Dashboard() {
         await updateNote(existing.id, { content: draft });
       }
     } else if (draft && draft.trim()) {
-      await addNote(selectedDateStr, draft.trim(), 'daily');
+      await addNote(effectiveNoteDate, draft.trim(), 'daily');
     }
   };
 
@@ -90,7 +126,7 @@ export default function Dashboard() {
     return () => {
       const draft = noteDraftRef.current;
       const existing = currentDailyNoteRef.current;
-      const dateStr = selectedDateStrRef.current;
+      const dateStr = effectiveNoteDateRef.current;
       const wasEditing = isEditingNoteRef.current;
       if (wasEditing && draft) {
         if (existing) {
@@ -107,17 +143,19 @@ export default function Dashboard() {
   // Format date display
   const formatDateHeader = (ds) => {
     try {
-      if (!ds) return '';
-      const [year, month, day] = ds.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      if (isNaN(date.getTime())) return ds;
-      const monthName = date.toLocaleDateString('en-US', { month: 'long' });
-      const dayNum = date.getDate();
-      const yearNum = date.getFullYear();
-      const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+      const targetDate = ds ? (() => {
+        const [year, month, day] = ds.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      })() : new Date();
+
+      if (isNaN(targetDate.getTime())) return ds || '';
+      const monthName = targetDate.toLocaleDateString('en-US', { month: 'long' });
+      const dayNum = targetDate.getDate();
+      const yearNum = targetDate.getFullYear();
+      const weekday = targetDate.toLocaleDateString('en-US', { weekday: 'long' });
       return `${monthName} ${dayNum}, ${yearNum}, ${weekday}`;
     } catch {
-      return ds;
+      return ds || '';
     }
   };
 
@@ -282,7 +320,7 @@ export default function Dashboard() {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const isToday = dateStr === todayStr;
-      const isSelected = dateStr === selectedDateStr;
+      const isSelected = selectedDateStr && dateStr === selectedDateStr;
 
       let dayClasses = 'calendar-day';
       if (isToday) dayClasses += ' today';
@@ -321,7 +359,7 @@ export default function Dashboard() {
     const selectedActivity = activities.find(a => a.id === selectedActivityId);
 
     return (
-      <section className="calendar-view" id="calendar-view">
+      <section className="calendar-view" id="calendar-view" ref={calendarRef}>
         <div className="calendar-header">
           <button id="prev-month" className="calendar-nav-btn" onClick={prevMonth} aria-label="Previous month">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -350,6 +388,9 @@ export default function Dashboard() {
     );
   };
 
+  // Activities to show
+  const activitiesToShow = activitiesExpanded ? activities : activities.slice(0, 3);
+
   // Goals to show
   const activeGoals = goals.filter(g => !g.completed);
   const completedGoals = goals.filter(g => g.completed);
@@ -376,7 +417,7 @@ export default function Dashboard() {
   }
 
   // Currently logged IDs for selectedDateStr
-  const currentLoggedIds = new Set(logs[selectedDateStr] || []);
+  const currentLoggedIds = new Set(selectedDateStr ? (logs[selectedDateStr] || []) : []);
 
   return (
     <div className="main-layout">
@@ -384,121 +425,178 @@ export default function Dashboard() {
       <div className="left-column">
         {/* Activities Component */}
         <div 
-          className="activities-component inline-logging-open" 
+          className={`activities-component ${selectedDateStr ? 'inline-logging-open' : ''}`} 
           onClick={(e) => {
+            if (selectedDateStr) return;
             if (e.target.closest('.show-all-btn, .activity-item, .pill, .activity-group-title, button')) return;
             navigate('/activities');
           }}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: selectedDateStr ? 'default' : 'pointer' }}
         >
           <div className="section-header">
             <h2>Activities</h2>
-            <button 
-              className="show-all-btn" 
-              id="activities-show-all" 
-              title="Show all activities"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/activities');
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-              </svg>
-            </button>
-          </div>
-          <div id="activity-list" className="activity-list inline-logging-active">
-            {activitiesLoading ? (
-              <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading activities...</p>
+            {selectedDateStr ? (
+              <button 
+                className="show-all-btn close-logging-btn" 
+                id="activities-show-all" 
+                title="Close logging and show all activities"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedDateStr(null);
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
             ) : (
-              <div className="inline-logging-interface">
-                <div className="inline-logging-header">
-                  <h3>{formatDateForInline(selectedDateStr)}</h3>
-                </div>
-                <div className="inline-activities-container">
-                  {activities.length === 0 ? (
-                    <p style={{ padding: '0 0.5rem', opacity: 0.7 }}>No activities yet.</p>
-                  ) : (
-                    activities.map(activity => {
-                    const hasSubs = activity.subActivities && activity.subActivities.length > 0;
-                    
-                    if (hasSubs) {
-                      return (
-                        <div key={activity.id} className="activity-group">
-                          <h4 
-                            className="activity-group-title"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedActivityId(prev => prev === activity.id ? null : activity.id);
-                            }}
-                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                            title={selectedActivityId === activity.id ? "Click to clear calendar filter" : "Click to filter calendar for this activity"}
-                          >
-                            <span>{activity.name}</span>
-                            {selectedActivityId === activity.id && (
-                              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'normal' }}>filtered</span>
-                            )}
-                          </h4>
-                          <div className="pills-container">
-                            {activity.subActivities.map(sub => {
-                              const isSelected = currentLoggedIds.has(sub.id);
-                              const color = sub.color || '#3B82F6';
-                              return (
-                                <div
-                                  key={sub.id}
-                                  className={`pill ${isSelected ? 'selected' : ''}`}
-                                  data-id={sub.id}
-                                  data-date={selectedDateStr}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleActivityLog(sub.id, selectedDateStr);
-                                  }}
-                                  style={{
-                                    cursor: 'pointer',
-                                    borderColor: isSelected ? color : `${color}55`,
-                                    backgroundColor: isSelected ? `${color}25` : 'var(--bg-primary)',
-                                    color: isSelected ? color : 'var(--text-primary)'
-                                  }}
-                                >
-                                  {sub.name}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    }
+              (activities.length > 3 || activitiesExpanded) && (
+                <button 
+                  className={`show-all-btn ${activitiesExpanded ? 'expanded' : ''}`} 
+                  id="activities-show-all" 
+                  title={activitiesExpanded ? 'Collapse' : 'Show all'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActivitiesExpanded(!activitiesExpanded);
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                  </svg>
+                </button>
+              )
+            )}
+          </div>
+          <div id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${activitiesExpanded ? 'expanded' : ''}`}>
+            {selectedDateStr ? (
+              activitiesLoading ? (
+                <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading activities...</p>
+              ) : (
+                <div className="inline-logging-interface">
+                  <div className="inline-logging-header">
+                    <h3>{formatDateForInline(selectedDateStr)}</h3>
+                  </div>
+                  <div className="inline-activities-container">
+                    {activities.length === 0 ? (
+                      <p style={{ padding: '0 0.5rem', opacity: 0.7 }}>No activities yet.</p>
+                    ) : (
+                      activities.map(activity => {
+                        const hasSubs = activity.subActivities && activity.subActivities.length > 0;
+                        
+                        if (hasSubs) {
+                          return (
+                            <div key={activity.id} className="activity-group">
+                              <h4 
+                                className="activity-group-title"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedActivityId(prev => prev === activity.id ? null : activity.id);
+                                }}
+                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                title={selectedActivityId === activity.id ? "Click to clear calendar filter" : "Click to filter calendar for this activity"}
+                              >
+                                <span>{activity.name}</span>
+                                {selectedActivityId === activity.id && (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'normal' }}>filtered</span>
+                                )}
+                              </h4>
+                              <div className="pills-container">
+                                {activity.subActivities.map(sub => {
+                                  const isSelected = currentLoggedIds.has(sub.id);
+                                  const color = sub.color || '#3B82F6';
+                                  return (
+                                    <div
+                                      key={sub.id}
+                                      className={`pill ${isSelected ? 'selected' : ''}`}
+                                      data-id={sub.id}
+                                      data-date={selectedDateStr}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleActivityLog(sub.id, selectedDateStr);
+                                      }}
+                                      style={{
+                                        cursor: 'pointer',
+                                        borderColor: isSelected ? color : `${color}55`,
+                                        backgroundColor: isSelected ? `${color}25` : 'var(--bg-primary)',
+                                        color: isSelected ? color : 'var(--text-primary)'
+                                      }}
+                                    >
+                                      {sub.name}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
 
-                    const isSelected = currentLoggedIds.has(activity.id);
-                    const color = 'var(--accent-primary)';
-                    return (
-                      <div key={activity.id} className="activity-group">
-                        <div className="pills-container">
-                          <div
-                            key={activity.id}
-                            className={`pill ${isSelected ? 'selected' : ''}`}
-                            data-id={activity.id}
-                            data-date={selectedDateStr}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleActivityLog(activity.id, selectedDateStr);
-                            }}
-                            style={{
-                              cursor: 'pointer',
-                              borderColor: isSelected ? color : 'var(--border-color)',
-                              backgroundColor: isSelected ? 'var(--primary-color-alpha)' : 'var(--bg-primary)',
-                              color: isSelected ? color : 'var(--text-primary)'
-                            }}
-                          >
-                            {activity.name}
+                        const isSelected = currentLoggedIds.has(activity.id);
+                        const color = 'var(--accent-primary)';
+                        return (
+                          <div key={activity.id} className="activity-group">
+                            <div className="pills-container">
+                              <div
+                                key={activity.id}
+                                className={`pill ${isSelected ? 'selected' : ''}`}
+                                data-id={activity.id}
+                                data-date={selectedDateStr}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleActivityLog(activity.id, selectedDateStr);
+                                }}
+                                style={{
+                                  cursor: 'pointer',
+                                  borderColor: isSelected ? color : 'var(--border-color)',
+                                  backgroundColor: isSelected ? 'var(--primary-color-alpha)' : 'var(--bg-primary)',
+                                  color: isSelected ? color : 'var(--text-primary)'
+                                }}
+                              >
+                                {activity.name}
+                              </div>
+                            </div>
                           </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )
+            ) : (
+              activitiesLoading ? (
+                <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading activities...</p>
+              ) : activities.length === 0 ? (
+                <p style={{ padding: '0 1rem', opacity: 0.7 }}>No activities yet.</p>
+              ) : (
+                <ul className="activity-items-ul" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  {activitiesToShow.map(activity => {
+                    const isSelected = selectedActivityId === activity.id;
+                    const subCount = activity.subActivities ? activity.subActivities.length : 0;
+                    return (
+                      <li 
+                        key={activity.id} 
+                        className={`activity-item ${isSelected ? 'selected' : ''}`} 
+                        data-id={activity.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedActivityId(prev => prev === activity.id ? null : activity.id);
+                        }}
+                        title={isSelected ? "Click to clear calendar filter" : "Click to filter calendar for this activity"}
+                      >
+                        <div className="activity-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{activity.name}</span>
+                          {isSelected ? (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'normal' }}>filtered</span>
+                          ) : subCount > 0 ? (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              {subCount} sub{subCount > 1 ? 's' : ''}
+                            </span>
+                          ) : null}
                         </div>
-                      </div>
+                      </li>
                     );
-                  })
-                )}
-              </div>
-            </div>
+                  })}
+                </ul>
+              )
             )}
           </div>
         </div>

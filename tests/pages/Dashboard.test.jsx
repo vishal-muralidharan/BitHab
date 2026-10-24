@@ -89,13 +89,32 @@ describe('Dashboard Page', () => {
     expect(screen.getByTestId('notes-page')).toBeInTheDocument();
   });
 
-  it('renders inline activity logging interface in left activities column', async () => {
+  it('renders activities list by default, switches to inline logging on calendar date click, and unselects on outside click', async () => {
     renderDashboard();
 
     await act(async () => {});
 
     const activityList = document.getElementById('activity-list');
+    expect(activityList).not.toHaveClass('inline-logging-active');
+    expect(activityList.querySelector('.inline-logging-interface')).not.toBeInTheDocument();
+
+    // Click a calendar day
+    const dayCell = document.querySelector('.calendar-day:not(.other-month)');
+    await act(async () => {
+      fireEvent.click(dayCell);
+    });
+
+    // Logging state is active for selected date
     expect(activityList).toHaveClass('inline-logging-active');
     expect(activityList.querySelector('.inline-logging-interface')).toBeInTheDocument();
+
+    // Click outside calendar (e.g. document body)
+    await act(async () => {
+      fireEvent.mouseDown(document.body);
+    });
+
+    // Date is unselected, logging state undone, and all activities are shown
+    expect(activityList).not.toHaveClass('inline-logging-active');
+    expect(activityList.querySelector('.inline-logging-interface')).not.toBeInTheDocument();
   });
 });
