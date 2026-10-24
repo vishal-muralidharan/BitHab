@@ -45,9 +45,11 @@ Every development task in this repository must strictly adhere to the following 
   4. **Ergonomic Touch Targets:** Minimum 44x44px touch targets on mobile interactive controls.
   5. **iOS Safari Auto-Zoom Prevention:** All form inputs must enforce at least `16px` font-size on mobile.
   6. **Zero Layout Shift:** Status transitions (e.g., "Copied!", "Saved") must use fixed button widths or non-displacing toast alerts.
-  7. **Desktop Column Baseline Stretch:** Dashboard 3-column layout must stretch to utilize bottom space (`min-height: calc(100vh - 90px)`) with all column cards terminating on the exact same bottom baseline.
+  7. **Desktop Column Baseline Stretch & Viewport Height Lock:** Dashboard 3-column layout must stretch to utilize bottom space (`min-height: calc(100vh - 90px)`) with all column cards terminating on the exact same bottom baseline. Desktop dashboard (`>= 1024px`) must lock `height: calc(100vh - 90px); overflow: hidden;` to eliminate scroll to dead space unless `.expanded-active` is engaged during user interaction.
   8. **Cross-Device Screen Tier Inclusivity:** Layouts must be explicitly verified across 5 device tiers: Compact Mobile (< 375px), Standard Mobile (375–599px), Small Tablets/Foldables (600–767px), Portrait Tablets (768–1023px), and Desktops (>= 1024px).
   9. **Adaptive Action Buttons & Text Wrapping:** Action buttons on phone viewports (< 480px / < 768px) must collapse text and render icon-only (`+`) with 44px touch targets to prevent header overcrowding, and content text must enforce strict wrapping (`word-break: break-word; overflow-wrap: anywhere;`).
+  10. **Calendar Dividing Line Geometry & Centering:** Calendar weekdays must be vertically and horizontally centered (`height: 38px; display: flex; align-items: center; justify-content: center;`) flush between the header bottom divider and weekday bottom divider.
+  11. **Interactive Date Header & Month/Year/Activity Modal:** Center date `#current-date` and `#calendar-title` must open `#year-month-picker-modal` for direct navigation across years, months, and activity filters, reflowing from flex-row on desktop to flex-column on mobile (< 480px).
 
 ### Rule 7: Pre-Implementation Audit, Search & Structured Planning
 * **Skill Reference:** [.agents/skills/audit-and-planning/SKILL.md](file:///.agents/skills/audit-and-planning/SKILL.md) & [.agents/skills/repo-search/SKILL.md](file:///.agents/skills/repo-search/SKILL.md)
@@ -61,6 +63,7 @@ Every development task in this repository must strictly adhere to the following 
   2. **Multi-Theme Parity:** Every UI element must maintain accessible contrast across all 6 themes (`oceanic-depths`, `evergreen-forest`, `cyberpunk-neon`, `monochrome-minimalist`, `sunrise-coral`, `cherry-blossom`) and in both Light (`[data-mode="light"]`) and Dark (`[data-mode="dark"]`) modes.
   3. **Instant Zero-Flicker Switching:** Theme and dark/light mode toggles must apply synchronous DOM attribute updates (`data-theme`, `data-mode`) and `localStorage` writes before background Firestore synchronization.
   4. **Body Class Coordination:** Coordinate layout rules with standard body classes (`index-page`, `themes-page`, `focus-mode`, `auth-page`).
+  5. **Deep Focus Ergonomic Controls & Fullscreen Enforcement:** Timer controls use green (`#10b981`) for start, yellow (`#f59e0b`) for pause, and red (`#ef4444`) for stop; compulsory fullscreen modal with auto-pause on exit.
 
 ### Rule 9: Continuous Skill & Documentation Synchronization
 * **Skill Reference:** [.agents/skills/sync-skills-and-docs/SKILL.md](file:///.agents/skills/sync-skills-and-docs/SKILL.md)
@@ -209,3 +212,6 @@ Every commit message must follow the Semantic Commit format on **one line only**
 14. **Never conclude a feature without skill & documentation synchronization:** Every newly introduced component, context, or stylesheet must be audited and registered across `.agents/skills/` and `README.md`.
 15. **Always reuse canonical test users:** Never register new throwaway user accounts during manual or browser testing. Always reuse the canonical test accounts (`test@bithab.com` / `Password123!`) defined in [.agents/skills/targeted-module-testing/SKILL.md](file:///.agents/skills/targeted-module-testing/SKILL.md).
 16. **Never use sed commands:** Avoid `sed` commands completely across development, testing, and building. Never use `sed` to edit files, inject environment variables, or alter configs. Always use dedicated IDE editing tools or native Node.js/Vite environment handling (`import.meta.env`).
+17. **Never allow desktop dashboard scroll to dead space:** Desktop dashboard (`>= 1024px`) must enforce `height: calc(100vh - 90px); overflow: hidden;` until `.expanded-active` is triggered by user interaction.
+18. **Never displace calendar weekday labels:** Weekday headers must maintain `height: 38px; display: flex; align-items: center; justify-content: center;` centered flush between the header bottom divider and weekday bottom divider.
+19. **Never break compulsory fullscreen focus integrity:** Deep Focus must require fullscreen entry before session interaction and immediately auto-pause on fullscreen exit.
