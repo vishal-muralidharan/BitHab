@@ -77,15 +77,36 @@ Because `BottomNav.jsx` is fixed to the bottom of the viewport on mobile devices
 
 ---
 
-## 3. Responsive Breakpoint Standards
+## 3. Comprehensive Cross-Device Screen Tier Matrix
 
-BitHab stylesheets enforce responsive reflow across three main device tiers:
+BitHab interfaces must be designed, styled, and tested to provide ergonomic, pixel-perfect experiences across all device screen tiers:
 
-| Breakpoint | Viewport Width | Navigation & Shell | Content Layout |
+| Device Tier | Viewport Width | Shell & Navigation | Content Layout & Adaptations |
 | :--- | :--- | :--- | :--- |
-| **Mobile** | `< 768px` | `MobileTopbar` + `BottomNav` | Single-column cards, full-width inputs, stacked calendar navigation, `padding-bottom: 100px` for bottom bar clearance |
-| **Tablet** | `768px - 1024px` | Desktop `Header` | 2-column dashboard grids, inline schedule controls |
-| **Desktop** | `> 1024px` | Desktop `Header` | 3-column dashboard grid (`1fr 1.5fr 1fr`), 3-column focus room (`Subjects` \| `Clock` \| `Tasks`) |
+| **Compact Mobile** | `< 375px` (e.g. iPhone SE, 320–360px) | `MobileTopbar` + fixed `BottomNav` | 1-column layout, full-width cards; **Adaptive Action Buttons** collapse text and render icon-only (`+` instead of "New List" / "New Note"); strict text wrapping (`overflow-wrap: anywhere; word-break: break-word;`); `padding-bottom: 90px`. |
+| **Standard Mobile** | `375px – 599px` (e.g. iPhone 15/Pro Max, Galaxy S/Ultra) | `MobileTopbar` + fixed `BottomNav` | 1-column layout, full-width inputs (enforcing `font-size: 16px` to prevent iOS Safari auto-zoom), 44×44px touch targets; `padding-bottom: calc(5rem + env(safe-area-inset-bottom, 20px))`. |
+| **Foldables & Small Tablets** | `600px – 767px` (e.g. Fold unfolded, 7" tablets) | `MobileTopbar` + fixed `BottomNav` | Adaptive 1 to 2 column reflow; compact card padding (`1.25rem`); centered content container with balanced margins. |
+| **Portrait Tablets** | `768px – 1023px` (e.g. iPad 10.2", iPad Air portrait) | Desktop `Header` (90px) | 2-column balanced grid (`grid-template-columns: repeat(2, 1fr)`); inline action controls; no bottom navigation clearance needed. |
+| **Laptops & Desktops** | `>= 1024px` (e.g. 13"–16" Laptops, 1080p, 1440p) | Desktop `Header` (90px) | 3-column balanced grid (`grid-template-columns: repeat(3, 1fr)` or `repeat(auto-fill, minmax(360px, 1fr))`); dashboard baseline parity; container capped at `max-width: 1400px` (or `1200px`). |
+
+### Adaptive Action Buttons (Phone Icon-Only Adaptability)
+On compact/mobile viewports (`< 768px` and specifically `< 480px`), top action buttons (such as `+ New List`, `+ New Note`, `+ New Activity`) must not overcrowd page titles or force awkward multi-line wrapping:
+* **Desktop & Tablet:** Button displays icon + text (e.g. `<i class="fas fa-plus"></i> <span>New List</span>`).
+* **Phone Screens (`< 480px` or `< 768px`):** The text label collapses (`span { display: none; }` or responsive utility) so the button renders as a sleek, square or circular icon-only button with a clean `+` glyph while maintaining a minimum **44×44px** touch target.
+
+### Strict Content Text Wrapping
+To prevent long URLs, unbroken strings, or task descriptions from blowing out card widths on narrow mobile screens (320px–375px):
+```css
+.list-item-text,
+.item-content,
+.note-content,
+.activity-name {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  line-height: 1.5;
+}
+```
 
 ### Desktop Dashboard Layout & Bottom Baseline Parity
 * On desktop viewports (`>= 1024px`), the dashboard (`.main-layout`) utilizes a 3-column CSS grid:
@@ -153,12 +174,14 @@ When rendering modal dialogs (`custom-dialogs.css`, `pattern-modal`, `date-modal
 
 Before committing any UI code, verify:
 ```text
-[ ] 1. Mobile-First Layout: Page renders cleanly on mobile (< 768px) without horizontal scrollbar.
-[ ] 2. Dual-Nav Verification: Header renders on desktop (90px height), MobileTopbar + BottomNav render on mobile.
-[ ] 3. Focus Route Bypassing: /focus, /deep-focus, and /analytics correctly apply focus-mode and expand cleanly with zero logo jump.
-[ ] 4. Bottom Clearance: Mobile page content has adequate bottom clearance (padding-bottom: 5rem / 100px) so elements aren't hidden behind BottomNav.
-[ ] 5. Desktop Grid Stretch: Dashboard 3-column layout stretches to min-height: calc(100vh - 90px) and aligns bottom card baselines.
-[ ] 6. Touch Targets: Interactive buttons, icon arrows, and calendar cells meet minimum 44x44px hit dimensions.
-[ ] 7. iOS 16px Font Rule: All form inputs use at least 16px font-size to prevent auto-zooming.
-[ ] 8. Modals Bounded: Modals and overlays enforce max-height and internal scrolling.
+[ ] 1. Compact Mobile (< 375px): Page renders cleanly without horizontal scrollbar; text wraps properly with word-break: break-word.
+[ ] 2. Adaptive Action Buttons: Action buttons collapse text to icon-only (+) on phone viewports (< 480px / < 768px).
+[ ] 3. Standard Mobile (375–599px): Dual-Nav displays MobileTopbar + BottomNav; cards stack in 1 column.
+[ ] 4. Bottom Clearance: Mobile page content has adequate bottom clearance (padding-bottom: calc(5rem + env(safe-area-inset-bottom, 20px))) so elements are never hidden behind BottomNav.
+[ ] 5. Touch Targets: Interactive buttons, icon arrows, checkboxes, and calendar cells meet minimum 44x44px hit dimensions.
+[ ] 6. iOS 16px Font Rule: All form inputs use at least 16px font-size to prevent auto-zooming.
+[ ] 7. Portrait Tablet (768–1023px): Header displays desktop navigation cleanly; cards reflow into 2 balanced columns.
+[ ] 8. Desktop (>= 1024px): 3-column grid aligns baseline cards and caps content container width.
+[ ] 9. Focus Route Bypassing: /focus, /deep-focus, and /analytics correctly apply focus-mode and expand cleanly with zero logo jump.
+[ ] 10. Modals Bounded: Modals and overlays enforce max-height: 90vh and internal scrolling without clipping.
 ```

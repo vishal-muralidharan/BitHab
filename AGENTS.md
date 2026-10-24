@@ -46,6 +46,8 @@ Every development task in this repository must strictly adhere to the following 
   5. **iOS Safari Auto-Zoom Prevention:** All form inputs must enforce at least `16px` font-size on mobile.
   6. **Zero Layout Shift:** Status transitions (e.g., "Copied!", "Saved") must use fixed button widths or non-displacing toast alerts.
   7. **Desktop Column Baseline Stretch:** Dashboard 3-column layout must stretch to utilize bottom space (`min-height: calc(100vh - 90px)`) with all column cards terminating on the exact same bottom baseline.
+  8. **Cross-Device Screen Tier Inclusivity:** Layouts must be explicitly verified across 5 device tiers: Compact Mobile (< 375px), Standard Mobile (375–599px), Small Tablets/Foldables (600–767px), Portrait Tablets (768–1023px), and Desktops (>= 1024px).
+  9. **Adaptive Action Buttons & Text Wrapping:** Action buttons on phone viewports (< 480px / < 768px) must collapse text and render icon-only (`+`) with 44px touch targets to prevent header overcrowding, and content text must enforce strict wrapping (`word-break: break-word; overflow-wrap: anywhere;`).
 
 ### Rule 7: Pre-Implementation Audit, Search & Structured Planning
 * **Skill Reference:** [.agents/skills/audit-and-planning/SKILL.md](file:///.agents/skills/audit-and-planning/SKILL.md) & [.agents/skills/repo-search/SKILL.md](file:///.agents/skills/repo-search/SKILL.md)
