@@ -91,17 +91,23 @@ interface Reminder {
 }
 ```
 
-### 4. `Note` Schema
+### 4. `Note` Schema (With Legacy Object & Subcollection Compatibility)
 ```typescript
 interface Note {
   id: string;                               // Unique note ID
-  title?: string;                           // Note title (for general notes)
-  content: string;                          // Note text content
+  title?: string;                           // Note title (for general notes or date string)
+  content: string;                          // Note text content (legacy alias: note)
   type: 'daily' | 'general';                // Daily note (linked to date) or general note
-  date?: string;                            // "YYYY-MM-DD" (required for daily notes)
-  isFavorite?: boolean;                     // Starred/favorited flag
+  date?: string | null;                     // "YYYY-MM-DD" (required for daily notes)
+  favorite?: boolean;                       // Starred/favorited flag
+  isFavorite?: boolean;                     // Starred/favorited legacy alias
   createdAt?: string | number;              // Timestamp
+  updatedAt?: string | number;              // Timestamp
 }
+
+// Legacy format compatibility:
+// Legacy accounts may store notes as an Object map on user doc: { [dateStr]: text }
+// Daily notes are also dual-written to subcollection /users/{userId}/notes/{dateStr} for backward compatibility.
 ```
 
 ### 5. `List` Schema
