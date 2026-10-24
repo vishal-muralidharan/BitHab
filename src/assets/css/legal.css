@@ -1,0 +1,203 @@
+/* Legal & Settings Layout Styles - Vanilla CSS Design Tokens */
+
+.public-legal-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.public-legal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  height: 80px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.public-legal-header .logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.public-legal-header .logo {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.public-legal-header .logo-light,
+.public-legal-header .logo-dark {
+  height: 38px;
+  width: auto;
+  display: block;
+}
+
+body.dark .public-legal-header .logo-light,
+[data-mode="dark"] .public-legal-header .logo-light {
+  display: none !important;
+}
+
+body.dark .public-legal-header .logo-dark,
+[data-mode="dark"] .public-legal-header .logo-dark {
+  display: block !important;
+}
+
+body:not(.dark) .public-legal-header .logo-dark,
+[data-mode="light"] .public-legal-header .logo-dark {
+  display: none !important;
+}
+
+body:not(.dark) .public-legal-header .logo-light,
+[data-mode="light"] .public-legal-header .logo-light {
+  display: block !important;
+}
+
+.public-legal-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.legal-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-height: 44px;
+  min-width: 44px;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.legal-nav-btn:hover {
+  background-color: var(--primary-color);
+  color: var(--bg-primary);
+  border-color: var(--primary-color);
+}
+
+.legal-content-wrapper {
+  flex: 1;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+.legal-page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.legal-page-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.legal-page-meta {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.legal-page-section {
+  margin-bottom: 2rem;
+}
+
+.legal-page-section h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.legal-page-section p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.legal-page-section ul,
+.legal-page-section ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+
+.legal-page-section li {
+  margin-bottom: 0.5rem;
+}
+
+/* Legal Footer */
+.legal-footer {
+  padding: 2rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.legal-footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+.legal-footer-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity var(--transition);
+}
+
+.legal-footer-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .public-legal-header {
+    padding: 0.75rem 1rem;
+    height: 72px;
+  }
+  
+  .legal-content-wrapper {
+    padding: 1.5rem 1rem 4rem;
+  }
+  
+  .legal-page-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* Settings & DPDP Page Shell Containers */
+.settings-page,
+.dpdp-page {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 0 3rem;
+}
+

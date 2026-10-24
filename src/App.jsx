@@ -15,6 +15,12 @@ import Register from './pages/Register';
 import Analytics from './pages/Analytics';
 import DeepFocus from './pages/DeepFocus';
 import ScheduleActivities from './pages/ScheduleActivities';
+import SettingsPage from './pages/Settings';
+import DPDPPage from './pages/DPDP';
+import PrivacyPage from './pages/Privacy';
+import TermsPage from './pages/Terms';
+import TermsAndConditionsPage from './pages/TermsAndConditions';
+import PublicLegalLayout from './components/layout/PublicLegalLayout';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -65,9 +71,14 @@ function App() {
           <Routes>
             {/* Auth routes without Layout */}
             <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          <Route path="/*" element={
+            <Route path="/register" element={<Register />} />
+            
+            {/* Public Legal routes with PublicLegalLayout */}
+            <Route path="/privacy" element={<PublicLegalLayout><PrivacyPage /></PublicLegalLayout>} />
+            <Route path="/terms" element={<PublicLegalLayout><TermsPage /></PublicLegalLayout>} />
+            <Route path="/terms-and-conditions" element={<PublicLegalLayout><TermsAndConditionsPage /></PublicLegalLayout>} />
+            
+            <Route path="/*" element={
             <PrivateRoute>
               <Layout>
                 <Routes>
@@ -82,6 +93,8 @@ function App() {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/deep-focus" element={<DeepFocus />} />
                   <Route path="/schedule-activities" element={<ScheduleActivities />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/dpdp" element={<DPDPPage />} />
                 </Routes>
               </Layout>
             </PrivateRoute>

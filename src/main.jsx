@@ -12,6 +12,7 @@ import './assets/css/deep-focus.css'
 import './assets/css/lists.css'
 import './assets/css/management.css'
 import './assets/css/schedule.css'
+import './assets/css/legal.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
