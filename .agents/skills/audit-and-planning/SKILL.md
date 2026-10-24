@@ -102,6 +102,8 @@ Before creating local state or manual fetch logic in a page, check whether a con
 2. **Vanilla CSS Discipline (Rule 6):** Ensure all colors consume CSS custom properties (`var(--primary-color)`, `var(--bg-primary)`, `var(--surface-color)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--border-color)`).
 3. **Multi-Theme Parity:** Verify contrast and visibility across all 6 themes and dark/light modes.
 4. **Mobile Ergonomics:** Ensure touch targets are at least 44x44px and bottom navigation is accessible.
+5. **Dashboard Viewport & Modal Safety:** Ensure desktop home views lock height to `calc(100vh - 90px)` with `overflow: hidden` unless `.expanded-active` is engaged; ensure modals provide full responsive reflow (horizontal flex row on desktop vs vertical column on mobile `< 480px`).
+6. **Data Filtering & Scoping:** When features require activity filtering (e.g. calendar dots), ensure parent activity and child subactivities are scoped with `visibleActivityIds`.
 
 ---
 
@@ -151,4 +153,5 @@ Before editing any code, verify:
 [ ] 6. Formulated an atomic, step-by-step plan with verification checks and commit messages.
 [ ] 7. Reused canonical test user accounts (test@bithab.com) for any browser testing or session audits.
 [ ] 8. Verified zero sed commands in the execution plan—all file modifications planned with dedicated editing tools.
+[ ] 9. Verified desktop dashboard fixed viewport lock (calc(100vh - 90px)) and modal responsive stacking rules.
 ```
