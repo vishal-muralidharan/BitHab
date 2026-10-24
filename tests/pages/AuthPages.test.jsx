@@ -132,6 +132,7 @@ describe('Auth Pages (Login and Register)', () => {
       fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'newuser@example.com' } });
       fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'matchingPass' } });
       fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'matchingPass' } });
+      fireEvent.click(screen.getByRole('checkbox'));
 
       await act(async () => {
         screen.getByRole('button', { name: /Register/i }).click();
@@ -142,6 +143,36 @@ describe('Auth Pages (Login and Register)', () => {
         'newuser@example.com',
         'matchingPass'
       );
+    });
+
+    it('requires agreement to terms before submitting registration', async () => {
+      vi.spyOn(auth, 'onAuthStateChanged').mockImplementation((_auth, cb) => {
+        cb(null);
+        return vi.fn();
+      });
+
+      render(
+        <MemoryRouter initialEntries={['/register']}>
+          <AuthProvider>
+            <ThemeProvider>
+              <Routes>
+                <Route path="/register" element={<Register />} />
+              </Routes>
+            </ThemeProvider>
+          </AuthProvider>
+        </MemoryRouter>
+      );
+
+      fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'test@example.com' } });
+      fireEvent.change(screen.getByPlaceholderText('Password'), { target: { value: 'matchingPass' } });
+      fireEvent.change(screen.getByPlaceholderText('Confirm Password'), { target: { value: 'matchingPass' } });
+
+      await act(async () => {
+        screen.getByRole('button', { name: /Register/i }).click();
+      });
+
+      expect(screen.getByText(/You must agree to the Terms of Service/i)).toBeInTheDocument();
+      expect(auth.createUserWithEmailAndPassword).not.toHaveBeenCalled();
     });
   });
 });

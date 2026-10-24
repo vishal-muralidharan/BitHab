@@ -21,6 +21,7 @@ import PrivacyPage from './pages/Privacy';
 import TermsPage from './pages/Terms';
 import TermsAndConditionsPage from './pages/TermsAndConditions';
 import PublicLegalLayout from './components/layout/PublicLegalLayout';
+import TermsAgreementModal from './components/layout/TermsAgreementModal';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -68,7 +69,8 @@ function App() {
                 <ListProvider>
                   <ThemeProvider>
                     <BrowserRouter>
-          <Routes>
+                      <TermsAgreementModal />
+                      <Routes>
             {/* Auth routes without Layout */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

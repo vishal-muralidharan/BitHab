@@ -7,9 +7,10 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { currentUser, signup, signInWithGoogle } = useAuth();
+  const { currentUser, signup, signInWithGoogle, acceptTerms } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -31,10 +32,13 @@ export default function Register() {
     if (password !== confirmPassword) {
       return setError('Passwords do not match');
     }
+    if (!agreeTerms) {
+      return setError('You must agree to the Terms of Service, Terms and Conditions, and Privacy Policy to register.');
+    }
     try {
       setError('');
       setLoading(true);
-      await signup(email, password);
+      await signup(email, password, { agreedToTerms: true, termsVersion: '2026-10-24' });
       navigate('/');
     } catch (err) {
       setError('Failed to create an account: ' + err.message);
@@ -46,7 +50,10 @@ export default function Register() {
     try {
       setError('');
       setLoading(true);
-      await signInWithGoogle();
+      const res = await signInWithGoogle();
+      if (agreeTerms && res?.user && acceptTerms) {
+        await acceptTerms('2026-10-24');
+      }
       navigate('/');
     } catch (err) {
       setError('Failed to sign up with Google: ' + err.message);
@@ -107,6 +114,21 @@ export default function Register() {
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
               />
+              <div className="terms-checkbox-group">
+                <label className="terms-checkbox-label" htmlFor="register-terms-checkbox">
+                  <input 
+                    type="checkbox" 
+                    id="register-terms-checkbox"
+                    checked={agreeTerms} 
+                    onChange={e => setAgreeTerms(e.target.checked)} 
+                  />
+                  <span>
+                    I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>,{' '}
+                    <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer">Terms and Conditions</a> and{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                  </span>
+                </label>
+              </div>
               <button type="submit" disabled={loading}>
                 <i className="fas fa-user icon-prefix" aria-hidden="true"></i>
                 <span>Register</span>
