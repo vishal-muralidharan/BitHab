@@ -35,6 +35,14 @@ const localStorageMock = (function () {
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
+// Mock Fullscreen API
+if (!document.documentElement.requestFullscreen) {
+  document.documentElement.requestFullscreen = vi.fn().mockResolvedValue(undefined);
+}
+if (!document.exitFullscreen) {
+  document.exitFullscreen = vi.fn().mockResolvedValue(undefined);
+}
+
 // Global Firebase Mocks
 vi.mock('firebase/auth', async (importOriginal) => {
   const actual = await importOriginal();

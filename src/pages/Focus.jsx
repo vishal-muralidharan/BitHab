@@ -160,7 +160,16 @@ export default function Focus() {
             id="deep-work-toggle" 
             title="Deep Focus" 
             aria-label="Toggle deep focus mode"
-            onClick={() => navigate('/deep-focus')}
+            onClick={async () => {
+              try {
+                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                  await document.documentElement.requestFullscreen();
+                }
+              } catch (err) {
+                console.warn('Fullscreen entry from Focus page was ignored or denied:', err);
+              }
+              navigate('/deep-focus');
+            }}
           >
             <i className="fas fa-spa" aria-hidden="true"></i>
           </button>

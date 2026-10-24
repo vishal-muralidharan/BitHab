@@ -4,8 +4,56 @@ import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
+const isFullscreenActive = () => {
+  if (typeof document === 'undefined') return false;
+  return Boolean(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  );
+};
+
+const requestBrowserFullscreen = async () => {
+  if (typeof document === 'undefined') return;
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) {
+      await el.requestFullscreen();
+    } else if (el.webkitRequestFullscreen) {
+      await el.webkitRequestFullscreen();
+    } else if (el.mozRequestFullScreen) {
+      await el.mozRequestFullScreen();
+    } else if (el.msRequestFullscreen) {
+      await el.msRequestFullscreen();
+    }
+  } catch (err) {
+    console.warn('Fullscreen entry failed or denied:', err);
+  }
+};
+
+const exitBrowserFullscreen = async () => {
+  if (typeof document === 'undefined') return;
+  try {
+    if (document.exitFullscreen) {
+      await document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      await document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      await document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+      await document.msExitFullscreen();
+    }
+  } catch (err) {
+    console.warn('Fullscreen exit failed:', err);
+  }
+};
+
 export default function DeepFocus() {
   const { currentUser } = useAuth();
+
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(() => isFullscreenActive());
 
   // Clock
   const [now, setNow] = useState(new Date());
@@ -205,6 +253,56 @@ export default function DeepFocus() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [timerState, pauseTimer, startTimer]);
 
+  const wasFullscreenRef = useRef(isFullscreenActive());
+
+  // Synchronize fullscreen state and enforce auto-pause if user exits
+  useEffect(() => {
+    const updateFullscreenState = () => {
+      const active = isFullscreenActive();
+      const previouslyActive = wasFullscreenRef.current;
+      wasFullscreenRef.current = active;
+      setIsFullscreen(active);
+
+      // If user actively exited fullscreen while session was running, enforce pause
+      if (previouslyActive && !active) {
+        if (sessionStartRef.current && !pausedAtRef.current) {
+          pauseTimer();
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', updateFullscreenState);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenState);
+    document.addEventListener('mozfullscreenchange', updateFullscreenState);
+    document.addEventListener('MSFullscreenChange', updateFullscreenState);
+
+    updateFullscreenState();
+    if (!isFullscreenActive()) {
+      requestBrowserFullscreen();
+    }
+
+    return () => {
+      document.removeEventListener('fullscreenchange', updateFullscreenState);
+      document.removeEventListener('webkitfullscreenchange', updateFullscreenState);
+      document.removeEventListener('mozfullscreenchange', updateFullscreenState);
+      document.removeEventListener('MSFullscreenChange', updateFullscreenState);
+    };
+  }, [pauseTimer]);
+
+  const handleExitDeepWork = async () => {
+    if (isFullscreenActive()) {
+      await exitBrowserFullscreen();
+    }
+  };
+
+  const handleToggleFullscreen = async () => {
+    if (isFullscreenActive()) {
+      await exitBrowserFullscreen();
+    } else {
+      await requestBrowserFullscreen();
+    }
+  };
+
   // Primary action button (START / PAUSE / RESUME)
   const handlePrimaryAction = () => {
     if (timerState === 'idle' || timerState === 'stopped') {
@@ -305,7 +403,23 @@ export default function DeepFocus() {
           <span>Deep Work Session</span>
         </div>
         <div className="deep-work-header-right">
-          <Link className="exit-deep-work" to="/focus" title="Back to Focus" id="exit-deep-work" aria-label="Exit deep focus">
+          <button 
+            className="deep-work-fullscreen-btn" 
+            id="fullscreen-toggle-btn"
+            onClick={handleToggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            <i className={`fas fa-${isFullscreen ? 'compress' : 'expand'}`} aria-hidden="true"></i>
+          </button>
+          <Link 
+            className="exit-deep-work" 
+            to="/focus" 
+            onClick={handleExitDeepWork}
+            title="Back to Focus" 
+            id="exit-deep-work" 
+            aria-label="Exit deep focus"
+          >
             <i className="fas fa-xmark" aria-hidden="true"></i>
           </Link>
         </div>
@@ -467,6 +581,39 @@ export default function DeepFocus() {
           >
             OK
           </button>
+        </div>
+      )}
+
+      {/* Compulsory Fullscreen Enforcement Overlay */}
+      {!isFullscreen && (
+        <div className="fullscreen-enforcement-backdrop" id="fullscreen-prompt">
+          <div className="fullscreen-enforcement-card">
+            <div className="fullscreen-icon-badge">
+              <i className="fas fa-expand" aria-hidden="true"></i>
+            </div>
+            <h2 className="fullscreen-title">Fullscreen Mode Required</h2>
+            <p className="fullscreen-desc">
+              Deep Focus requires full screen mode to maintain an uninterrupted, distraction-free environment.
+            </p>
+            <div className="fullscreen-actions">
+              <button 
+                className="fullscreen-primary-btn" 
+                id="enter-fullscreen-btn" 
+                onClick={requestBrowserFullscreen}
+              >
+                <i className="fas fa-expand" aria-hidden="true"></i>
+                <span>Enter Fullscreen</span>
+              </button>
+              <Link 
+                className="fullscreen-secondary-btn" 
+                to="/focus" 
+                id="skip-fullscreen-btn" 
+                onClick={handleExitDeepWork}
+              >
+                <span>Return to Focus</span>
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </div>
