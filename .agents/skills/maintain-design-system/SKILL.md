@@ -152,6 +152,12 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
     - **Yellow (`#f59e0b`) for PAUSE** (with high-contrast black text)
     - **Red (`#ef4444`) for STOP** (with white text)
     - **Neutral translucent outline for RESET**
+  - **Subjects & Tasks Side Panels Layout:**
+    - On desktop (`> 1024px`), Subjects (upper left, `top: 85px; left: 32px`) and Tasks (upper right, `top: 85px; right: 32px`) are anchored as fixed frosted cards (`width: 230px; max-width: 260px`) completely clear of the central countdown timer and buttons.
+    - Both cards enforce vertical stacking (`display: flex; flex-direction: column; align-items: stretch;`) with full-width headers (`h4` with bottom border), font-awesome icons (`fa-book-open`, `fa-list-check`), and left accent borders (`border-left: 3px solid rgba(255, 255, 255, 0.4)`).
+    - Empty states use centered dashed notices (`.empty-notice`).
+    - On tablets (`<= 1024px`), panels switch to an aligned 2-column grid (`grid-template-columns: 1fr 1fr; max-width: 600px;`) positioned cleanly below the target duration block.
+    - On mobile (`<= 768px`), panels stack vertically with full width.
 
 ---
 

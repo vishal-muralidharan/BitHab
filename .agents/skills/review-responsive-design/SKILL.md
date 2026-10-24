@@ -94,6 +94,11 @@ BitHab stylesheets enforce responsive reflow across three main device tiers:
 * Contained cards (`.activities-component`, `.notes-component`, `.calendar-view`, `.goals-component`, `.reminders-component`) specify `flex: 1 1 0; min-height: 0; max-height: none;`.
 * **Zero Dead Space Rule:** The bottom of Left Column (Notes card), Center Column (Calendar view card), and Right Column (Reminders card) must terminate on the exact same horizontal baseline, completely utilizing bottom viewport real estate without awkward dead voids.
 
+### Deep Focus Responsive Reflow
+* **Desktop (`> 1024px`):** Subjects (`top: 85px; left: 32px; width: 230px`) and Tasks (`top: 85px; right: 32px; width: 230px`) are fixed frosted side cards anchored in the upper viewport, completely clear of the central countdown clock and control buttons.
+* **Tablets (`<= 1024px`):** Side panels reflow into a centered 2-column grid (`grid-template-columns: 1fr 1fr; max-width: 600px`) beneath the target duration block.
+* **Mobile (`<= 768px`):** Side panels stack into a single column (`grid-template-columns: 1fr`) with full container width.
+
 ---
 
 ## 4. Mobile Form Ergonomics & iOS Safari Rules
