@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import LegalFooter from './LegalFooter';
 
 export default function PublicLegalLayout({ children }) {
   const { currentUser } = useAuth();
@@ -8,7 +9,6 @@ export default function PublicLegalLayout({ children }) {
   const isDarkMode = themeContext?.isDarkMode ?? false;
   const toggleDarkMode = themeContext?.toggleDarkMode ?? (() => {});
 
-  const currentYear = new Date().getFullYear();
   const homePath = currentUser ? '/' : '/login';
 
   return (
@@ -48,13 +48,7 @@ export default function PublicLegalLayout({ children }) {
         {children}
       </main>
 
-      <footer className="legal-footer">
-        <p>© {currentYear} BitHab. All rights reserved.</p>
-        <div className="legal-footer-links">
-          <Link to="/terms" className="legal-footer-link">Terms of Service</Link>
-          <Link to="/privacy" className="legal-footer-link">Privacy Policy</Link>
-        </div>
-      </footer>
+      <LegalFooter />
     </div>
   );
 }
