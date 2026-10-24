@@ -137,6 +137,22 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
 * **Outside Click Dismissal:** Clicking outside the calendar view (`calendarRef`) on the document (except when clicking active logging pills or typing inside the notes editor) automatically unselects the date, closes the inline logging interface, and restores all activities in the Activities card.
 * **Show-All Header Button:** Clicking the Activities card header button (`#activities-show-all`) while in logging mode unselects the date and restores all activities, or toggles expansion when already viewing all activities.
 
+### Rule 14: Focus & Deep Focus High-Contrast Aesthetics
+* **Focus Mode (`/focus`):**
+  - Built on a fixed ambient light blue gradient background.
+  - Transparent setting for cards (`rgba(255, 255, 255, 0.25)` frosted glass with `backdrop-filter: blur(20px)`), with zero dark backgrounds.
+  - The date display (Saturday) is completely transparent with no dark background or box.
+  - All text (digital clock, date, section titles, inputs, list items, quotes, icons) is enforced in full black (`#000000`).
+  - Top header always renders the light theme logo (`logo-transparent-light.png`).
+* **Deep Focus Mode (`/deep-focus`):**
+  - Minimalist pure black canvas (`#000000`) with predominantly black-and-white elements (countdown clock `#ffffff`, white progress track and fill, white percentage text).
+  - Absolutely zero orange or clashing theme colors (`var(--primary-color)`).
+  - Timer control buttons adhere to universal ergonomic color conventions:
+    - **Green (`#10b981`) for START / RESUME**
+    - **Yellow (`#f59e0b`) for PAUSE** (with high-contrast black text)
+    - **Red (`#ef4444`) for STOP** (with white text)
+    - **Neutral translucent outline for RESET**
+
 ---
 
 ## 4. Pre-Commit Design System Checklist
