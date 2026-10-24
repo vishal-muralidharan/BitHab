@@ -141,9 +141,11 @@ export default function Focus() {
     <div className="focus-mode" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Top Header */}
       <div className="focus-header">
-        <Link to="/" className="focus-logo">
-          <img src="/assets/images/logo-transparent-light.png" alt="BitHab" className="logo-img logo-light" />
-          <img src="/assets/images/logo-transparent-dark.png" alt="BitHab" className="logo-img logo-dark" />
+        <Link to="/" className="logo-link focus-logo">
+          <h1 className="logo">
+            <img src="/assets/images/logo-transparent-light.png" alt="BitHab Logo" className="logo-light" />
+            <img src="/assets/images/logo-transparent-dark.png" alt="BitHab Logo" className="logo-dark" />
+          </h1>
         </Link>
         <div className="header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button 

@@ -25,38 +25,43 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 85px;
+    height: 70px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 clamp(1rem, 4vw, 2rem);
-    background: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 1001;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     box-sizing: border-box;
+    transition: background-color var(--transition), 
+                border-color var(--transition),
+                box-shadow var(--transition);
 }
 
-/* Focus Logo - Simple Home Link */
+/* Focus Logo - Standard Alignment Link */
 .focus-logo {
-    font-family: 'Montserrat', Arial, sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: 1px;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    height: 40px;
     text-decoration: none;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--transition);
 }
 
 .focus-logo:hover {
     opacity: 0.8;
 }
 
-.focus-logo .logo-img {
+.focus-logo .logo {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.focus-logo .logo img,
+.focus-logo .logo-img,
+.focus-logo img {
     height: 40px;
     width: auto;
     object-fit: contain;
@@ -108,7 +113,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 105px 2rem 2rem; /* moderate gap - not too much */
+    padding: 90px 2rem 2rem; /* 70px header + 20px gap */
     min-height: calc(100vh - 90px); /* default to full screen */
     box-sizing: border-box;
     overflow-y: visible; /* allow page to scroll when content grows */
@@ -1032,16 +1037,18 @@
 /* Tablets (1024px and down) */
 @media (max-width: 1024px) {
     .focus-header {
-        padding: 0 1.5rem;
-        height: 65px;
+        padding: 0.75rem 1.25rem;
+        height: 72px;
     }
     
-    .focus-logo .logo img {
-        height: 30px;
+    .focus-logo .logo img,
+    .focus-logo .logo-img,
+    .focus-logo img {
+        height: 36px;
     }
     
     .focus-container {
-        padding: 80px 1.5rem 1.5rem;
+        padding: 85px 1.5rem 1.5rem;
         gap: 1.5rem;
     }
 }
@@ -1053,16 +1060,18 @@
     }
     
     .focus-header {
-        padding: 0 1rem;
-        height: 60px;
+        padding: 0.75rem 1.25rem;
+        height: 72px;
     }
     
-    .focus-logo .logo img {
-        height: 28px;
+    .focus-logo .logo img,
+    .focus-logo .logo-img,
+    .focus-logo img {
+        height: 36px;
     }
     
     .focus-container {
-        padding: 75px 1rem 80px; /* proper headroom for time element + space for bottom nav */
+        padding: 85px 1rem 80px; /* proper headroom for time element + space for bottom nav */
         gap: 1rem;
     }    .focus-session-panel {
         min-width: 280px;
@@ -1118,16 +1127,18 @@
 /* Small tablets and large phones */
 @media (max-width: 640px) {
     .focus-header {
-        padding: 0 1rem;
-        height: 58px;
+        padding: 0.75rem 1.25rem;
+        height: 72px;
     }
     
-    .focus-logo .logo img {
-        height: 26px;
+    .focus-logo .logo img,
+    .focus-logo .logo-img,
+    .focus-logo img {
+        height: 36px;
     }
     
     .focus-container {
-        padding: 73px 1rem 1rem;
+        padding: 85px 1rem 1rem;
         gap: 1rem;
     }
 }
@@ -2005,8 +2016,8 @@
 
 @media (max-width: 768px) {
     .focus-header {
-        padding: 0 1rem;
-        height: 70px;
+        padding: 0.75rem 1.25rem;
+        height: 72px;
     }
     
     .focus-container {
