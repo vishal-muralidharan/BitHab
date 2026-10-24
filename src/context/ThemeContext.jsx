@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { db } from '../config/firebase';
-import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 
 const THEMES = {
@@ -203,6 +203,15 @@ export function ThemeProvider({ children }) {
         return true;
     });
 
+    const isUserActionRef = useRef(false);
+    const currentThemeRef = useRef(currentTheme);
+    const isDarkModeRef = useRef(isDarkMode);
+
+    useEffect(() => {
+        currentThemeRef.current = currentTheme;
+        isDarkModeRef.current = isDarkMode;
+    }, [currentTheme, isDarkMode]);
+
     // Firebase Real-time Sync
     useEffect(() => {
         if (!currentUser) return;
@@ -215,8 +224,12 @@ export function ThemeProvider({ children }) {
                 const snapshot = await getDoc(userRef);
                 if (isMounted && snapshot.exists() && snapshot.data().themePreferences) {
                     const prefs = snapshot.data().themePreferences;
-                    if (prefs.currentTheme) setCurrentTheme(prefs.currentTheme);
-                    if (prefs.isDarkMode !== undefined) setIsDarkMode(prefs.isDarkMode);
+                    if (prefs.currentTheme && prefs.currentTheme !== currentThemeRef.current && THEMES[prefs.currentTheme]) {
+                        setCurrentTheme(prefs.currentTheme);
+                    }
+                    if (prefs.isDarkMode !== undefined && prefs.isDarkMode !== isDarkModeRef.current) {
+                        setIsDarkMode(prefs.isDarkMode);
+                    }
                 }
             } catch (e) {
                 console.error('Failed to load theme initial fetch from Firestore', e);
@@ -227,8 +240,12 @@ export function ThemeProvider({ children }) {
         const unsubscribe = onSnapshot(userRef, (snapshot) => {
             if (isMounted && snapshot.exists() && snapshot.data().themePreferences) {
                 const prefs = snapshot.data().themePreferences;
-                if (prefs.currentTheme) setCurrentTheme(prefs.currentTheme);
-                if (prefs.isDarkMode !== undefined) setIsDarkMode(prefs.isDarkMode);
+                if (prefs.currentTheme && prefs.currentTheme !== currentThemeRef.current && THEMES[prefs.currentTheme]) {
+                    setCurrentTheme(prefs.currentTheme);
+                }
+                if (prefs.isDarkMode !== undefined && prefs.isDarkMode !== isDarkModeRef.current) {
+                    setIsDarkMode(prefs.isDarkMode);
+                }
             }
         }, (err) => {
             console.error('Error in ThemeContext onSnapshot listener', err);
@@ -273,23 +290,33 @@ export function ThemeProvider({ children }) {
             updatedAt: Date.now()
         }));
 
-        // Sync back to Firebase if logged in
-        if (currentUser) {
+        // Sync back to Firebase only when explicitly triggered by user action
+        if (currentUser && isUserActionRef.current) {
+            isUserActionRef.current = false;
             const userRef = doc(db, 'users', currentUser.uid);
             setDoc(userRef, {
                 themePreferences: {
                     currentTheme,
                     isDarkMode,
-                    lastUpdated: serverTimestamp()
+                    lastUpdated: Date.now()
                 }
             }, { merge: true }).catch(err => console.error("Failed to save theme", err));
         }
     }, [currentTheme, isDarkMode, currentUser]);
 
-    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+    const changeTheme = (newTheme) => {
+        if (!THEMES[newTheme] || newTheme === currentThemeRef.current) return;
+        isUserActionRef.current = true;
+        setCurrentTheme(newTheme);
+    };
+
+    const toggleDarkMode = () => {
+        isUserActionRef.current = true;
+        setIsDarkMode(prev => !prev);
+    };
     
     return (
-        <ThemeContext.Provider value={{ currentTheme, setTheme: setCurrentTheme, isDarkMode, toggleDarkMode, themes: THEMES }}>
+        <ThemeContext.Provider value={{ currentTheme, setTheme: changeTheme, isDarkMode, toggleDarkMode, themes: THEMES }}>
             {children}
         </ThemeContext.Provider>
     );
