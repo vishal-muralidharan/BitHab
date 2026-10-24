@@ -23,6 +23,9 @@ Premature coding without prior audit frequently causes:
 * Theme regressions across the 6 themes (`default`, `ocean`, `sunset`, `forest`, `dark`, `minimal`) or dark/light modes.
 * Broken responsive layouts on mobile devices when body classes or media queries are overlooked.
 * Monolithic, tangled commits that violate atomic development standards.
+* Platform inconsistencies or file corruption from using ad-hoc shell commands like `sed`.
+
+> **Zero `sed` Mandate:** Never use `sed` commands for code edits, build variable replacements, or test hacks. All edits must use dedicated IDE editing tools (`replace_file_content` / `multi_replace_file_content`), environment variables must rely on native Vite (`import.meta.env`) or Node.js (`fs`), and builds must compile via `npm run build`.
 
 ---
 
@@ -147,4 +150,5 @@ Before editing any code, verify:
 [ ] 5. Verified mobile viewport boundaries, body classes, and bottom navigation clearance.
 [ ] 6. Formulated an atomic, step-by-step plan with verification checks and commit messages.
 [ ] 7. Reused canonical test user accounts (test@bithab.com) for any browser testing or session audits.
+[ ] 8. Verified zero sed commands in the execution plan—all file modifications planned with dedicated editing tools.
 ```

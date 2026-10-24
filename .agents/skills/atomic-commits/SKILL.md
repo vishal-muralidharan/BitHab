@@ -52,6 +52,7 @@ Before staging files, verify that the changes are sound:
 2. **Run Build:** Execute `npm run build` (`vite build`). Ensure the production bundle builds without errors.
 3. **Review Diff:** Run `git diff` to ensure only intentional modifications are present.
 4. **Check Status:** Run `git status` to see exact modified and untracked files.
+5. **Zero `sed` Verification:** Confirm zero `sed` commands were used—all modifications must be produced via dedicated editing tools or platform-agnostic scripts.
 
 ### Step 3: Granular Staging
 Stage **only** the files relevant to the specific functional increment:
@@ -131,3 +132,4 @@ Only after the commit is recorded and the workspace status for this unit is clea
 * ❌ **Multi-Line Commit Messages:** Creating commit messages with multi-line bodies, bullet points, or markdown.
 * ❌ **Unverified Commits:** Committing code before running `npm run lint` and `npm run build`.
 * ❌ **Vague Commit Messages:** Using messages like `updates`, `fix bug`, `wip`, or `changes`.
+* ❌ **Using `sed` for Edits or Builds:** Modifying files, altering test configs, or injecting build variables with shell `sed` commands.

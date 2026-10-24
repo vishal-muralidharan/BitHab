@@ -20,7 +20,8 @@ Every development task in this repository must strictly adhere to the following 
   1. **Lint on Every Change:** Run `npm run lint` (`oxlint`). Code must produce **0 errors**. Resolve all unused variables and missing hook dependencies before committing.
   2. **Production Build Validation:** Run `npm run build` (`vite build`). Ensure the application bundles cleanly without compilation failures.
   3. **Runtime Stability:** Verify that changes introduce zero unhandled exceptions or console errors in the browser.
-* **Prohibited:** Committing code that fails `npm run lint` or breaks `npm run build`.
+  4. **Zero `sed` Policy:** Never use `sed` commands for building, modifying files, injecting environment variables, or testing workarounds. All code modifications must use dedicated file editing tools (`replace_file_content` / `multi_replace_file_content`), environment variables must use native Vite support (`import.meta.env`) or standard Node.js APIs (`fs`), and builds must compile cleanly without shell-level string substitution hacks.
+* **Prohibited:** Committing code that fails `npm run lint` or breaks `npm run build`, and using `sed` commands for file editing, building, or testing.
 
 ### Rule 3: Architecture & Directory Placement
 * **Skill Reference:** [.agents/skills/review-directory-structure/SKILL.md](file:///.agents/skills/review-directory-structure/SKILL.md)
@@ -203,3 +204,4 @@ Every commit message must follow the Semantic Commit format on **one line only**
 13. **Never obscure mobile content behind BottomNav:** Always ensure adequate bottom padding on mobile page views.
 14. **Never conclude a feature without skill & documentation synchronization:** Every newly introduced component, context, or stylesheet must be audited and registered across `.agents/skills/` and `README.md`.
 15. **Always reuse canonical test users:** Never register new throwaway user accounts during manual or browser testing. Always reuse the canonical test accounts (`test@bithab.com` / `Password123!`) defined in [.agents/skills/targeted-module-testing/SKILL.md](file:///.agents/skills/targeted-module-testing/SKILL.md).
+16. **Never use sed commands:** Avoid `sed` commands completely across development, testing, and building. Never use `sed` to edit files, inject environment variables, or alter configs. Always use dedicated IDE editing tools or native Node.js/Vite environment handling (`import.meta.env`).

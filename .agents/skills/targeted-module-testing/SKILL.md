@@ -18,6 +18,7 @@ This skill defines the testing, static analysis, build verification, and browser
 2. **Zero Errors Mandate:** Commits are only permitted when `npm run lint` reports **0 errors** and `npm run build` compiles completely.
 3. **Live Browser Verification:** For user-facing features, route transitions, and interactive controls, use browser testing to verify DOM states, theme toggles, and console stability.
 4. **Clean Workspace Policy:** Never commit ephemeral build artifacts in `dist/` or transient screenshots.
+5. **Zero `sed` Command Policy:** Avoid `sed` commands completely. Never use `sed` to edit files, rewrite configs, alter test files, or inject build-time variables. Source files must only be edited with dedicated tools (`replace_file_content` / `multi_replace_file_content`), environment variables must be handled via native platform tools (`import.meta.env` or Node.js `fs`), and builds must compile directly via `npm run build` (`vite build`).
 
 ---
 
@@ -108,6 +109,7 @@ Before considering module verification complete:
 [ ] 4. Reusable canonical test user (test@bithab.com) used for all live browser verification.
 [ ] 5. No stray console.error statements or unhandled promise rejections in browser.
 [ ] 6. Clean workspace state verified via git status.
-[ ] 7. Ready for atomic commit via atomic-commits skill.
+[ ] 7. Zero sed commands used during testing, building, or file manipulation.
+[ ] 8. Ready for atomic commit via atomic-commits skill.
 ```
 
