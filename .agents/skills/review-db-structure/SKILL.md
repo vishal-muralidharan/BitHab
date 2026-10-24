@@ -30,6 +30,9 @@ Firestore Root
     ├── focusData: FocusData                # Focus room subjects, tasks, and target duration
     ├── theme: string                       # Active theme ('default', 'ocean', etc.)
     ├── isDarkMode: boolean                 # Dark mode toggle preference
+    ├── agreed_to_terms: boolean            # User consent flag for terms & privacy policies
+    ├── agreed_to_terms_at: Timestamp       # Server timestamp of consent acceptance
+    ├── terms_version: string               # Version string of accepted terms (e.g. '2026-10-24')
     │
     ├── /notes/{dateStr}                    # Daily notes subcollection (legacy & dual-write compatibility)
     │   ├── content / note: string          # Note text

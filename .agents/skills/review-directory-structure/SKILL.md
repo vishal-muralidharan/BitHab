@@ -33,8 +33,15 @@ The BitHab repository is organized into distinct layers separating client-side R
 ├── config/                           # Build-time deployment configurations
 │   ├── firebase-config.js            # Legacy client config fallback
 │   └── generate-firebase-config.js   # Netlify Firebase credential generator & Vite bundler
+├── docs/                             # Architecture and data inventory documentation
+│   └── data-inventory.md             # Canonical Firestore collection and field map
+├── netlify/                          # Netlify Serverless Functions
+│   └── functions/
+│       └── delete-account.js         # Firebase Admin server-side account deletion
 ├── public/                           # Static assets served as-is (favicons, manifests, _redirects)
 ├── src/                              # Client-side React 19 application
+│   ├── api/                          # Frontend API integration layer
+│   │   └── user.js                   # Account deletion, data export & terms acceptance
 │   ├── assets/                       # Static media, icons, and stylesheets
 │   │   ├── css/                      # Modular Vanilla CSS stylesheets
 │   │   │   ├── style.css             # Base styles, resets, CSS variables, buttons
@@ -48,14 +55,20 @@ The BitHab repository is organized into distinct layers separating client-side R
 │   │   │   ├── schedule.css          # Activity scheduling calendar & stats
 │   │   │   ├── auth.css              # Authentication card and input layouts
 │   │   │   ├── custom-dialogs.css    # Custom confirm & prompt modal dialogs
-│   │   │   └── clock.css             # Digital clock styles
+│   │   │   ├── clock.css             # Digital clock styles
+│   │   │   └── legal.css             # Settings, DPDP, terms, and privacy styles
 │   │   └── images/                   # App logos and image assets
 │   ├── components/                   # Reusable React components
+│   │   ├── common/                   # Shared UI modals and widgets
+│   │   │   └── ConfirmModal.jsx      # Reusable accessible confirm/prompt modal
 │   │   └── layout/                   # Global shell layouts and navigation
 │   │       ├── Header.jsx            # Desktop top navigation header
 │   │       ├── BottomNav.jsx         # Mobile bottom navigation bar
 │   │       ├── MobileTopbar.jsx      # Mobile header with logo and theme toggle
-│   │       └── Layout.jsx            # Dynamic body-class manager & route shell
+│   │       ├── Layout.jsx            # Dynamic body-class manager & route shell
+│   │       ├── PublicLegalLayout.jsx # Public layout shell for legal documents
+│   │       ├── LegalFooter.jsx       # Subtle legal copyright and links footer
+│   │       └── TermsAgreementModal.jsx # Terms consent overlay dialog
 │   ├── context/                      # Global React Context state providers
 │   │   ├── AuthContext.jsx           # Firebase Authentication & current user state
 │   │   ├── ThemeContext.jsx          # Multi-theme and dark/light mode state
@@ -79,6 +92,11 @@ The BitHab repository is organized into distinct layers separating client-side R
 │   │   ├── DeepFocus.jsx             # Fullscreen deep work session timer
 │   │   ├── Analytics.jsx             # 7-day focus chart & productivity metrics
 │   │   ├── Themes.jsx                # Multi-theme preview and selector
+│   │   ├── Settings.jsx              # Account, appearance, legal links & danger zone
+│   │   ├── DPDP.jsx                  # DPDP data rights, export & grievance redressal
+│   │   ├── Terms.jsx                 # Terms of Service legal document
+│   │   ├── Privacy.jsx               # Privacy Policy legal document
+│   │   ├── TermsAndConditions.jsx    # General Terms and Conditions document
 │   │   ├── Login.jsx                 # Email/password & Google OAuth login
 │   │   └── Register.jsx              # New user registration & onboarding
 │   ├── App.jsx                       # React Router configuration & provider nesting
@@ -86,6 +104,7 @@ The BitHab repository is organized into distinct layers separating client-side R
 ├── .gitignore                        # Git ignore patterns
 ├── .oxlintrc.json                    # Oxlint static analysis configuration
 ├── AGENTS.md                         # Agent development guidelines and pipeline rules
+├── firestore.rules                   # Firestore security rules and access control
 ├── index.html                        # Application HTML entry point
 ├── netlify.toml                      # Netlify build command, publish directory, and redirect config
 ├── package.json                      # Project dependencies and script definitions
