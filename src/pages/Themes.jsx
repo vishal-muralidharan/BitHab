@@ -5,10 +5,7 @@ export default function Themes() {
 
   return (
     <div className="page-content">
-      <div className="page-header">
-        <h1>Themes</h1>
-        <p>Customize your BitHab experience with various themes</p>
-      </div>
+      <h1 className="visually-hidden">Themes</h1>
       
       <div className="current-theme-section">
         <h2>Current Theme</h2>
