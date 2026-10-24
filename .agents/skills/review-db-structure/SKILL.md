@@ -84,7 +84,7 @@ interface Goal {
 }
 ```
 
-### 3. `Reminder` Schema
+### 3. `Reminder` Schema & Datetime State Evaluation
 ```typescript
 interface Reminder {
   id: string;                               // Unique reminder ID
@@ -93,6 +93,13 @@ interface Reminder {
   time: string;                             // Target time "HH:mm" (24-hour)
   completed: boolean;                       // Completion toggle
 }
+
+// Datetime State Calculation:
+// const isReminderActive = (dateStr, timeStr) => {
+//   const reminderDateTime = new Date(`${dateStr}T${timeStr}`);
+//   return !isNaN(reminderDateTime.getTime()) && reminderDateTime > new Date();
+// };
+// Quick Selectors: "Today" (offset 0), "Tomorrow" (offset +1), "Next Week" (offset +7).
 ```
 
 ### 4. `Note` Schema (With Legacy Object & Subcollection Compatibility)
@@ -139,7 +146,7 @@ interface FocusData {
 }
 ```
 
-### 7. Activity Daily Log Schema (With Map & Subcollection Dual-Compatibility)
+### 7. Activity Daily Log Schema & Inline Logging Mechanism
 ```typescript
 // On root user doc:
 // logs: Record<DateStr, Array<string>>    // Map of "YYYY-MM-DD" to list of logged activity/subactivity IDs
@@ -150,6 +157,15 @@ interface ActivityDailyLogDoc {
   completed?: boolean;                      // True if day marked completed
   updatedAt?: string;                       // ISOString
 }
+
+// Inline Activity Logging Data Flow:
+// 1. Dashboard displays inline activity pills for selectedDateStr without redirecting to a modal.
+// 2. toggleActivityLog(subActivityId, selectedDateStr):
+//    - Toggles existence of subActivityId in logs[selectedDateStr].
+//    - Immediately writes updated logs map to doc(db, 'users', uid).
+// 3. Calendar Day Cell Sync:
+//    - Calendar extracts logged IDs for each visible day cell.
+//    - Matches IDs against subactivity color catalog to render real-time color dots.
 ```
 
 ---

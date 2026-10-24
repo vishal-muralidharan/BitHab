@@ -32,10 +32,12 @@ Whenever a feature introduces new code, consult this matrix to identify which sk
 | :--- | :--- | :--- |
 | **New Route Page or Layout Element** | `review-directory-structure`<br>`repo-search` | `README.md` (Feature Architecture)<br>`AGENTS.md` |
 | **New Context Provider or State Hook** | `review-directory-structure`<br>`repo-search` | `README.md`<br>`AGENTS.md` |
-| **New CSS Custom Property or Theme Palette** | `maintain-design-system`<br>`review-responsive-design` | `src/assets/css/themes.css`<br>`README.md` |
+| **New CSS Custom Property, Theme Palette, or Instant Switching** | `maintain-design-system`<br>`review-responsive-design` | `src/assets/css/themes.css`<br>`README.md` |
+| **Dashboard Stretch, Baseline Alignment, or Card Spacing** | `maintain-design-system`<br>`review-responsive-design` | `src/assets/css/dashboard.css`<br>`AGENTS.md` (Rule 6) |
+| **Inline Activity Logging, Reminders Status, or Firestore Model** | `review-db-structure`<br>`maintain-design-system` | `AGENTS.md` (Rule 5)<br>`README.md` |
 | **New Firestore Field or Document Schema** | `review-db-structure`<br>`audit-and-planning` | `AGENTS.md` (Rule 5)<br>`README.md` |
 | **New Body Class or Route Mode** | `maintain-design-system`<br>`review-responsive-design` | `AGENTS.md` (Rule 6)<br>`src/components/layout/Layout.jsx` |
-| **New Tooling or Script Command** | `targeted-module-testing`<br>`atomic-commits` | `package.json`<br>`AGENTS.md` |
+| **New Tooling, Test Fixtures, or Script Command (Zero `sed` Policy)** | `targeted-module-testing`<br>`atomic-commits` | `package.json`<br>`AGENTS.md` |
 
 ---
 
@@ -86,19 +88,22 @@ After completing feature code and verification checks, execute this 6-phase audi
 
 ### Phase 2: Synchronize `maintain-design-system`
 1. **Design Tokens:** If new CSS custom properties were added to `style.css` or `themes.css`, register them in the specification matrix.
-2. **Theme Parity:** Ensure contrast rules account for any new UI components across all 6 themes.
+2. **Theme Parity & Instant Switching:** Ensure contrast rules account for any new UI components across all 6 themes and document synchronous attribute toggles (`data-theme`, `data-mode`) for zero flicker.
+3. **Card Spacing & Baseline Alignment:** Confirm card header margins (`margin-bottom: 0.25rem; padding-bottom: 0.35rem;`), centered icon button rules (`display: flex; align-items: center; justify-content: center;`), and form separator badge structures.
 
 ### Phase 3: Synchronize `review-responsive-design`
-1. **Navigation & Clearance:** If new fixed buttons or bottom elements were added, verify that mobile bottom navigation clearance (`padding-bottom: 5rem`) is preserved.
-2. **Touch Targets:** Verify that new interactive elements maintain 44x44px touch targets.
+1. **Navigation & Clearance:** If new fixed buttons or bottom elements were added, verify that mobile bottom navigation clearance (`padding-bottom: 5rem` / `100px`) is preserved.
+2. **Desktop Grid Stretch:** Verify desktop 3-column layout ratios (`1fr 1.5fr 1fr`), stretch height (`min-height: calc(100vh - 90px)`), and baseline bottom alignment.
+3. **Touch Targets & Fonts:** Verify that new interactive elements maintain 44x44px touch targets and form inputs enforce 16px font-size to prevent iOS Safari auto-zoom.
 
 ### Phase 4: Synchronize `review-db-structure`
 1. **Canonical Schema:** Register all new Firestore fields, arrays, or subcollections with types and default values.
 2. **Backward Compatibility:** Confirm that legacy data shapes continue to be supported.
+3. **Data Flows & Listeners:** Document real-time state synchronization (such as inline activity logs mapping to calendar dots, or active vs expired datetime comparisons).
 
 ### Phase 5: Synchronize `repo-search` & `audit-and-planning`
 1. **Search Scopes:** Ensure new directories or features are included in the search scope matrix.
-2. **Pre-Implementation Checklists:** Update checklist questions to guard against recurring patterns.
+2. **Pre-Implementation Checklists:** Update checklist questions to guard against recurring patterns and enforce the zero `sed` command policy.
 
 ### Phase 6: Synchronize `README.md` & `AGENTS.md`
 1. **README Feature Map:** Document new capabilities in the appropriate subsection of `README.md`.

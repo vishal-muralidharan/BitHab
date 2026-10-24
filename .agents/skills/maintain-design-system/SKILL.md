@@ -17,7 +17,7 @@ This skill defines the mandatory design principles, styling standards, and compo
 
 BitHab is designed as an elegant, distraction-free productivity and habit tracking sanctuary. The visual identity emphasizes:
 
-* **Sleek Multi-Theme Aesthetic:** 6 curated themes (`default`, `ocean`, `sunset`, `forest`, `dark`, `minimal`) with instant dark/light mode switching.
+* **Sleek Multi-Theme Aesthetic:** 6 curated themes (`oceanic-depths`, `evergreen-forest`, `cyberpunk-neon`, `monochrome-minimalist`, `sunrise-coral`, `cherry-blossom`) with instant dark/light mode switching.
 * **Pure Vanilla CSS Architecture:** Zero reliance on heavy CSS utility frameworks like Tailwind. Total control through clean, modular stylesheets in `src/assets/css/`.
 * **Token Discipline via CSS Custom Properties:** Every color, background, text shade, and border flows through CSS variables defined on `:root` and theme selectors.
 * **Ergonomic Surfaces & Micro-Interactions:** Smooth hover transitions, active button states, card elevators, and calendar dot indicators.
@@ -30,23 +30,23 @@ BitHab is designed as an elegant, distraction-free productivity and habit tracki
 
 | CSS Token | Description | Light Mode Example | Dark Mode Example |
 | :--- | :--- | :--- | :--- |
-| `--primary-color` | Primary accent / brand color | `#4f46e5` (Theme dependent) | `#6366f1` / `#818cf8` |
+| `--primary-color` | Primary accent / brand color | `#0969DA` (Theme dependent) | `#58A6FF` (Theme dependent) |
 | `--primary-hover` | Interactive hover accent | Darker primary shade | Brighter primary shade |
-| `--primary-color-alpha` | Transparent primary accent tint | `rgba(79, 70, 229, 0.1)` | `rgba(99, 102, 241, 0.15)` |
-| `--bg-primary` | Main page canvas background | `#f8fafc` / `#ffffff` | `#0f172a` / `#090d16` |
+| `--primary-color-alpha` | Transparent primary accent tint | `rgba(9, 105, 218, 0.1)` | `rgba(88, 166, 255, 0.15)` |
+| `--bg-primary` | Main page canvas background | `#F0F6FC` / `#ffffff` | `#0A0E14` / `#090d16` |
 | `--bg-secondary` | Section or panel background | `#f1f5f9` | `#1e293b` |
-| `--surface-color` | Card, modal & sheet container | `#ffffff` | `#1e293b` / `#161e2e` |
-| `--text-primary` | Main readable headings & body | `#0f172a` | `#f8fafc` |
-| `--text-secondary` | Muted labels, subtitles & dates | `#64748b` | `#94a3b8` |
-| `--border-color` | Borders, dividers & card outlines | `#e2e8f0` | `rgba(255, 255, 255, 0.1)` |
+| `--surface-color` | Card, modal & sheet container | `#E6F0FA` / `#ffffff` | `#131920` / `#161e2e` |
+| `--text-primary` | Main readable headings & body | `#0D3A5F` / `#0f172a` | `#B8D4F1` / `#f8fafc` |
+| `--text-secondary` | Muted labels, subtitles & dates | `#4E7BA3` / `#64748b` | `#7A99B8` / `#94a3b8` |
+| `--border-color` | Borders, dividers & card outlines | `#C5D9ED` / `#e2e8f0` | `#2D3845` / `rgba(255, 255, 255, 0.1)` |
 
-### The 6 Curated BitHab Themes (`src/assets/css/themes.css`)
-1. **Default:** Balanced Indigo & Slate palette for general productivity.
-2. **Ocean:** Calming Cyan & Deep Blue gradient tones for deep work.
-3. **Sunset:** Warm Coral, Peach, and Amber twilight hues.
-4. **Forest:** Restful Mint, Sage, and Emerald organic greens.
-5. **Dark:** High-contrast Midnight Charcoal with Gold & Emerald highlights.
-6. **Minimal:** Subtle, distraction-free neutral monochrome.
+### The 6 Curated BitHab Themes (`src/context/ThemeContext.jsx` & `src/assets/css/themes.css`)
+1. **Oceanic Depths (`oceanic-depths`):** Calming Cyan & Deep Blue tones for focus.
+2. **Evergreen Forest (`evergreen-forest`):** Restful Mint, Sage, and Emerald organic greens.
+3. **Cyberpunk Neon (`cyberpunk-neon`):** Vivid Violet, Purple, and Neon accents.
+4. **Monochrome (`monochrome-minimalist`):** Subtle, distraction-free neutral grayscale.
+5. **Sunrise Coral (`sunrise-coral`):** Warm Coral, Peach, and Amber twilight hues.
+6. **Cherry Blossom (`cherry-blossom`):** Vibrant Rose, Blossom Pink, and Magenta accents.
 
 ---
 
@@ -85,6 +85,52 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
 * Transient feedback (e.g., "Copied!", "Saved") or loading states must never displace adjacent cards or layout bars.
 * Reserve minimum widths or use fixed toast alerts.
 
+### Rule 6: Instant Zero-Flicker Theme Switching
+* When switching themes or toggling dark mode in `ThemeContext.jsx`:
+  - **Synchronous Attribute Update:** Immediately apply `document.documentElement.setAttribute('data-theme', theme)` and `document.documentElement.setAttribute('data-mode', isDarkMode ? 'dark' : 'light')`.
+  - **Synchronous Storage:** Write to `localStorage` immediately so the user perceives 0ms instant transition with zero screen flicker or layout repaints.
+  - **Asynchronous Remote Sync:** Persist preference to Firestore in the background (`/users/{userId}`) without blocking client UI execution.
+
+### Rule 7: Dashboard Stretch & Column Baseline Alignment
+* On the home dashboard (`src/assets/css/dashboard.css`), desktop viewports must stretch to utilize bottom space and align column baselines:
+  - `.main-layout` specifies `min-height: calc(100vh - 90px); align-items: stretch; display: grid; grid-template-columns: 1fr 1.5fr 1fr;`.
+  - `.left-column`, `.center-column`, and `.right-column` specify `height: 100%; min-height: 0; display: flex; flex-direction: column;`.
+  - Card components (`.activities-component`, `.notes-component`, `.calendar-view`, `.goals-component`, `.reminders-component`) specify `flex: 1 1 0; min-height: 0; max-height: none;`.
+  - **Baseline Rule:** The bottom of Left Column (Notes card), Center Column (Calendar card), and Right Column (Reminders card) must end at the **exact same pixel baseline** (`y` position) with zero bottom dead space.
+
+### Rule 8: Card Header-to-Content Compact Spacing
+* Excessive whitespace between card headers and their first list item diminishes scannability.
+* All dashboard cards must maintain tight vertical proportions:
+  - `.section-header` must enforce `margin-bottom: 0.25rem; padding-bottom: 0.35rem;`.
+  - List containers and textareas must zero out excessive top margins: `margin: 0.25rem 0 0; padding: 0;`.
+  - Never allow cumulative gaps (> 30px) between card headers and first items.
+
+### Rule 9: Centered Navigation Arrows & Icon Buttons
+* All standalone icon and arrow buttons (`.calendar-nav-btn`, `.show-all-btn`, modal close buttons, carousel controls) must enforce:
+  ```css
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  ```
+* Never rely on default inline button line-heights or asymmetric padding which leaves glyphs (e.g., `‹`, `›`, `✕`, SVG icons) visually off-center.
+
+### Rule 10: Form Divider Badges (Zero Line Collisions)
+* When implementing "OR" or section dividers in auth cards or modals:
+  - Parent `.separator` has `position: relative; text-align: center; margin: 1rem 0;`.
+  - The horizontal rule `::before` pseudo-element has `position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--border-color);`.
+  - The badge (`<span>OR</span>`): `position: relative; z-index: 1; background: var(--bg-primary); padding: 0 0.5rem; color: var(--text-secondary); font-size: 0.75rem;`.
+  - Ensures the horizontal rule never cuts or bleeds through the label text.
+
+### Rule 11: Date & Typography Formatting (No All-Caps)
+* Top-level headers and dashboard date displays must present human-friendly, properly capitalized dates (e.g., "Saturday, October 24, 2026" or "October 24, 2026, Saturday").
+* Avoid shouty all-caps text like "TODAY" or `text-transform: uppercase` on main headings unless explicitly styling tiny metadata badges.
+
+### Rule 12: Inline Activity & Reminder Status Aesthetics
+* **Inline Activity Logging:** Subactivity selection pills on the dashboard (`.subactivity-pills .subactivity-pill`) must show distinct inactive vs logged states with real-time colored dot indicators and instant calendar dot synchronization.
+* **Reminder State Styling:**
+  - Active reminders: Clean card surface with subtle accent left border (`border-left: 3px solid var(--primary-color)` or `#10b981`).
+  - Expired reminders: Muted red left border (`border-left: 3px solid #ef4444`), dimmed opacity (`0.75`), and an "Expired" status badge.
+
 ---
 
 ## 4. Pre-Commit Design System Checklist
@@ -93,8 +139,12 @@ Before committing any UI or styling changes, verify:
 ```text
 [ ] 1. No hardcoded hex values in JSX or page stylesheets without CSS custom property bindings.
 [ ] 2. Component verified across both Light mode and Dark mode.
-[ ] 3. Component verified across multiple themes (e.g. Default, Ocean, Dark).
+[ ] 3. Component verified across multiple themes (e.g. oceanic-depths, evergreen-forest, cyberpunk-neon).
 [ ] 4. Layout coordinates with standard body classes (index-page, themes-page, focus-mode).
 [ ] 5. Touch targets meet minimum 44x44px ergonomic dimensions on mobile.
 [ ] 6. Form inputs and buttons use appropriate typography and hover transitions.
+[ ] 7. Icon buttons and arrow controls enforce display: flex; align-items: center; justify-content: center;.
+[ ] 8. Dashboard column cards end on the exact same bottom baseline with zero dead space.
+[ ] 9. Card headers maintain compact spacing (margin-bottom: 0.25rem; padding-bottom: 0.35rem;).
+[ ] 10. Form dividers use z-index badge layering to avoid line bleed-through.
 ```

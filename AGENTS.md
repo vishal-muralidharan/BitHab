@@ -39,12 +39,13 @@ Every development task in this repository must strictly adhere to the following 
 ### Rule 6: Responsive Mobile Design & Dual-Nav Architecture
 * **Skill Reference:** [.agents/skills/review-responsive-design/SKILL.md](file:///.agents/skills/review-responsive-design/SKILL.md)
 * **Rule:** Every UI component, page, modal, or form must be verified for responsive safety across mobile and desktop screens:
-  1. **Dual-Nav Reflow:** Desktop viewports (>= 768px) display top `Header.jsx`; mobile viewports (< 768px) display `MobileTopbar.jsx` and fixed `BottomNav.jsx`.
+  1. **Dual-Nav Reflow:** Desktop viewports (>= 768px) display top `Header.jsx` (90px height); mobile viewports (< 768px) display `MobileTopbar.jsx` and fixed `BottomNav.jsx`.
   2. **Focus Mode Bypassing:** Full-screen focus routes (`/focus`, `/deep-focus`, `/analytics`) must bypass default navigation and expand to 100vh via the `focus-mode` body class.
   3. **Bottom Navigation Clearance:** Mobile page containers must reserve bottom padding (`padding-bottom: 5rem`) so content is never obscured by `BottomNav.jsx`.
   4. **Ergonomic Touch Targets:** Minimum 44x44px touch targets on mobile interactive controls.
   5. **iOS Safari Auto-Zoom Prevention:** All form inputs must enforce at least `16px` font-size on mobile.
   6. **Zero Layout Shift:** Status transitions (e.g., "Copied!", "Saved") must use fixed button widths or non-displacing toast alerts.
+  7. **Desktop Column Baseline Stretch:** Dashboard 3-column layout must stretch to utilize bottom space (`min-height: calc(100vh - 90px)`) with all column cards terminating on the exact same bottom baseline.
 
 ### Rule 7: Pre-Implementation Audit, Search & Structured Planning
 * **Skill Reference:** [.agents/skills/audit-and-planning/SKILL.md](file:///.agents/skills/audit-and-planning/SKILL.md) & [.agents/skills/repo-search/SKILL.md](file:///.agents/skills/repo-search/SKILL.md)
@@ -55,8 +56,9 @@ Every development task in this repository must strictly adhere to the following 
 * **Skill Reference:** [.agents/skills/maintain-design-system/SKILL.md](file:///.agents/skills/maintain-design-system/SKILL.md)
 * **Rule:** Whenever creating new components or modifying stylesheets, strictly preserve BitHab's Vanilla CSS Design System:
   1. **Zero Hardcoded Colors:** All color values must consume CSS custom properties (`var(--primary-color)`, `var(--bg-primary)`, `var(--surface-color)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--border-color)`). Never hardcode raw hex values in JSX styles or CSS rules.
-  2. **Multi-Theme Parity:** Every UI element must maintain accessible contrast across all 6 themes (`default`, `ocean`, `sunset`, `forest`, `dark`, `minimal`) and in both Light (`[data-mode="light"]`) and Dark (`[data-mode="dark"]`) modes.
-  3. **Body Class Coordination:** Coordinate layout rules with standard body classes (`index-page`, `themes-page`, `focus-mode`, `auth-page`).
+  2. **Multi-Theme Parity:** Every UI element must maintain accessible contrast across all 6 themes (`oceanic-depths`, `evergreen-forest`, `cyberpunk-neon`, `monochrome-minimalist`, `sunrise-coral`, `cherry-blossom`) and in both Light (`[data-mode="light"]`) and Dark (`[data-mode="dark"]`) modes.
+  3. **Instant Zero-Flicker Switching:** Theme and dark/light mode toggles must apply synchronous DOM attribute updates (`data-theme`, `data-mode`) and `localStorage` writes before background Firestore synchronization.
+  4. **Body Class Coordination:** Coordinate layout rules with standard body classes (`index-page`, `themes-page`, `focus-mode`, `auth-page`).
 
 ### Rule 9: Continuous Skill & Documentation Synchronization
 * **Skill Reference:** [.agents/skills/sync-skills-and-docs/SKILL.md](file:///.agents/skills/sync-skills-and-docs/SKILL.md)

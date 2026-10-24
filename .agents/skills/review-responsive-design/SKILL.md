@@ -56,9 +56,9 @@ In BitHab, navigation elements adapt based on screen width and route:
 │ Body class: .focus-mode                                          │
 │ - Bypasses Header, BottomNav, and MobileTopbar                   │
 │ - Dedicated top focus header (.focus-header) with Back/Analytics │
-│ - Header height (70px desktop, 72px mobile) and padding          │
-│   (0.75rem 1.5rem) match standard Header to guarantee zero logo  │
-│   displacement across page transitions                           │
+│ - Header height (90px desktop, 72px mobile) and padding          │
+│   (0.75rem 1.5rem) match standard Header.jsx to guarantee zero   │
+│   logo displacement or jumping across page transitions           │
 │ - Expands layout to 100vh with no extraneous scroll              │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -79,9 +79,20 @@ BitHab stylesheets enforce responsive reflow across three main device tiers:
 
 | Breakpoint | Viewport Width | Navigation & Shell | Content Layout |
 | :--- | :--- | :--- | :--- |
-| **Mobile** | `< 768px` | `MobileTopbar` + `BottomNav` | Single-column cards, full-width inputs, stacked calendar navigation |
+| **Mobile** | `< 768px` | `MobileTopbar` + `BottomNav` | Single-column cards, full-width inputs, stacked calendar navigation, `padding-bottom: 100px` for bottom bar clearance |
 | **Tablet** | `768px - 1024px` | Desktop `Header` | 2-column dashboard grids, inline schedule controls |
-| **Desktop** | `> 1024px` | Desktop `Header` | 3-column dashboard grid, 3-column focus room (`Subjects` \| `Clock` \| `Tasks`) |
+| **Desktop** | `> 1024px` | Desktop `Header` | 3-column dashboard grid (`1fr 1.5fr 1fr`), 3-column focus room (`Subjects` \| `Clock` \| `Tasks`) |
+
+### Desktop Dashboard Layout & Bottom Baseline Parity
+* On desktop viewports (`>= 1024px`), the dashboard (`.main-layout`) utilizes a 3-column CSS grid:
+  ```css
+  grid-template-columns: 1fr 1.5fr 1fr;
+  min-height: calc(100vh - 90px);
+  align-items: stretch;
+  ```
+* All three column containers (`.left-column`, `.center-column`, `.right-column`) enforce `height: 100%; min-height: 0; display: flex; flex-direction: column;`.
+* Contained cards (`.activities-component`, `.notes-component`, `.calendar-view`, `.goals-component`, `.reminders-component`) specify `flex: 1 1 0; min-height: 0; max-height: none;`.
+* **Zero Dead Space Rule:** The bottom of Left Column (Notes card), Center Column (Calendar view card), and Right Column (Reminders card) must terminate on the exact same horizontal baseline, completely utilizing bottom viewport real estate without awkward dead voids.
 
 ---
 
@@ -128,10 +139,11 @@ When rendering modal dialogs (`custom-dialogs.css`, `pattern-modal`, `date-modal
 Before committing any UI code, verify:
 ```text
 [ ] 1. Mobile-First Layout: Page renders cleanly on mobile (< 768px) without horizontal scrollbar.
-[ ] 2. Dual-Nav Verification: Header renders on desktop, MobileTopbar + BottomNav render on mobile.
-[ ] 3. Focus Route Bypassing: /focus, /deep-focus, and /analytics correctly apply focus-mode and expand cleanly.
-[ ] 4. Bottom Clearance: Page content has adequate bottom padding so elements aren't hidden behind BottomNav.
-[ ] 5. Touch Targets: Interactive buttons and calendar cells meet minimum 44x44px hit dimensions.
-[ ] 6. iOS 16px Font Rule: All form inputs use at least 16px font-size to prevent auto-zooming.
-[ ] 7. Modals Bounded: Modals and overlays enforce max-height and internal scrolling.
+[ ] 2. Dual-Nav Verification: Header renders on desktop (90px height), MobileTopbar + BottomNav render on mobile.
+[ ] 3. Focus Route Bypassing: /focus, /deep-focus, and /analytics correctly apply focus-mode and expand cleanly with zero logo jump.
+[ ] 4. Bottom Clearance: Mobile page content has adequate bottom clearance (padding-bottom: 5rem / 100px) so elements aren't hidden behind BottomNav.
+[ ] 5. Desktop Grid Stretch: Dashboard 3-column layout stretches to min-height: calc(100vh - 90px) and aligns bottom card baselines.
+[ ] 6. Touch Targets: Interactive buttons, icon arrows, and calendar cells meet minimum 44x44px hit dimensions.
+[ ] 7. iOS 16px Font Rule: All form inputs use at least 16px font-size to prevent auto-zooming.
+[ ] 8. Modals Bounded: Modals and overlays enforce max-height and internal scrolling.
 ```

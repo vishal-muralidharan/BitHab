@@ -20,7 +20,7 @@ This skill defines the mandatory pre-implementation workflow for the **BitHab** 
 Premature coding without prior audit frequently causes:
 * Duplicate state logic when contexts in `src/context/` already manage the domain data.
 * Regressions in Firestore data models (e.g. breaking legacy `goals` or `notes` saved by other versions).
-* Theme regressions across the 6 themes (`default`, `ocean`, `sunset`, `forest`, `dark`, `minimal`) or dark/light modes.
+* Theme regressions across the 6 themes (`oceanic-depths`, `evergreen-forest`, `cyberpunk-neon`, `monochrome-minimalist`, `sunrise-coral`, `cherry-blossom`) or dark/light modes.
 * Broken responsive layouts on mobile devices when body classes or media queries are overlooked.
 * Monolithic, tangled commits that violate atomic development standards.
 * Platform inconsistencies or file corruption from using ad-hoc shell commands like `sed`.
