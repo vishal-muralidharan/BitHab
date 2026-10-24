@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActivities } from '../context/ActivityContext';
 import { useGoals } from '../context/GoalContext';
@@ -35,30 +35,77 @@ export default function Dashboard() {
     setCurrentCalendarDate(new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 1));
   };
 
-  const handleDateClick = (dateStr) => {
+  const handleDateClick = async (dateStr) => {
+    if (isEditingNote && noteDraft) {
+      if (currentDailyNote) {
+        if (noteDraft !== currentDailyNote.content) {
+          updateNote(currentDailyNote.id, { content: noteDraft });
+        }
+      } else if (noteDraft.trim()) {
+        addNote(selectedDateStr, noteDraft.trim(), 'daily');
+      }
+      setIsEditingNote(false);
+    }
     setSelectedDateStr(dateStr);
     setShowLoggingSection(true);
   };
 
   // Find daily note for selectedDateStr
   const currentDailyNote = notes.find(n => n.type === 'daily' && n.date === selectedDateStr);
-  const [noteDraft, setNoteDraft] = useState(() => currentDailyNote ? currentDailyNote.content : '');
-  const [prevSelectedDate, setPrevSelectedDate] = useState(selectedDateStr);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [isEditingNote, setIsEditingNote] = useState(false);
 
-  if (prevSelectedDate !== selectedDateStr) {
-    setPrevSelectedDate(selectedDateStr);
-    setNoteDraft(currentDailyNote ? currentDailyNote.content : '');
-  }
+  // Synchronize noteDraft whenever selectedDateStr or currentDailyNote changes (unless currently typing)
+  useEffect(() => {
+    if (!isEditingNote) {
+      setNoteDraft(currentDailyNote ? currentDailyNote.content : '');
+    }
+  }, [selectedDateStr, currentDailyNote, isEditingNote]);
+
+  // Keep references for auto-save on unmount/navigation
+  const noteDraftRef = useRef(noteDraft);
+  const currentDailyNoteRef = useRef(currentDailyNote);
+  const selectedDateStrRef = useRef(selectedDateStr);
+  const isEditingNoteRef = useRef(isEditingNote);
+
+  useEffect(() => {
+    noteDraftRef.current = noteDraft;
+    currentDailyNoteRef.current = currentDailyNote;
+    selectedDateStrRef.current = selectedDateStr;
+    isEditingNoteRef.current = isEditingNote;
+  }, [noteDraft, currentDailyNote, selectedDateStr, isEditingNote]);
 
   const handleNoteBlur = async () => {
-    if (currentDailyNote) {
-      if (noteDraft !== currentDailyNote.content) {
-        await updateNote(currentDailyNote.id, { content: noteDraft });
+    setIsEditingNote(false);
+    const draft = noteDraft;
+    const existing = currentDailyNote;
+    if (existing) {
+      if (draft !== existing.content) {
+        await updateNote(existing.id, { content: draft });
       }
-    } else if (noteDraft.trim()) {
-      await addNote(selectedDateStr, noteDraft, 'daily');
+    } else if (draft && draft.trim()) {
+      await addNote(selectedDateStr, draft.trim(), 'daily');
     }
   };
+
+  // Auto-save pending note content if navigating or unmounting
+  useEffect(() => {
+    return () => {
+      const draft = noteDraftRef.current;
+      const existing = currentDailyNoteRef.current;
+      const dateStr = selectedDateStrRef.current;
+      const wasEditing = isEditingNoteRef.current;
+      if (wasEditing && draft) {
+        if (existing) {
+          if (draft !== existing.content) {
+            updateNote(existing.id, { content: draft });
+          }
+        } else if (draft.trim()) {
+          addNote(dateStr, draft.trim(), 'daily');
+        }
+      }
+    };
+  }, [addNote, updateNote]);
 
   // Format date display
   const formatDateHeader = (ds) => {
@@ -404,6 +451,7 @@ export default function Dashboard() {
                 className="notes-editor home-notes-editor"
                 placeholder="Write your note for this day"
                 value={noteDraft}
+                onFocus={() => setIsEditingNote(true)}
                 onChange={e => setNoteDraft(e.target.value)}
                 onBlur={handleNoteBlur}
                 onClick={e => e.stopPropagation()}
