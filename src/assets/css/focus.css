@@ -41,7 +41,7 @@
                 box-shadow var(--transition);
 }
 
-/* Focus Logo - Standard Alignment Link */
+/* Focus Logo - Always Light Theme Logo for light blue background */
 .focus-logo {
     display: flex;
     align-items: center;
@@ -59,6 +59,24 @@
     align-items: center;
 }
 
+.focus-header .logo .logo-light,
+.focus-header .logo-light,
+.focus-header .focus-page-logo,
+body.dark .focus-header .logo-light,
+body.dark .focus-header .focus-page-logo {
+    display: block !important;
+    opacity: 1 !important;
+    height: 40px !important;
+    width: auto !important;
+}
+
+.focus-header .logo .logo-dark,
+.focus-header .logo-dark,
+body.dark .focus-header .logo-dark {
+    display: none !important;
+    opacity: 0 !important;
+}
+
 .focus-logo .logo img,
 .focus-logo .logo-img,
 .focus-logo img {
@@ -67,7 +85,7 @@
     object-fit: contain;
 }
 
-/* Header Actions for Focus Page */
+/* Header Actions for Focus Page - Transparent with Full Black Icons */
 .focus-header .header-actions {
     display: flex;
     align-items: center;
@@ -77,10 +95,10 @@
 }
 
 .focus-header .deep-work-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
     border-radius: 0.5rem;
-    color: var(--text-primary);
+    color: #000000 !important;
     font-size: 1.1rem;
     padding: 0.5rem;
     cursor: pointer;
@@ -90,20 +108,22 @@
     justify-content: center;
     text-decoration: none;
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     min-width: 44px;
     min-height: 44px;
 }
 
 .focus-header .deep-work-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #000000 !important;
 }
 
 .focus-header .deep-work-btn i {
     font-size: 1.1rem;
-    color: var(--text-primary);
+    color: #000000 !important;
 }
 
 /* Main Focus Container */
@@ -216,24 +236,25 @@
     font-weight: 600;
 }
 
-/* Goals Column */
+/* Goals & Tasks Column */
 .goals-column,
 .tasks-column {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
-    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 1rem !important;
     padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 .goals-column h3,
 .tasks-column h3 {
-    color: var(--text-primary);
+    color: #000000 !important;
     margin: 0 0 1rem 0;
     text-align: center;
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700 !important;
 }
 
 .section-title {
@@ -241,10 +262,13 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    color: #000000 !important;
 }
 
-.section-title i {
+.section-title i,
+.section-title span {
     font-size: 1.1rem;
+    color: #000000 !important;
 }
 
 .goal-input-section {
@@ -256,18 +280,26 @@
 .goal-input,
 .task-input {
     padding: 0.75rem 3rem 0.75rem 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.55) !important;
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.3) !important;
+    color: #000000 !important;
     font-size: 1rem;
+    font-weight: 500;
     width: 100%;
     box-sizing: border-box;
 }
 
 .goal-input::placeholder,
 .task-input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(0, 0, 0, 0.55) !important;
+}
+
+.goal-input:focus,
+.task-input:focus {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-color: rgba(0, 0, 0, 0.4) !important;
+    outline: none !important;
 }
 
 .goals-list,
@@ -299,20 +331,21 @@
 
 /* Focus Session Column (Center) */
 .focus-session-column {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
-    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 1rem !important;
     padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
     text-align: center;
 }
 
 .focus-session-column h3 {
-    color: var(--text-primary);
+    color: #000000 !important;
     margin: 0 0 1rem 0;
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700 !important;
 }
 
 /* Deep Work Section */
@@ -323,13 +356,13 @@
 }
 
 .deep-work-btn {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+    border: 1px solid rgba(255, 255, 255, 0.45);
     border-radius: 8px;
-    color: rgba(255, 255, 255, 0.9);
+    color: #000000 !important;
     padding: 1rem 2rem;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -339,36 +372,40 @@
 }
 
 .deep-work-btn:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-    border-color: rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.25));
+    border-color: rgba(255, 255, 255, 0.7);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    color: #000000 !important;
 }
 
 .deep-work-icon {
     font-size: 1.2rem;
+    color: #000000 !important;
 }
 
 .deep-work-text {
     letter-spacing: 0.02em;
+    color: #000000 !important;
 }
 
 /* Subject Column */
 .subject-column {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
-    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 1rem !important;
     padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 .subject-column h3 {
-    color: var(--text-primary);
+    color: #000000 !important;
     margin: 0 0 1rem 0;
     text-align: center;
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700 !important;
 }
 
 .subject-input-section {
@@ -379,17 +416,24 @@
 
 .subject-input {
     padding: 0.75rem 3rem 0.75rem 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.55) !important;
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.3) !important;
+    color: #000000 !important;
     font-size: 1rem;
+    font-weight: 500;
     width: 100%;
     box-sizing: border-box;
 }
 
 .subject-input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(0, 0, 0, 0.55) !important;
+}
+
+.subject-input:focus {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-color: rgba(0, 0, 0, 0.4) !important;
+    outline: none !important;
 }
 
 .subjects-list,
@@ -407,48 +451,85 @@
 .focus-mode .subject-item,
 .focus-mode .goal-item,
 .focus-mode .task-item {
-    padding: 0.6rem 0.75rem;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 0.4rem;
-    color: var(--text-primary);
+    padding: 0.65rem 0.85rem;
+    background: rgba(255, 255, 255, 0.25) !important;
+    border-radius: 0.5rem;
+    color: #000000 !important;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 0.9rem;
-    border-left: 3px solid transparent;
+    font-size: 0.95rem;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
 }
 
 .focus-mode .subject-item:hover,
 .focus-mode .goal-item:hover,
 .focus-mode .task-item:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-left-color: rgba(74, 144, 226, 0.8);
+    background: rgba(255, 255, 255, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.65) !important;
     transform: translateX(2px);
-    border-color: rgba(255, 255, 255, 0.5);
+    color: #000000 !important;
+}
+
+.focus-mode .subject-item.selected {
+    background: rgba(255, 255, 255, 0.55) !important;
+    border: 1.5px solid #000000 !important;
+    font-weight: 600;
+}
+
+.focus-mode .subject-item span,
+.focus-mode .subject-item .subject-item-text,
+.focus-mode .task-item span,
+.focus-mode .task-item .task-item-text {
+    color: #000000 !important;
+}
+
+.focus-mode .subject-item .delete-item-btn,
+.focus-mode .task-item .delete-item-btn,
+.focus-mode .subject-item button,
+.focus-mode .task-item button {
+    background: none !important;
+    border: none !important;
+    color: rgba(0, 0, 0, 0.6) !important;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.focus-mode .subject-item .delete-item-btn:hover,
+.focus-mode .task-item .delete-item-btn:hover,
+.focus-mode .subject-item button:hover,
+.focus-mode .task-item button:hover {
+    color: #000000 !important;
+    opacity: 1;
 }
 
 .focus-mode .subject-item:active,
 .focus-mode .goal-item:active,
 .focus-mode .task-item:active {
     transform: translateX(1px);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.4);
 }
 
 /* Completed task styling */
 .focus-mode .task-item.completed {
     text-decoration: line-through;
-    opacity: 0.6;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
+    opacity: 0.65;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.focus-mode .task-item.completed span,
+.focus-mode .task-item.completed .task-item-text {
+    text-decoration: line-through;
+    color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .focus-mode .task-item.completed:hover {
-    opacity: 0.8;
-    background: rgba(255, 255, 255, 0.15);
+    opacity: 0.85;
+    background: rgba(255, 255, 255, 0.25) !important;
 }
 
 .focus-mode .clock-container {
@@ -470,19 +551,59 @@
     justify-content: center;
 }
 
-/* Make sure time display fits in column */
+.focus-mode .digital-clock {
+    color: #000000 !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Make sure time display fits in column - Full Black Text */
 .focus-mode .time-display {
     font-size: clamp(4rem, 10vw, 8rem); /* Responsive font size */
     text-align: center;
     width: 100%;
-    color: var(--text-primary); /* Dark color for visibility */
+    color: #000000 !important;
+    text-shadow: none !important;
+    letter-spacing: 0.05em;
 }
 
+.focus-mode .time-display .hours,
+.focus-mode .time-display .minutes,
+.focus-mode .time-display .separator {
+    color: #000000 !important;
+}
+
+.focus-mode .ampm-display,
+.focus-mode .ampm-display span,
+.focus-mode #ampm {
+    color: #000000 !important;
+    opacity: 0.9 !important;
+    font-weight: 600 !important;
+}
+
+/* Date Display - Fully Transparent Setting (No dark Saturday box) */
 .focus-mode .date-display {
-    font-size: clamp(0.8rem, 2vw, 1rem);
+    font-size: clamp(0.9rem, 2vw, 1.15rem) !important;
     text-align: center;
     width: 100%;
-    color: var(--text-secondary); /* Slightly lighter dark color */
+    color: #000000 !important;
+    font-weight: 600 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.12em !important;
+    height: auto !important;
+    padding: 0.35rem 0.5rem !important;
+    margin-top: 0.5rem !important;
+}
+
+.focus-mode .date-display span,
+.focus-mode #current-date {
+    color: #000000 !important;
+    font-weight: 600 !important;
 }
 
 /* Focus Session Panel */
@@ -566,12 +687,13 @@
 .add-icon {
     position: absolute;
     right: 0.75rem;
-    color: var(--text-primary);
+    color: #000000 !important;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 0.3rem;
     border-radius: 50%;
-    background: rgba(76, 175, 80, 0.2);
+    background: rgba(255, 255, 255, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
     width: 1.8rem;
     height: 1.8rem;
     display: flex;
@@ -580,8 +702,8 @@
 }
 
 .add-icon:hover {
-    color: white;
-    background: rgba(76, 175, 80, 0.8);
+    color: #000000 !important;
+    background: rgba(255, 255, 255, 0.8) !important;
     transform: scale(1.1);
 }
 
@@ -591,7 +713,7 @@
 
 .add-icon i {
     font-size: 1rem;
-    color: currentColor;
+    color: #000000 !important;
 }
 
 /* Modal Dialog */
@@ -1011,25 +1133,30 @@
     font-size: 1rem;
 }
 
-/* Motivational Overlay */
+/* Motivational Overlay - Full Black Text */
 .motivation-overlay {
     text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: #000000 !important;
     max-width: 600px;
     padding: 1rem;
 }
 
 .quote-text {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-style: italic;
+    font-weight: 500 !important;
     margin: 0 0 0.5rem 0;
     line-height: 1.4;
+    color: #000000 !important;
+    text-shadow: none !important;
 }
 
 .quote-author {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     margin: 0;
-    opacity: 0.7;
+    font-weight: 500 !important;
+    color: rgba(0, 0, 0, 0.8) !important;
+    opacity: 0.9;
 }
 
 /* Responsive Design */
@@ -2240,4 +2367,180 @@
     .chart-bars {
         gap: 0.5rem;
     }
+}
+
+/* ============================================================
+   FOCUS MODE HIGH-CONTRAST LIGHT BLUE & TRANSPARENT ENFORCEMENT
+   1. All text forced to full black (#000000) for maximum clarity.
+   2. All box containers maintain transparent frosted glass; no dark boxes.
+   3. Saturday / date display is completely transparent with no dark background.
+   4. Logo is strictly the light theme logo for high visibility.
+   ============================================================ */
+
+/* Force Light Logo */
+.focus-header .logo-light,
+.focus-header .focus-page-logo,
+body.dark .focus-header .logo-light,
+body.dark .focus-header .focus-page-logo,
+[data-mode="dark"] .focus-header .logo-light,
+[data-mode="dark"] .focus-header .focus-page-logo {
+    display: block !important;
+    opacity: 1 !important;
+    height: 40px !important;
+    width: auto !important;
+}
+
+.focus-header .logo-dark,
+body.dark .focus-header .logo-dark,
+[data-mode="dark"] .focus-header .logo-dark {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* Three Columns: Transparent Frosted Glass (Zero Dark Backgrounds) */
+.focus-mode .subject-column,
+.focus-mode .focus-session-column,
+.focus-mode .tasks-column {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Complete Black Text on Focus Mode */
+.focus-mode .section-title,
+.focus-mode .section-title span,
+.focus-mode .section-title i,
+.focus-mode .subject-column h3,
+.focus-mode .tasks-column h3,
+.focus-mode .focus-session-column h3 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+.focus-mode .digital-clock,
+.focus-mode .time-display,
+.focus-mode .time-display .hours,
+.focus-mode .time-display .minutes,
+.focus-mode .time-display .separator {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.focus-mode .ampm-display,
+.focus-mode .ampm-display span,
+.focus-mode #ampm {
+    color: #000000 !important;
+    opacity: 0.9 !important;
+    font-weight: 600 !important;
+}
+
+/* Date Display (e.g. SATURDAY, OCTOBER 24): Transparent, zero dark background */
+.focus-mode .date-display,
+.focus-mode #date-display {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #000000 !important;
+    font-size: clamp(0.9rem, 2vw, 1.15rem) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.12em !important;
+    height: auto !important;
+    padding: 0.35rem 0.5rem !important;
+    margin-top: 0.5rem !important;
+}
+
+.focus-mode .date-display span,
+.focus-mode #current-date {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Inputs & Placeholder */
+.focus-mode .subject-input,
+.focus-mode .task-input {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.55) !important;
+    border-radius: 0.5rem !important;
+    color: #000000 !important;
+    font-weight: 500 !important;
+}
+
+.focus-mode .subject-input::placeholder,
+.focus-mode .task-input::placeholder {
+    color: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Add Icon Button */
+.focus-mode .add-icon {
+    background: rgba(255, 255, 255, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    color: #000000 !important;
+}
+
+.focus-mode .add-icon i {
+    color: #000000 !important;
+}
+
+/* Subject & Task Items */
+.focus-mode .subject-item,
+.focus-mode .task-item {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    border-radius: 0.5rem !important;
+    color: #000000 !important;
+}
+
+.focus-mode .subject-item:hover,
+.focus-mode .task-item:hover {
+    background: rgba(255, 255, 255, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.focus-mode .subject-item.selected {
+    background: rgba(255, 255, 255, 0.55) !important;
+    border: 1.5px solid #000000 !important;
+    font-weight: 600 !important;
+}
+
+.focus-mode .subject-item span,
+.focus-mode .subject-item-text,
+.focus-mode .task-item span,
+.focus-mode .task-item-text {
+    color: #000000 !important;
+}
+
+.focus-mode .task-item input[type="checkbox"] {
+    accent-color: #000000;
+}
+
+.focus-mode .subject-item button,
+.focus-mode .task-item button,
+.focus-mode .delete-item-btn {
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.focus-mode .subject-item button:hover,
+.focus-mode .task-item button:hover,
+.focus-mode .delete-item-btn:hover {
+    color: #000000 !important;
+}
+
+/* Motivation Quote */
+.focus-mode .motivation-overlay {
+    color: #000000 !important;
+}
+
+.focus-mode .quote-text {
+    color: #000000 !important;
+    font-weight: 500 !important;
+    text-shadow: none !important;
+}
+
+.focus-mode .quote-author {
+    color: rgba(0, 0, 0, 0.8) !important;
+    font-weight: 500 !important;
 }

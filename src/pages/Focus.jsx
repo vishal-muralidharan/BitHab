@@ -143,8 +143,7 @@ export default function Focus() {
       <div className="focus-header">
         <Link to="/" className="logo-link focus-logo">
           <h1 className="logo">
-            <img src="/assets/images/logo-transparent-light.png" alt="BitHab Logo" className="logo-light" />
-            <img src="/assets/images/logo-transparent-dark.png" alt="BitHab Logo" className="logo-dark" />
+            <img src="/assets/images/logo-transparent-light.png" alt="BitHab Logo" className="logo-light focus-page-logo" />
           </h1>
         </Link>
         <div className="header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -200,23 +199,12 @@ export default function Focus() {
                       key={s} 
                       className={`subject-item ${isSelected ? 'selected' : ''}`}
                       onClick={() => setSelectedSubject(isSelected ? '' : s)}
-                      style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        padding: '10px 14px', 
-                        borderRadius: '8px', 
-                        marginBottom: '8px',
-                        cursor: 'pointer',
-                        border: isSelected ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
-                        backgroundColor: isSelected ? 'var(--primary-color-alpha)' : 'var(--bg-secondary)'
-                      }}
                     >
-                      <span style={{ color: isSelected ? 'var(--primary-color)' : 'var(--text-primary)', fontWeight: isSelected ? '600' : '400' }}>{s}</span>
+                      <span className="subject-item-text" style={{ fontWeight: isSelected ? '600' : '400' }}>{s}</span>
                       <button 
                         aria-label="Delete subject"
+                        className="delete-item-btn"
                         onClick={(e) => { e.stopPropagation(); handleDeleteSubject(s); }}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.6 }}
                       >
                         <i className="fas fa-times"></i>
                       </button>
@@ -273,36 +261,22 @@ export default function Focus() {
                   return (
                     <div 
                       key={t}
-                      className="task-item"
-                      style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        padding: '10px 14px', 
-                        borderRadius: '8px', 
-                        marginBottom: '8px',
-                        border: '1px solid var(--border-color)',
-                        backgroundColor: 'var(--bg-secondary)'
-                      }}
+                      className={`task-item ${isDone ? 'completed' : ''}`}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                      <div className="task-content" style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                         <input 
                           type="checkbox" 
                           checked={isDone} 
                           onChange={() => handleToggleTask(t)}
-                          style={{ cursor: 'pointer' }}
                         />
-                        <span style={{ 
-                          textDecoration: isDone ? 'line-through' : 'none', 
-                          color: isDone ? 'var(--text-secondary)' : 'var(--text-primary)' 
-                        }}>
+                        <span className="task-item-text">
                           {t}
                         </span>
                       </div>
                       <button 
                         aria-label="Delete task"
+                        className="delete-item-btn"
                         onClick={() => handleDeleteTask(t)}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.6 }}
                       >
                         <i className="fas fa-times"></i>
                       </button>
