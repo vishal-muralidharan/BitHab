@@ -99,4 +99,34 @@ describe('DeepFocus Page', () => {
 
     expect(screen.getByTestId('focus-page')).toBeInTheDocument();
   });
+
+  it('renders subjects and incomplete tasks when focusData exists', async () => {
+    const { getDoc } = await import('firebase/firestore');
+    getDoc.mockResolvedValueOnce({
+      exists: () => true,
+      data: () => ({
+        focusData: {
+          subjects: ['Mathematics', 'Computer Science'],
+          tasks: ['Finish Calculus Assignment', 'Review Codebase'],
+          completedTasks: { 'Finish Calculus Assignment': true },
+          targetDuration: 30
+        }
+      })
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/deep-focus']}>
+        <AuthProvider>
+          <DeepFocus />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await act(async () => {});
+
+    expect(screen.getByText('Mathematics')).toBeInTheDocument();
+    expect(screen.getByText('Computer Science')).toBeInTheDocument();
+    expect(screen.getByText('Review Codebase')).toBeInTheDocument();
+    expect(screen.queryByText('Finish Calculus Assignment')).not.toBeInTheDocument();
+  });
 });

@@ -502,105 +502,113 @@
 
 /* Minimalistic subjects and tasks display */
 .deep-work-subjects-tasks {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100%;
-  pointer-events: none;
-  z-index: 10;
+  position: static;
+  pointer-events: auto;
 }
 
 .deep-work-section {
-  position: absolute;
-  max-width: 180px;
+  position: fixed;
+  top: 85px;
+  width: 230px;
+  max-width: 260px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: auto;
+  z-index: 50;
+  box-sizing: border-box;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 300;
 }
 
 .deep-work-section.subjects {
-  left: 30px;
+  left: 32px;
   text-align: left;
 }
 
 .deep-work-section.tasks {
-  right: 30px;
-  text-align: right;
+  right: 32px;
+  text-align: left;
 }
 
 .deep-work-section h4 {
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
+  width: 100%;
+  box-sizing: border-box;
   font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deep-work-section h4 i {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .deep-work-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .deep-work-list li {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
   line-height: 1.4;
-  padding: 6px 8px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  border-left: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid rgba(255, 255, 255, 0.4);
   transition: all 0.2s ease;
+  text-align: left;
+  word-break: break-word;
 }
 
 .deep-work-list li:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-left-color: rgba(255, 255, 255, 0.6);
+  border-left-color: #10b981;
 }
 
 .deep-work-section.tasks .deep-work-list li {
-  border-left: none;
-  border-right: 2px solid rgba(255, 255, 255, 0.3);
+  border-left: 3px solid rgba(255, 255, 255, 0.4);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .deep-work-section.tasks .deep-work-list li:hover {
-  border-right-color: rgba(255, 255, 255, 0.6);
+  border-left-color: #10b981;
 }
 
-@media (max-width: 768px) {
-  .deep-work-section {
-    max-width: 140px;
-    font-size: 11px;
-  }
-  
-  .deep-work-section.subjects {
-    left: 15px;
-  }
-  
-  .deep-work-section.tasks {
-    right: 15px;
-  }
-  
-  .deep-work-section h4 {
-    font-size: 10px;
-    margin-bottom: 12px;
-    letter-spacing: 1px;
-  }
-  
-  .deep-work-list {
-    gap: 8px;
-  }
-  
-  .deep-work-list li {
-    font-size: 10px;
-    padding: 4px 6px;
-  }
+.deep-work-list li.empty-notice {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.45);
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-left: 1px dashed rgba(255, 255, 255, 0.15);
+  text-align: center;
+  padding: 10px;
 }
 
 /* Tablet responsive adjustments */
@@ -623,7 +631,32 @@
   }
   
   .deep-work-subjects-tasks {
-    display: none; /* Hide side panels on tablets */
+    position: static;
+    transform: none;
+    width: 100%;
+    max-width: 600px;
+    pointer-events: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 1.5rem;
+    align-self: center;
+  }
+
+  .deep-work-section {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    text-align: left;
+    box-shadow: none;
+  }
+
+  .deep-work-section.subjects,
+  .deep-work-section.tasks {
+    left: auto;
+    right: auto;
+    text-align: left;
   }
 }
 
@@ -715,16 +748,19 @@
     pointer-events: auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-top: 12px;
+    gap: 12px;
+    margin-top: 1rem;
     align-self: stretch;
     align-items: stretch;
   }
   
   .deep-work-section {
     position: static;
+    width: 100%;
     max-width: 100%;
     text-align: left;
+    box-shadow: none;
+    padding: 12px 14px;
   }
 
   .deep-work-section.tasks {
@@ -733,7 +769,7 @@
   
   .deep-work-section h4 {
     margin-bottom: 8px;
-    font-size: 12px;
+    font-size: 11px;
   }
   
   .deep-work-list {
@@ -743,13 +779,14 @@
   
   .deep-work-list li {
     font-size: 12px;
-    padding: 6px 10px;
-    border-left: 2px solid rgba(255, 255, 255, 0.3);
-    border-right: none;
+    padding: 8px 10px;
+    border-left: 3px solid rgba(255, 255, 255, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
   }
   
   .deep-work-section.tasks .deep-work-list li {
-    border-left: 2px solid rgba(255, 255, 255, 0.3);
+    border-left: 3px solid rgba(255, 255, 255, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
   }
   
   /* Ensure no overlapping */

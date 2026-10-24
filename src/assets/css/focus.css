@@ -348,8 +348,8 @@ body.dark .focus-header .logo-dark {
     font-weight: 700 !important;
 }
 
-/* Deep Work Section */
-.deep-work-section {
+/* Deep Work Section in Focus Page */
+.focus-page .deep-work-section {
     margin: 2rem 0;
     display: flex;
     justify-content: center;

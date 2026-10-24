@@ -398,32 +398,38 @@ export default function DeepFocus() {
         {/* Minimalistic Subjects and Tasks Display */}
         <div className="deep-work-subjects-tasks">
           <div className="deep-work-section subjects">
-            <h4>Subjects</h4>
+            <h4>
+              <i className="fas fa-book-open" aria-hidden="true"></i>
+              <span>Subjects</span>
+            </h4>
             <ul className="deep-work-list" id="deep-subjects-list">
               {subjects.length > 0 ? (
                 subjects.slice(0, 5).map((subject, i) => (
-                  <li key={i} style={{ color: '#ffffff', fontSize: '12px', marginBottom: '4px' }}>
+                  <li key={i}>
                     {subject}
                   </li>
                 ))
               ) : (
-                <li style={{ opacity: 0.6, fontStyle: 'italic', fontSize: '11px', color: '#cccccc' }}>
+                <li className="empty-notice">
                   Add subjects in focus mode
                 </li>
               )}
             </ul>
           </div>
           <div className="deep-work-section tasks">
-            <h4>Tasks</h4>
+            <h4>
+              <i className="fas fa-list-check" aria-hidden="true"></i>
+              <span>Tasks</span>
+            </h4>
             <ul className="deep-work-list" id="deep-tasks-list">
               {incompleteTasks.length > 0 ? (
                 incompleteTasks.slice(0, 5).map((task, i) => (
-                  <li key={i} style={{ color: '#ffffff', fontSize: '12px', marginBottom: '4px' }}>
+                  <li key={i}>
                     {task}
                   </li>
                 ))
               ) : (
-                <li style={{ opacity: 0.6, fontStyle: 'italic', fontSize: '11px', color: '#cccccc' }}>
+                <li className="empty-notice">
                   Add tasks in focus mode
                 </li>
               )}
