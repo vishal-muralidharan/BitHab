@@ -416,6 +416,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    text-align: left;
 }
 
 .date-section label,
@@ -454,16 +455,18 @@
 
 .datetime-input {
     background: var(--bg-primary);
-    border: 1px solid var(--bg-primary);
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
     padding: 0.8em 1em;
     border-radius: var(--radius);
     width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
 }
 
 .datetime-input:focus {
     outline: none;
     border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.22);
 }
 
 /* Goal completion styles for management pages */

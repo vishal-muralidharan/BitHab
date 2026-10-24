@@ -10,7 +10,7 @@ describe('Reminders Page', () => {
     vi.clearAllMocks();
   });
 
-  it('renders reminders header, empty state, and creates a reminder with date and time', async () => {
+  it('renders reminders header, empty state, opens datetime modal and creates a reminder', async () => {
     render(
       <MemoryRouter initialEntries={['/reminders']}>
         <AuthProvider>
@@ -26,15 +26,26 @@ describe('Reminders Page', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Reminders' })).toBeInTheDocument();
     expect(screen.getByText('No reminders set. Add one to get started.')).toBeInTheDocument();
 
-    const input = screen.getByPlaceholderText('Add new reminder');
+    // Click "Add New Reminder" button
+    const openBtn = screen.getByRole('button', { name: /Add New Reminder/i });
+    await act(async () => {
+      openBtn.click();
+    });
+
+    expect(screen.getByText('Add New Reminder', { selector: '#datetime-modal-title' })).toBeInTheDocument();
+
+    const input = screen.getByPlaceholderText('What would you like to be reminded about?');
     fireEvent.change(input, { target: { value: 'Annual Doctor Checkup' } });
 
+    // Select Tomorrow quick button
+    const tomorrowBtn = screen.getByRole('button', { name: 'Tomorrow' });
+    fireEvent.click(tomorrowBtn);
+
     await act(async () => {
-      screen.getByRole('button', { name: 'Add reminder' }).click();
+      screen.getByRole('button', { name: 'Add Reminder' }).click();
     });
 
     expect(screen.getByText('Annual Doctor Checkup')).toBeInTheDocument();
-    expect(input.value).toBe('');
   });
 
   it('opens edit modal and updates reminder content', async () => {
@@ -50,11 +61,16 @@ describe('Reminders Page', () => {
 
     await act(async () => {});
 
-    // Add reminder
-    const input = screen.getByPlaceholderText('Add new reminder');
-    fireEvent.change(input, { target: { value: 'Buy Groceries' } });
+    // Open add modal and add reminder
     await act(async () => {
-      screen.getByRole('button', { name: 'Add reminder' }).click();
+      screen.getByRole('button', { name: /Add New Reminder/i }).click();
+    });
+
+    const input = screen.getByPlaceholderText('What would you like to be reminded about?');
+    fireEvent.change(input, { target: { value: 'Buy Groceries' } });
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Add Reminder' }).click();
     });
 
     // Open edit modal
@@ -68,7 +84,7 @@ describe('Reminders Page', () => {
     fireEvent.change(modalInput, { target: { value: 'Buy Organic Groceries' } });
 
     await act(async () => {
-      screen.getByRole('button', { name: 'Save' }).click();
+      screen.getByRole('button', { name: 'Save Changes' }).click();
     });
 
     expect(screen.getByText('Buy Organic Groceries')).toBeInTheDocument();
@@ -87,11 +103,16 @@ describe('Reminders Page', () => {
 
     await act(async () => {});
 
-    // Add reminder
-    const input = screen.getByPlaceholderText('Add new reminder');
-    fireEvent.change(input, { target: { value: 'Water Fern' } });
+    // Open add modal and add reminder
     await act(async () => {
-      screen.getByRole('button', { name: 'Add reminder' }).click();
+      screen.getByRole('button', { name: /Add New Reminder/i }).click();
+    });
+
+    const input = screen.getByPlaceholderText('What would you like to be reminded about?');
+    fireEvent.change(input, { target: { value: 'Water Fern' } });
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'Add Reminder' }).click();
     });
 
     // Delete
