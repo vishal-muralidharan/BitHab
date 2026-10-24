@@ -201,6 +201,276 @@ body:not(.dark) .public-legal-header .logo-light,
   padding: 1rem 0 3rem;
 }
 
+.settings-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.settings-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.settings-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.settings-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.settings-section-title i {
+  color: var(--primary-color);
+}
+
+.settings-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.settings-info-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.settings-info-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.settings-info-val {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.settings-link-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.settings-card-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--transition);
+  min-height: 44px;
+}
+
+.settings-card-link:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-hover);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.settings-contact-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.settings-contact-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.settings-contact-link:hover {
+  text-decoration: underline;
+}
+
+/* Danger Zone */
+.settings-section.danger-zone {
+  border-color: var(--error-color);
+  background: rgba(248, 81, 73, 0.03);
+}
+
+.settings-section.danger-zone .settings-section-title {
+  color: var(--error-color);
+}
+
+.settings-section.danger-zone .settings-section-title i {
+  color: var(--error-color);
+}
+
+.danger-warning-box {
+  background: var(--bg-primary);
+  border: 1px solid var(--error-color);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.danger-warning-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--error-color);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.danger-warning-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.danger-deletion-list {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.danger-confirm-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.danger-confirm-prompt {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.danger-confirm-prompt strong {
+  color: var(--error-color);
+  font-family: monospace;
+  padding: 0.15rem 0.4rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.danger-confirm-input {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  min-height: 44px;
+}
+
+.danger-confirm-input:focus {
+  border-color: var(--error-color);
+}
+
+.danger-delete-btn {
+  align-self: flex-start;
+  padding: 0.75rem 1.5rem;
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--transition);
+}
+
+.danger-delete-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.danger-delete-btn:not(:disabled):hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.custom-modal-btn-danger {
+  background: var(--error-color);
+  color: white;
+}
+
+.custom-modal-btn-danger:not(:disabled):hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.custom-modal-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Toast alert */
+.settings-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+.settings-toast.success {
+  border-color: var(--success-color);
+}
+
+.settings-toast.error {
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
 /* Terms Checkbox in Auth and Modal */
 .terms-checkbox-group {
   margin: 1rem 0;

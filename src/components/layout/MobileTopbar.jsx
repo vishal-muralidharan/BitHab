@@ -48,6 +48,15 @@ export default function MobileTopbar() {
             </button>
           </>
         )}
+        <Link 
+          to="/settings" 
+          className="theme-toggle-btn" 
+          id="mobile-settings-btn" 
+          title="Settings" 
+          aria-label="Settings (mobile)"
+        >
+          <i className="fas fa-cog" aria-hidden="true"></i>
+        </Link>
         <button id="mobile-theme-toggle" className="theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
           <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>

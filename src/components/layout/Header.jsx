@@ -74,6 +74,15 @@ export default function Header() {
             </button>
           </>
         )}
+        <Link 
+          to="/settings" 
+          className="header-btn theme-toggle-btn" 
+          id="settings-toggle" 
+          title="Settings" 
+          aria-label="Settings"
+        >
+          <i className="fas fa-cog" aria-hidden="true"></i>
+        </Link>
         <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
           <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>
