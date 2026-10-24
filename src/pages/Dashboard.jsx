@@ -21,10 +21,8 @@ export default function Dashboard() {
   });
 
   const [selectedActivityId, setSelectedActivityId] = useState(null);
-  const [activitiesExpanded, setActivitiesExpanded] = useState(false);
   const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [remindersExpanded, setRemindersExpanded] = useState(false);
-  const [showLoggingSection, setShowLoggingSection] = useState(false);
 
   // Month navigation
   const prevMonth = () => {
@@ -47,7 +45,6 @@ export default function Dashboard() {
       setIsEditingNote(false);
     }
     setSelectedDateStr(dateStr);
-    setShowLoggingSection(true);
   };
 
   // Find daily note for selectedDateStr
@@ -119,6 +116,30 @@ export default function Dashboard() {
       const yearNum = date.getFullYear();
       const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
       return `${monthName} ${dayNum}, ${yearNum}, ${weekday}`;
+    } catch {
+      return ds;
+    }
+  };
+
+  const formatDateForInline = (ds) => {
+    try {
+      if (!ds) return '';
+      const [year, month, day] = ds.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      if (isNaN(date.getTime())) return ds;
+      const monthName = date.toLocaleString('default', { month: 'long' });
+      let dayWithSuffix;
+      if (day > 3 && day < 21) {
+        dayWithSuffix = `${day}th`;
+      } else {
+        switch (day % 10) {
+          case 1: dayWithSuffix = `${day}st`; break;
+          case 2: dayWithSuffix = `${day}nd`; break;
+          case 3: dayWithSuffix = `${day}rd`; break;
+          default: dayWithSuffix = `${day}th`; break;
+        }
+      }
+      return `${dayWithSuffix} ${monthName}`;
     } catch {
       return ds;
     }
@@ -321,9 +342,6 @@ export default function Dashboard() {
     );
   };
 
-  // Activities to show
-  const activitiesToShow = activitiesExpanded ? activities : activities.slice(0, 3);
-
   // Goals to show
   const activeGoals = goals.filter(g => !g.completed);
   const completedGoals = goals.filter(g => g.completed);
@@ -358,58 +376,123 @@ export default function Dashboard() {
       <div className="left-column">
         {/* Activities Component */}
         <div 
-          className="activities-component" 
+          className="activities-component inline-logging-open" 
           onClick={(e) => {
-            if (e.target.closest('.show-all-btn, .activity-item, .pill, button')) return;
+            if (e.target.closest('.show-all-btn, .activity-item, .pill, .activity-group-title, button')) return;
             navigate('/activities');
           }}
           style={{ cursor: 'pointer' }}
         >
           <div className="section-header">
             <h2>Activities</h2>
-            {activities.length > 3 && (
-              <button 
-                className={`show-all-btn ${activitiesExpanded ? 'expanded' : ''}`}
-                id="activities-show-all" 
-                title={activitiesExpanded ? 'Collapse' : 'Show all'}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivitiesExpanded(!activitiesExpanded);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-                </svg>
-              </button>
-            )}
+            <button 
+              className="show-all-btn" 
+              id="activities-show-all" 
+              title="Show all activities"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/activities');
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+              </svg>
+            </button>
           </div>
-          <ul id="activity-list" className={`activity-list ${activitiesExpanded ? 'expanded' : ''}`}>
+          <div id="activity-list" className="activity-list inline-logging-active">
             {activitiesLoading ? (
               <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading activities...</p>
-            ) : activities.length === 0 ? (
-              <p style={{ padding: '0 1rem', opacity: 0.7 }}>No activities yet.</p>
             ) : (
-              activitiesToShow.map(activity => {
-                const isSelected = selectedActivityId === activity.id;
-                return (
-                  <li 
-                    key={activity.id} 
-                    className={`activity-item ${isSelected ? 'selected' : ''}`} 
-                    data-id={activity.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedActivityId(prev => prev === activity.id ? null : activity.id);
-                    }}
-                    title={isSelected ? "Click to clear calendar filter" : "Click to filter calendar"}
-                  >
-                    <div className="activity-main">
-                      <span>{activity.name}</span>
-                    </div>
-                  </li>
-                );
-              })
+              <div className="inline-logging-interface">
+                <div className="inline-logging-header">
+                  <h3>{formatDateForInline(selectedDateStr)}</h3>
+                </div>
+                <div className="inline-activities-container">
+                  {activities.length === 0 ? (
+                    <p style={{ padding: '0 0.5rem', opacity: 0.7 }}>No activities yet.</p>
+                  ) : (
+                    activities.map(activity => {
+                    const hasSubs = activity.subActivities && activity.subActivities.length > 0;
+                    
+                    if (hasSubs) {
+                      return (
+                        <div key={activity.id} className="activity-group">
+                          <h4 
+                            className="activity-group-title"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedActivityId(prev => prev === activity.id ? null : activity.id);
+                            }}
+                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                            title={selectedActivityId === activity.id ? "Click to clear calendar filter" : "Click to filter calendar for this activity"}
+                          >
+                            <span>{activity.name}</span>
+                            {selectedActivityId === activity.id && (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'normal' }}>filtered</span>
+                            )}
+                          </h4>
+                          <div className="pills-container">
+                            {activity.subActivities.map(sub => {
+                              const isSelected = currentLoggedIds.has(sub.id);
+                              const color = sub.color || '#3B82F6';
+                              return (
+                                <div
+                                  key={sub.id}
+                                  className={`pill ${isSelected ? 'selected' : ''}`}
+                                  data-id={sub.id}
+                                  data-date={selectedDateStr}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleActivityLog(sub.id, selectedDateStr);
+                                  }}
+                                  style={{
+                                    cursor: 'pointer',
+                                    borderColor: isSelected ? color : `${color}55`,
+                                    backgroundColor: isSelected ? `${color}25` : 'var(--bg-primary)',
+                                    color: isSelected ? color : 'var(--text-primary)'
+                                  }}
+                                >
+                                  {sub.name}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const isSelected = currentLoggedIds.has(activity.id);
+                    const color = 'var(--accent-primary)';
+                    return (
+                      <div key={activity.id} className="activity-group">
+                        <div className="pills-container">
+                          <div
+                            key={activity.id}
+                            className={`pill ${isSelected ? 'selected' : ''}`}
+                            data-id={activity.id}
+                            data-date={selectedDateStr}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleActivityLog(activity.id, selectedDateStr);
+                            }}
+                            style={{
+                              cursor: 'pointer',
+                              borderColor: isSelected ? color : 'var(--border-color)',
+                              backgroundColor: isSelected ? 'var(--primary-color-alpha)' : 'var(--bg-primary)',
+                              color: isSelected ? color : 'var(--text-primary)'
+                            }}
+                          >
+                            {activity.name}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
             )}
-          </ul>
+          </div>
         </div>
 
         {/* Notes Component */}
@@ -465,93 +548,6 @@ export default function Dashboard() {
         </div>
 
         {renderCalendar()}
-
-        {/* Activity Logging Section */}
-        <div className={`activity-logging-section ${showLoggingSection ? '' : 'hidden'}`} id="activity-logging-section">
-          <div className="logging-header">
-            <h3>Log Activities for <span id="selected-date-text">{formatDateHeader(selectedDateStr)}</span></h3>
-            <button 
-              className="close-logging-btn" 
-              id="close-logging-btn" 
-              aria-label="Close activity logging"
-              onClick={() => setShowLoggingSection(false)}
-            >
-              <i className="fas fa-xmark" aria-hidden="true"></i>
-            </button>
-          </div>
-          <div className="logging-content">
-            <div className="inline-logging-interface" style={{ padding: '0.5rem 0' }}>
-              {activities.length === 0 ? (
-                <p style={{ opacity: 0.7, textAlign: 'center' }}>No activities configured yet.</p>
-              ) : (
-                activities.map(activity => {
-                  const hasSubs = activity.subActivities && activity.subActivities.length > 0;
-                  
-                  if (hasSubs) {
-                    return (
-                      <div key={activity.id} className="activity-group" style={{ marginBottom: '1rem' }}>
-                        <h4 className="activity-group-title" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                          {activity.name}
-                        </h4>
-                        <div className="pills-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          {activity.subActivities.map(sub => {
-                            const isSelected = currentLoggedIds.has(sub.id);
-                            const color = sub.color || '#3B82F6';
-                            return (
-                              <div
-                                key={sub.id}
-                                className={`pill ${isSelected ? 'selected' : ''}`}
-                                onClick={() => toggleActivityLog(sub.id, selectedDateStr)}
-                                style={{
-                                  cursor: 'pointer',
-                                  padding: '0.35rem 0.85rem',
-                                  borderRadius: '20px',
-                                  border: `1.5px solid ${isSelected ? color : `${color}55`}`,
-                                  backgroundColor: isSelected ? `${color}25` : 'transparent',
-                                  color: isSelected ? color : 'var(--text-primary)',
-                                  fontSize: '0.85rem',
-                                  fontWeight: isSelected ? '600' : '400',
-                                  transition: 'all 0.2s'
-                                }}
-                              >
-                                {sub.name}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const isSelected = currentLoggedIds.has(activity.id);
-                  const color = 'var(--accent-primary)';
-                  return (
-                    <div
-                      key={activity.id}
-                      className={`pill ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleActivityLog(activity.id, selectedDateStr)}
-                      style={{
-                        display: 'inline-block',
-                        margin: '0.25rem',
-                        cursor: 'pointer',
-                        padding: '0.35rem 0.85rem',
-                        borderRadius: '20px',
-                        border: `1.5px solid ${isSelected ? color : 'var(--border-color)'}`,
-                        backgroundColor: isSelected ? 'var(--primary-color-alpha)' : 'transparent',
-                        color: isSelected ? 'var(--primary-color)' : 'var(--text-primary)',
-                        fontSize: '0.85rem',
-                        fontWeight: isSelected ? '600' : '400',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {activity.name}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Right Column: Goals and Reminders */}

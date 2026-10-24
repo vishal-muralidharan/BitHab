@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -29,14 +29,39 @@ export function ScheduleProvider({ children }) {
     const userDocRef = doc(db, 'users', currentUser.uid);
     let isMounted = true;
 
-    // Initial fetch via getDoc
+    // Initial fetch via getDoc with subcollection compatibility fallback
     async function initialFetch() {
       try {
         const docSnap = await getDoc(userDocRef);
         if (isMounted && docSnap && docSnap.exists()) {
           const data = docSnap.data();
           if (data.schedules && typeof data.schedules === 'object') setSchedules(data.schedules);
-          if (data.logs && typeof data.logs === 'object') setLogs(data.logs);
+          let userLogs = (data.logs && typeof data.logs === 'object') ? data.logs : {};
+
+          // Legacy subcollection fallback if top-level logs is empty
+          if (Object.keys(userLogs).length === 0) {
+            try {
+              const logsCol = collection(db, 'users', currentUser.uid, 'logs');
+              const subSnap = await getDocs(logsCol);
+              if (!subSnap.empty) {
+                const subLogs = {};
+                subSnap.forEach(subDoc => {
+                  const subData = subDoc.data();
+                  if (Array.isArray(subData.loggedSubActivityIds)) {
+                    subLogs[subDoc.id] = subData.loggedSubActivityIds;
+                  }
+                });
+                if (Object.keys(subLogs).length > 0) {
+                  userLogs = subLogs;
+                  await setDoc(userDocRef, { logs: subLogs }, { merge: true });
+                }
+              }
+            } catch (err) {
+              console.warn("Subcollection logs fallback check error:", err);
+            }
+          }
+
+          if (isMounted) setLogs(userLogs);
         }
       } catch (error) {
         console.error("Error loading schedule data initial fetch:", error);
@@ -69,7 +94,7 @@ export function ScheduleProvider({ children }) {
     };
   }, [currentUser]);
 
-  async function saveScheduleData(newSchedules, newLogs) {
+  async function saveScheduleData(newSchedules, newLogs, updatedDateStr, newDayLogs) {
     if (!currentUser) return;
     
     try {
@@ -79,6 +104,19 @@ export function ScheduleProvider({ children }) {
         logs: newLogs,
         lastUpdated: Date.now()
       }, { merge: true });
+
+      // Synchronize with legacy logs subcollection for backward compatibility
+      if (updatedDateStr && Array.isArray(newDayLogs)) {
+        try {
+          const subLogRef = doc(db, 'users', currentUser.uid, 'logs', updatedDateStr);
+          await setDoc(subLogRef, {
+            loggedSubActivityIds: newDayLogs,
+            lastUpdated: Date.now()
+          }, { merge: true });
+        } catch {
+          // Gracefully continue
+        }
+      }
       
       setSchedules(newSchedules);
       setLogs(newLogs);
@@ -131,7 +169,7 @@ export function ScheduleProvider({ children }) {
       [dateStr]: newDayLogs
     };
     
-    return saveScheduleData(schedules, newLogs);
+    return saveScheduleData(schedules, newLogs, dateStr, newDayLogs);
   }
 
   const value = {

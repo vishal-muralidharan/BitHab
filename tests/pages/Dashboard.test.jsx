@@ -88,4 +88,14 @@ describe('Dashboard Page', () => {
 
     expect(screen.getByTestId('notes-page')).toBeInTheDocument();
   });
+
+  it('renders inline activity logging interface in left activities column', async () => {
+    renderDashboard();
+
+    await act(async () => {});
+
+    const activityList = document.getElementById('activity-list');
+    expect(activityList).toHaveClass('inline-logging-active');
+    expect(activityList.querySelector('.inline-logging-interface')).toBeInTheDocument();
+  });
 });
