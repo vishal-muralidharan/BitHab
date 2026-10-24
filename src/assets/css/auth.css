@@ -172,26 +172,27 @@
 
 /* Auth Divider */
 .auth-divider {
-    position: relative;
+    display: flex;
+    align-items: center;
     margin: 1.5rem 0;
     text-align: center;
 }
 
-.auth-divider::before {
+.auth-divider::before,
+.auth-divider::after {
     content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
+    flex: 1;
     height: 1px;
     background: var(--border-color);
 }
 
 .auth-divider span {
-    background: var(--bg-secondary);
+    padding: 0 0.85rem;
     color: var(--text-secondary);
-    padding: 0 1rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1;
+    background: var(--bg-secondary);
 }
 
 /* Dark theme adjustments for Google button */
