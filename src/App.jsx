@@ -27,8 +27,23 @@ import { ListProvider } from './context/ListContext';
 import { Navigate } from 'react-router-dom';
 
 function PrivateRoute({ children }) {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'var(--bg-primary, #ffffff)',
+        color: 'var(--text-secondary, #666666)'
+      }}>
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
