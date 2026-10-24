@@ -118,4 +118,39 @@ describe('NoteContext', () => {
     expect(screen.getByText('Ancient thoughts from 2025')).toBeInTheDocument();
     expect(screen.getByText('starred')).toBeInTheDocument();
   });
+
+  it('supports legacy object map notes format and real-time snapshot sync', async () => {
+    let snapshotListener;
+    vi.spyOn(firestore, 'onSnapshot').mockImplementationOnce((ref, callback) => {
+      snapshotListener = callback;
+      return vi.fn();
+    });
+
+    render(
+      <AuthProvider>
+        <NoteProvider>
+          <NoteConsumer />
+        </NoteProvider>
+      </AuthProvider>
+    );
+
+    // Simulate real-time snapshot coming in with legacy map notes
+    await act(async () => {
+      if (snapshotListener) {
+        snapshotListener({
+          exists: () => true,
+          data: () => ({
+            notes: {
+              '2026-10-24': 'Today note from legacy map',
+              '2026-10-25': 'Tomorrow note from legacy map'
+            }
+          })
+        });
+      }
+    });
+
+    expect(screen.getByTestId('notes-count')).toHaveTextContent('2');
+    expect(screen.getByText('Today note from legacy map')).toBeInTheDocument();
+    expect(screen.getByText('Tomorrow note from legacy map')).toBeInTheDocument();
+  });
 });
