@@ -55,7 +55,8 @@ export function GoalProvider({ children }) {
     // Real-time onSnapshot subscription for live updates without re-login
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (isMounted && docSnap && docSnap.exists() && docSnap.data().goals) {
-        setGoals(normalizeGoals(docSnap.data().goals));
+        const normalized = normalizeGoals(docSnap.data().goals);
+        setGoals(prev => JSON.stringify(prev) === JSON.stringify(normalized) ? prev : normalized);
       }
       if (isMounted) setLoading(false);
     }, (error) => {

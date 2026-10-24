@@ -52,7 +52,8 @@ export function ListProvider({ children }) {
     // Real-time onSnapshot subscription
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (isMounted && docSnap && docSnap.exists() && docSnap.data().lists) {
-        setLists(normalizeLists(docSnap.data().lists));
+        const normalized = normalizeLists(docSnap.data().lists);
+        setLists(prev => JSON.stringify(prev) === JSON.stringify(normalized) ? prev : normalized);
       }
       if (isMounted) setLoading(false);
     }, (error) => {

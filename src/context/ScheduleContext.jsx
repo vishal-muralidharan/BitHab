@@ -50,8 +50,12 @@ export function ScheduleProvider({ children }) {
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (isMounted && docSnap && docSnap.exists()) {
         const data = docSnap.data();
-        if (data.schedules && typeof data.schedules === 'object') setSchedules(data.schedules);
-        if (data.logs && typeof data.logs === 'object') setLogs(data.logs);
+        if (data.schedules && typeof data.schedules === 'object') {
+          setSchedules(prev => JSON.stringify(prev) === JSON.stringify(data.schedules) ? prev : data.schedules);
+        }
+        if (data.logs && typeof data.logs === 'object') {
+          setLogs(prev => JSON.stringify(prev) === JSON.stringify(data.logs) ? prev : data.logs);
+        }
       }
       if (isMounted) setLoading(false);
     }, (error) => {

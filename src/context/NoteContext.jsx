@@ -97,7 +97,7 @@ export function NoteProvider({ children }) {
     const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
       if (isMounted && docSnap && docSnap.exists() && docSnap.data().notes) {
         const parsed = extractNotes(docSnap.data().notes);
-        setNotes(parsed);
+        setNotes(prev => JSON.stringify(prev) === JSON.stringify(parsed) ? prev : parsed);
       }
       if (isMounted) setLoading(false);
     }, (error) => {

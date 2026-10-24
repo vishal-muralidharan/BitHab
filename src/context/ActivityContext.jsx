@@ -48,8 +48,14 @@ export function ActivityProvider({ children }) {
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (isMounted && docSnap && docSnap.exists()) {
         const data = docSnap.data();
-        if (data.activities) setActivities(Array.isArray(data.activities) ? data.activities : []);
-        if (data.focusLogs) setFocusLogs(Array.isArray(data.focusLogs) ? data.focusLogs : []);
+        if (data.activities) {
+          const nextActs = Array.isArray(data.activities) ? data.activities : [];
+          setActivities(prev => JSON.stringify(prev) === JSON.stringify(nextActs) ? prev : nextActs);
+        }
+        if (data.focusLogs) {
+          const nextLogs = Array.isArray(data.focusLogs) ? data.focusLogs : [];
+          setFocusLogs(prev => JSON.stringify(prev) === JSON.stringify(nextLogs) ? prev : nextLogs);
+        }
       }
       if (isMounted) setLoading(false);
     }, (error) => {

@@ -54,7 +54,8 @@ export function ReminderProvider({ children }) {
     // Real-time onSnapshot subscription
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (isMounted && docSnap && docSnap.exists() && docSnap.data().reminders) {
-        setReminders(normalizeReminders(docSnap.data().reminders));
+        const normalized = normalizeReminders(docSnap.data().reminders);
+        setReminders(prev => JSON.stringify(prev) === JSON.stringify(normalized) ? prev : normalized);
       }
       if (isMounted) setLoading(false);
     }, (error) => {
