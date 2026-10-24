@@ -26,6 +26,37 @@ export default function Dashboard() {
   const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [remindersExpanded, setRemindersExpanded] = useState(false);
 
+  // Year/Month/Activity modal state
+  const [showYearMonthPicker, setShowYearMonthPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(today.getFullYear());
+  const [pickerMonth, setPickerMonth] = useState(today.getMonth());
+  const [pickerActivityId, setPickerActivityId] = useState('');
+
+  const openYearMonthPicker = () => {
+    setPickerYear(currentCalendarDate.getFullYear());
+    setPickerMonth(currentCalendarDate.getMonth());
+    setPickerActivityId(selectedActivityId || '');
+    setShowYearMonthPicker(true);
+  };
+
+  const handleApplyYearMonth = () => {
+    const selectedYear = parseInt(pickerYear, 10);
+    const selectedMonth = parseInt(pickerMonth, 10);
+    const newDate = new Date(selectedYear, selectedMonth, 1);
+    setCurrentCalendarDate(newDate);
+
+    if (pickerActivityId) {
+      setSelectedActivityId(pickerActivityId);
+    } else {
+      setSelectedActivityId(null);
+    }
+
+    const newMonthStr = String(selectedMonth + 1).padStart(2, '0');
+    setSelectedDateStr(`${selectedYear}-${newMonthStr}-01`);
+
+    setShowYearMonthPicker(false);
+  };
+
   const calendarRef = useRef(null);
   const effectiveNoteDate = selectedDateStr || todayStr;
 
@@ -357,6 +388,9 @@ export default function Dashboard() {
     }
 
     const selectedActivity = activities.find(a => a.id === selectedActivityId);
+    const currentActivityTitle = selectedActivity 
+      ? selectedActivity.name 
+      : (activities.length > 0 ? activities[0].name : 'All Activities');
 
     return (
       <section className="calendar-view" id="calendar-view" ref={calendarRef}>
@@ -366,13 +400,16 @@ export default function Dashboard() {
               <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <div className="calendar-title-container">
-            <h2 className="calendar-title" id="calendar-title">{monthName} {year}</h2>
-            {selectedActivity && (
-              <h3 className="current-activity-title" style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', margin: '0.2rem 0 0 0', fontWeight: '600' }}>
-                {selectedActivity.name}
-              </h3>
-            )}
+          <div 
+            className="calendar-title-container clickable" 
+            onClick={openYearMonthPicker}
+            title="Click to choose other months and activities"
+            style={{ cursor: 'pointer' }}
+          >
+            <h2 className="calendar-title" id="calendar-title">{currentActivityTitle}</h2>
+            <span className="calendar-subtitle" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
+              {monthName} {year}
+            </span>
           </div>
           <button id="next-month" className="calendar-nav-btn" onClick={nextMonth} aria-label="Next month">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -419,8 +456,10 @@ export default function Dashboard() {
   // Currently logged IDs for selectedDateStr
   const currentLoggedIds = new Set(selectedDateStr ? (logs[selectedDateStr] || []) : []);
 
+  const hasExpandedInteraction = activitiesExpanded || goalsExpanded || remindersExpanded;
+
   return (
-    <div className="main-layout">
+    <div className={`main-layout ${hasExpandedInteraction ? 'expanded-active' : ''}`}>
       {/* Left Column: Activities and Notes */}
       <div className="left-column">
         {/* Activities Component */}
@@ -632,9 +671,17 @@ export default function Dashboard() {
 
       {/* Center Column: Date and Calendar */}
       <div className="center-column">
-        <div className="date-display">
+        <div 
+          className="date-display clickable" 
+          onClick={openYearMonthPicker}
+          title="Click to choose other months and activities"
+          style={{ cursor: 'pointer' }}
+        >
           <div className="current-date-colored" id="current-date">
-            {formatDateHeader(selectedDateStr)}
+            <span>{formatDateHeader(selectedDateStr)}</span>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ marginLeft: '6px', opacity: 0.7 }} aria-hidden="true">
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         </div>
 
@@ -748,6 +795,128 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Year/Month/Activity Picker Modal */}
+      {showYearMonthPicker && (
+        <div 
+          id="year-month-picker-modal" 
+          className="modal"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(4px)'
+          }}
+          onClick={(e) => {
+            if (e.target.id === 'year-month-picker-modal') {
+              setShowYearMonthPicker(false);
+            }
+          }}
+        >
+          <div 
+            className="modal-content"
+            style={{
+              backgroundColor: 'var(--surface-color)',
+              color: 'var(--text-primary)',
+              borderRadius: 'var(--radius)',
+              border: '1px solid var(--border-color)',
+              boxShadow: 'var(--shadow)',
+              padding: '1.75rem',
+              maxWidth: '480px',
+              width: '90%'
+            }}
+          >
+            <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1.15rem', fontWeight: 600, textAlign: 'center' }}>
+              Select Year, Month, and Activity
+            </h3>
+            <div className="year-month-picker">
+              <div className="year-picker-section">
+                <label htmlFor="year-select">Year:</label>
+                <select 
+                  id="year-select" 
+                  className="picker-select"
+                  value={pickerYear}
+                  onChange={(e) => setPickerYear(Number(e.target.value))}
+                >
+                  {(() => {
+                    const currentY = new Date().getFullYear();
+                    const opts = [];
+                    for (let y = currentY - 5; y <= currentY + 2; y++) {
+                      opts.push(<option key={y} value={y}>{y}</option>);
+                    }
+                    return opts;
+                  })()}
+                </select>
+              </div>
+              <div className="month-picker-section">
+                <label htmlFor="month-select">Month:</label>
+                <select 
+                  id="month-select" 
+                  className="picker-select"
+                  value={pickerMonth}
+                  onChange={(e) => setPickerMonth(Number(e.target.value))}
+                >
+                  {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((name, idx) => (
+                    <option key={name} value={idx}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="activity-picker-section">
+                <label htmlFor="activity-select">Activity:</label>
+                <select 
+                  id="activity-select" 
+                  className="picker-select"
+                  value={pickerActivityId}
+                  onChange={(e) => setPickerActivityId(e.target.value)}
+                >
+                  <option value="">All Activities</option>
+                  {activities.map(act => (
+                    <option key={act.id} value={act.id}>{act.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                id="apply-year-month" 
+                className="btn-confirm header-btn"
+                onClick={handleApplyYearMonth}
+                style={{
+                  backgroundColor: 'var(--primary-color)',
+                  color: 'var(--text-on-primary, #ffffff)',
+                  border: 'none',
+                  padding: '0.6rem 1.25rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Apply
+              </button>
+              <button 
+                id="cancel-year-month" 
+                className="btn-cancel header-btn"
+                onClick={() => setShowYearMonthPicker(false)}
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  padding: '0.6rem 1.25rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
