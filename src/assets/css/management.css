@@ -584,23 +584,23 @@
     justify-content: space-between;
     align-items: center;
     transition: all var(--transition);
-    border-left: 4px solid #22c55e; /* Green for upcoming reminders */
+    border-left: 4px solid var(--success-color, #22c55e); /* Green for upcoming reminders */
     box-shadow: var(--shadow);
 }
 
 .reminder-item.expired {
     opacity: 0.9;
-    border-left-color: #ef4444; /* Red for expired */
-    background: rgba(239, 68, 68, 0.05);
+    border-left-color: var(--danger-color, #ef4444); /* Red for expired */
+    background: rgba(var(--accent-primary-rgb, 88, 166, 255), 0.05);
 }
 
 .reminder-item.expired .reminder-text {
-    color: #ef4444;
+    color: var(--danger-color, #ef4444);
     font-weight: 500;
 }
 
 .reminder-item.expired .reminder-datetime {
-    color: #ef4444;
+    color: var(--danger-color, #ef4444);
     opacity: 0.8;
 }
 

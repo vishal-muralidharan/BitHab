@@ -75,7 +75,7 @@
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 0.5rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 1.1rem;
     padding: 0.5rem;
     cursor: pointer;
@@ -98,7 +98,7 @@
 
 .focus-header .deep-work-btn i {
     font-size: 1.1rem;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 /* Main Focus Container */
@@ -160,7 +160,7 @@
 }
 
 .analytics-header h3 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
@@ -170,7 +170,7 @@
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0.5rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -224,7 +224,7 @@
 
 .goals-column h3,
 .tasks-column h3 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin: 0 0 1rem 0;
     text-align: center;
     font-size: 1.2rem;
@@ -254,7 +254,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.1);
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 1rem;
     width: 100%;
     box-sizing: border-box;
@@ -280,7 +280,7 @@
     padding: 0.5rem 0.75rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 0.25rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.9rem;
@@ -289,7 +289,7 @@
 .focus-mode .goal-item:hover,
 .focus-mode .task-item:hover {
     background: rgba(255, 255, 255, 0.15);
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 /* Focus Session Column (Center) */
@@ -304,7 +304,7 @@
 }
 
 .focus-session-column h3 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin: 0 0 1rem 0;
     font-size: 1.2rem;
     font-weight: 600;
@@ -359,7 +359,7 @@
 }
 
 .subject-column h3 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin: 0 0 1rem 0;
     text-align: center;
     font-size: 1.2rem;
@@ -377,7 +377,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.1);
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 1rem;
     width: 100%;
     box-sizing: border-box;
@@ -405,7 +405,7 @@
     padding: 0.6rem 0.75rem;
     background: rgba(255, 255, 255, 0.15);
     border-radius: 0.4rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.9rem;
@@ -438,7 +438,7 @@
     text-decoration: line-through;
     opacity: 0.6;
     background: rgba(255, 255, 255, 0.1);
-    color: #7f8c8d;
+    color: var(--text-secondary);
 }
 
 .focus-mode .task-item.completed:hover {
@@ -470,14 +470,14 @@
     font-size: clamp(4rem, 10vw, 8rem); /* Responsive font size */
     text-align: center;
     width: 100%;
-    color: #2c3e50; /* Dark color for visibility */
+    color: var(--text-primary); /* Dark color for visibility */
 }
 
 .focus-mode .date-display {
     font-size: clamp(0.8rem, 2vw, 1rem);
     text-align: center;
     width: 100%;
-    color: #34495e; /* Slightly lighter dark color */
+    color: var(--text-secondary); /* Slightly lighter dark color */
 }
 
 /* Focus Session Panel */
@@ -487,7 +487,7 @@
     border-radius: 1rem;
     padding: 1.5rem;
     text-align: center;
-    color: #2c3e50;
+    color: var(--text-primary);
     min-width: 300px;
     max-width: 400px;
     border: 1px solid rgba(255, 255, 255, 0.4);
@@ -498,7 +498,7 @@
     margin: 0 0 1rem 0;
     font-size: 1.2rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 /* Session Goals */
@@ -519,7 +519,7 @@
 .goals-column label,
 .subjects-column label {
     font-size: 0.8rem;
-    color: #34495e;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -530,7 +530,7 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0.5rem;
     padding: 0.6rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 0.85rem;
     width: 100%;
     box-sizing: border-box;
@@ -547,7 +547,7 @@
 .focus-mode .goal-input::placeholder,
 .focus-mode .subject-input::placeholder,
 .focus-mode .task-input::placeholder {
-    color: #7f8c8d;
+    color: var(--text-secondary);
 }
 
 /* Save Buttons */
@@ -561,7 +561,7 @@
 .add-icon {
     position: absolute;
     right: 0.75rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 0.3rem;
@@ -1380,14 +1380,14 @@
     right: 0;
     width: 400px;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--surface-color);
     backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid var(--border-color);
     z-index: 1000;
     overflow-y: auto;
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .customization-panel:not(.hidden) {
@@ -1399,15 +1399,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-hover);
 }
 
 .panel-header h3 {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .close-panel {
@@ -1415,15 +1415,15 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #666;
+    color: var(--text-secondary);
     padding: 0.25rem;
     border-radius: 0.25rem;
     transition: all 0.2s ease;
 }
 
 .close-panel:hover {
-    background: rgba(0, 0, 0, 0.1);
-    color: #333;
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .close-panel i {
@@ -1442,7 +1442,7 @@
     margin: 0 0 1rem 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-size: 0.9rem;
@@ -2099,15 +2099,15 @@
     font-family: 'Courier New', monospace;
     font-size: 4rem;
     font-weight: 300;
-    color: #2c3e50;
-    text-shadow: 0 0 30px rgba(44, 62, 80, 0.3);
+    color: var(--text-primary);
+    text-shadow: 0 0 30px rgba(var(--accent-primary-rgb, 88, 166, 255), 0.3);
 }
 
 .current-ampm {
     font-size: 1.8rem;
     margin-top: 0.5rem;
     opacity: 0.8;
-    color: #34495e;
+    color: var(--text-secondary);
 }
 
 /* Session Timer */
