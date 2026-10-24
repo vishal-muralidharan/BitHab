@@ -9,7 +9,7 @@ import { useSchedule } from '../context/ScheduleContext';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { activities, loading: activitiesLoading } = useActivities();
-  const { goals, loading: goalsLoading } = useGoals();
+  const { goals, loading: goalsLoading, toggleGoal } = useGoals();
   const { notes, addNote, updateNote } = useNotes();
   const { reminders, loading: remindersLoading } = useReminders();
   const { logs, toggleActivityLog } = useSchedule();
@@ -20,6 +20,7 @@ export default function Dashboard() {
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   });
 
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [activitiesExpanded, setActivitiesExpanded] = useState(false);
   const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [remindersExpanded, setRemindersExpanded] = useState(false);
@@ -61,19 +62,21 @@ export default function Dashboard() {
 
   // Format date display
   const formatDateHeader = (ds) => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    if (ds === todayStr) return 'Today';
-
     try {
       const [year, month, day] = ds.split('-').map(Number);
       const date = new Date(year, month - 1, day);
-      return date.toLocaleDateString('en-US', {
+      const formatted = date.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      if (ds === todayStr) {
+        return `Today, ${formatted}`;
+      }
+      return formatted;
     } catch {
       return ds;
     }
@@ -140,13 +143,17 @@ export default function Dashboard() {
     }
   };
 
-  // Activity dots helper for a date
+  // Activity dots helper for a date (supports filtering by selected activity)
   const getDotsForDate = (dateStr) => {
     const loggedIds = new Set(logs[dateStr] || []);
     if (loggedIds.size === 0) return null;
 
     const colors = [];
-    activities.forEach(activity => {
+    const activitiesToConsider = selectedActivityId
+      ? activities.filter(a => a.id === selectedActivityId)
+      : activities;
+
+    activitiesToConsider.forEach(activity => {
       if (activity.subActivities && activity.subActivities.length > 0) {
         activity.subActivities.forEach(sub => {
           if (loggedIds.has(sub.id)) {
@@ -248,12 +255,19 @@ export default function Dashboard() {
       );
     }
 
+    const selectedActivity = activities.find(a => a.id === selectedActivityId);
+
     return (
       <section className="calendar-view" id="calendar-view">
         <div className="calendar-header">
           <button id="prev-month" className="calendar-nav-btn" onClick={prevMonth} aria-label="Previous month">‹</button>
           <div className="calendar-title-container">
             <h2 className="calendar-title" id="calendar-title">{monthName} {year}</h2>
+            {selectedActivity && (
+              <h3 className="current-activity-title" style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', margin: '0.2rem 0 0 0', fontWeight: '600' }}>
+                {selectedActivity.name}
+              </h3>
+            )}
           </div>
           <button id="next-month" className="calendar-nav-btn" onClick={nextMonth} aria-label="Next month">›</button>
         </div>
@@ -333,13 +347,25 @@ export default function Dashboard() {
             ) : activities.length === 0 ? (
               <p style={{ padding: '0 1rem', opacity: 0.7 }}>No activities yet.</p>
             ) : (
-              activitiesToShow.map(activity => (
-                <li key={activity.id} className="activity-item" data-id={activity.id}>
-                  <div className="activity-main">
-                    <span>{activity.name}</span>
-                  </div>
-                </li>
-              ))
+              activitiesToShow.map(activity => {
+                const isSelected = selectedActivityId === activity.id;
+                return (
+                  <li 
+                    key={activity.id} 
+                    className={`activity-item ${isSelected ? 'selected' : ''}`} 
+                    data-id={activity.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedActivityId(prev => prev === activity.id ? null : activity.id);
+                    }}
+                    title={isSelected ? "Click to clear calendar filter" : "Click to filter calendar"}
+                  >
+                    <div className="activity-main">
+                      <span>{activity.name}</span>
+                    </div>
+                  </li>
+                );
+              })
             )}
           </ul>
         </div>
@@ -527,6 +553,11 @@ export default function Dashboard() {
                   key={goal.id} 
                   className={`goal-item ${goal.completed ? 'completed' : 'pending'}`}
                   data-id={goal.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleGoal(goal.id);
+                  }}
+                  title={goal.completed ? "Click to mark as pending" : "Click to mark as completed"}
                 >
                   <span style={{ textDecoration: goal.completed ? 'line-through' : 'none' }}>
                     {goal.name || goal.title}
