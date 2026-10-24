@@ -143,7 +143,7 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
   - Transparent setting for cards (`rgba(255, 255, 255, 0.25)` frosted glass with `backdrop-filter: blur(20px)`), with zero dark backgrounds.
   - The date display (Saturday) is completely transparent with no dark background or box.
   - All text (digital clock, date, section titles, inputs, list items, quotes, icons) is enforced in full black (`#000000`).
-  - Top header always renders the light theme logo (`logo-transparent-light.png`).
+  - Top header is completely unified with the standard navigation topbar (`Header.jsx` on desktop, `MobileTopbar.jsx` on mobile): identical 90px height, BitHab logo, complete center navigation (`Activities`, `Goals`, `Notes`, `Reminders`, `Focus` active, `More`), theme toggle, logout, and integrated Focus action controls (`Analytics` and `Deep Focus`).
 * **Deep Focus Mode (`/deep-focus`):**
   - Minimalist pure black canvas (`#000000`) with predominantly black-and-white elements (countdown clock `#ffffff`, white progress track and fill, white percentage text).
   - Absolutely zero orange or clashing theme colors (`var(--primary-color)`).

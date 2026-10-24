@@ -51,15 +51,19 @@ In BitHab, navigation elements adapt based on screen width and route:
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
-│ Focus Routes (/focus, /deep-focus, /analytics)                   │
+│ Focus Routes: Unified vs Immersive                               │
 │                                                                  │
-│ Body class: .focus-mode                                          │
-│ - Bypasses Header, BottomNav, and MobileTopbar                   │
-│ - Dedicated top focus header (.focus-header) with Back/Analytics │
-│ - Header height (90px desktop, 72px mobile) and padding          │
-│   (0.75rem 1.5rem) match standard Header.jsx to guarantee zero   │
-│   logo displacement or jumping across page transitions           │
-│ - Expands layout to 100vh with no extraneous scroll              │
+│ Standard Focus (/focus):                                         │
+│ - Renders standard dual-nav architecture: Header.jsx (90px) on   │
+│   desktop and MobileTopbar.jsx (72px) + BottomNav.jsx on mobile  │
+│ - Complete center navigation (Activities, Goals, Notes,          │
+│   Reminders, Focus [active], More), Theme toggle, and Logout     │
+│ - Header actions seamlessly integrate Focus controls (Analytics  │
+│   and Deep Focus buttons)                                        │
+│                                                                  │
+│ Deep Focus & Analytics (/deep-focus, /analytics):                │
+│ - Full distraction-free immersion bypassing standard navigation  │
+│ - Dedicated controls and fullscreen enforcement                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
