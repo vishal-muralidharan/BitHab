@@ -92,6 +92,7 @@ Before creating local state or manual fetch logic in a page, check whether a con
 2. **Differentiate Symptom from Root Cause:**
    * *Example:* A missing visual style on `/themes` might not be a broken CSS class—it often means `themes-page` body class was missing from `document.body`.
 3. **Verify Data State:** Inspect Firestore payload models to see if fields are missing, `undefined`, or structured differently than expected.
+4. **Auth & Test User Reuse:** When auditing UI behavior in the browser, always reuse canonical test accounts (`test@bithab.com` / `Password123!`) documented in [targeted-module-testing](file:///Users/VM/Projects%20-%20Curr/BitHab/.agents/skills/targeted-module-testing/SKILL.md). Never create random throwaway user accounts.
 
 ### For New Features & UI Additions:
 1. **Directory Placement (Rule 3):** Determine whether code belongs in `src/pages/`, `src/components/layout/`, `src/context/`, or `src/assets/css/`.
@@ -145,4 +146,5 @@ Before editing any code, verify:
 [ ] 4. Verified multi-theme compatibility across all 6 themes and dark/light modes.
 [ ] 5. Verified mobile viewport boundaries, body classes, and bottom navigation clearance.
 [ ] 6. Formulated an atomic, step-by-step plan with verification checks and commit messages.
+[ ] 7. Reused canonical test user accounts (test@bithab.com) for any browser testing or session audits.
 ```

@@ -179,7 +179,21 @@ useEffect(() => {
 
 ---
 
-## 4. Pre-Commit Database Checklist
+## 4. Canonical Reusable Test User Firestore Schemas
+
+To avoid creating extraneous user documents in Firestore, all testing, seed operations, and local verification MUST bind to the canonical test user accounts:
+
+| User Account | UID Pattern | Associated Collections & Seeded State |
+| :--- | :--- | :--- |
+| **`test@bithab.com`** | Primary Firebase Auth UID | Seeded with complete `/users/{userId}` structure: active activities catalog, multi-stage goals, daily notes, and `/focusSessions` subcollection. Always reuse this account for live development checks. |
+| **`testuser999@example.com`** | Secondary Firebase Auth UID | Fallback user document for multi-account concurrency and edge case validation. |
+| **`test@bithab.local`** | `test-user-123` | Canonical mock user ID used across Vitest unit tests in [tests/setup.js](file:///Users/VM/Projects%20-%20Curr/BitHab/tests/setup.js). |
+
+**Rule:** When seeding mock data, testing real-time listeners, or inspecting database models, bind documents to these persistent test accounts rather than generating new account roots on every test run.
+
+---
+
+## 5. Pre-Commit Database Checklist
 
 Before committing any DB-related change, verify:
 ```text
@@ -188,4 +202,6 @@ Before committing any DB-related change, verify:
 [ ] 3. All onSnapshot subscriptions return an unsubscriber in useEffect cleanup.
 [ ] 4. Subcollection queries (e.g. focusSessions) use correct parent user UID paths.
 [ ] 5. State updates from Firestore handle empty or newly created user accounts gracefully.
+[ ] 6. Canonical test users (test@bithab.com, test-user-123) preserved for testing and validation.
 ```
+
