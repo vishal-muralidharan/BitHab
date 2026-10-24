@@ -13,11 +13,7 @@
     transition: none; /* Remove theme transitions for focus page */
 }
 
-/* Hide bottom nav and mobile topbar on focus pages */
-.focus-mode .bottom-nav,
-.focus-mode .mobile-topbar {
-    display: none !important;
-}
+/* Mobile topbar and bottom nav are supported on focus pages */
 
 /* Focus Header - Simple and Clean */
 .focus-header {
@@ -133,7 +129,7 @@ body.dark .focus-header .logo-dark {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 90px 2rem 2rem; /* 70px header + 20px gap */
+    padding: 110px 2rem 2rem; /* 90px header + 20px gap */
     min-height: calc(100vh - 90px); /* default to full screen */
     box-sizing: border-box;
     overflow-y: visible; /* allow page to scroll when content grows */

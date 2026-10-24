@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
+import MobileTopbar from '../components/layout/MobileTopbar';
+import BottomNav from '../components/layout/BottomNav';
 import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -16,7 +18,6 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 export default function Focus() {
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   // Clock state
@@ -139,42 +140,8 @@ export default function Focus() {
 
   return (
     <div className="focus-mode" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Header */}
-      <div className="focus-header">
-        <Link to="/" className="logo-link focus-logo">
-          <h1 className="logo">
-            <img src="/assets/images/logo-transparent-light.png" alt="BitHab Logo" className="logo-light focus-page-logo" />
-          </h1>
-        </Link>
-        <div className="header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button 
-            className="deep-work-btn" 
-            title="Analytics" 
-            aria-label="View analytics"
-            onClick={() => navigate('/analytics')}
-          >
-            <i className="fas fa-chart-bar" aria-hidden="true"></i>
-          </button>
-          <button 
-            className="deep-work-btn" 
-            id="deep-work-toggle" 
-            title="Deep Focus" 
-            aria-label="Toggle deep focus mode"
-            onClick={async () => {
-              try {
-                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-                  await document.documentElement.requestFullscreen();
-                }
-              } catch (err) {
-                console.warn('Fullscreen entry from Focus page was ignored or denied:', err);
-              }
-              navigate('/deep-focus');
-            }}
-          >
-            <i className="fas fa-spa" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
+      <MobileTopbar />
+      <Header />
 
       {/* Main Focus Container */}
       <div className="focus-container" id="focus-container" style={{ flex: 1 }}>
@@ -305,6 +272,7 @@ export default function Focus() {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

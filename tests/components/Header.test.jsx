@@ -74,4 +74,20 @@ describe('Header', () => {
     expect(auth.signOut).toHaveBeenCalled();
     expect(screen.getByTestId('login')).toBeInTheDocument();
   });
+
+  it('renders Analytics and Deep Focus action buttons when on /focus route', () => {
+    render(
+      <MemoryRouter initialEntries={['/focus']}>
+        <AuthProvider>
+          <ThemeProvider>
+            <Header />
+          </ThemeProvider>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('link', { name: 'Focus' })).toHaveClass('active');
+    expect(screen.getByRole('button', { name: 'View analytics' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Toggle deep focus mode' })).toBeInTheDocument();
+  });
 });

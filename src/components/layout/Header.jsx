@@ -4,7 +4,9 @@ import { useTheme } from '../../context/ThemeContext';
 
 export default function Header() {
   const { logout } = useAuth();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const themeContext = useTheme();
+  const isDarkMode = themeContext?.isDarkMode ?? false;
+  const toggleDarkMode = themeContext?.toggleDarkMode ?? (() => {});
   const navigate = useNavigate();
   const location = useLocation();
   const isMoreActive = location.pathname === '/themes' || location.pathname === '/lists';
@@ -41,6 +43,37 @@ export default function Header() {
         </div>
       </nav>
       <div className="header-actions">
+        {location.pathname === '/focus' && (
+          <>
+            <button 
+              className="header-btn theme-toggle-btn" 
+              id="analytics-toggle"
+              title="Analytics" 
+              aria-label="View analytics"
+              onClick={() => navigate('/analytics')}
+            >
+              <i className="fas fa-chart-bar" aria-hidden="true"></i>
+            </button>
+            <button 
+              className="header-btn theme-toggle-btn" 
+              id="deep-work-toggle" 
+              title="Deep Focus" 
+              aria-label="Toggle deep focus mode"
+              onClick={async () => {
+                try {
+                  if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                  }
+                } catch (err) {
+                  console.warn('Fullscreen entry from Focus page was ignored or denied:', err);
+                }
+                navigate('/deep-focus');
+              }}
+            >
+              <i className="fas fa-spa" aria-hidden="true"></i>
+            </button>
+          </>
+        )}
         <button id="theme-toggle" className="header-btn theme-toggle-btn" aria-label="Toggle dark/light mode" onClick={toggleDarkMode}>
           <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
         </button>
