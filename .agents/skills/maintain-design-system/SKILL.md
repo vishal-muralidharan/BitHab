@@ -174,6 +174,103 @@ BitHab relies on explicit body classes for responsive reflows and full-screen mo
   - Inactive theme cards display theme title in default text color (`var(--text-primary)`) and button in `var(--primary-color)`.
   - Responsive reflows: 2 columns on tablet (`<= 1024px`), 1 column on mobile (`<= 768px`) with `padding-bottom: 80px` for bottom navigation clearance.
 
+### Rule 16: Fixed Desktop Viewport & Interaction Expansion
+* **Desktop Dashboard Height Lock (`index-page`):**
+  - On desktop viewports (`@media (min-width: 1024px)`), `body.index-page .page-container` and `body.index-page .main-layout` enforce a fixed height:
+    ```css
+    body.index-page .page-container {
+      height: calc(100vh - 90px);
+      overflow: hidden;
+    }
+    body.index-page .main-layout {
+      height: 100%;
+      min-height: unset;
+      overflow: hidden;
+    }
+    ```
+  - This eliminates awkward empty space scrolling below the 3-column dashboard baseline.
+* **Dynamic Interaction Expansion (`.expanded-active`):**
+  - When a user interacts to expand a card (e.g. expanding notes list, activities catalog, or goals manager), the parent containers add `.expanded-active`:
+    ```css
+    body.index-page .page-container.expanded-active,
+    body.index-page .main-layout.expanded-active {
+      overflow-y: auto;
+      height: auto;
+      min-height: calc(100vh - 90px);
+    }
+    ```
+  - This unlocks smooth vertical scrolling when extra content genuinely demands it, and re-locks to the viewport when collapsed.
+* **Mobile & Tablet Stacked Scrolling:**
+  - Viewports `< 1024px` retain natural document scrolling with reserved bottom clearance (`padding-bottom: calc(5rem + env(safe-area-inset-bottom, 20px))`) for `BottomNav.jsx`.
+
+### Rule 17: Calendar Weekday Dividing Line Geometry & Vertical Centering
+* **Dividing Line Alignment:**
+  - The weekday row is framed by two clean, horizontal divider lines (`1px solid var(--border-color)`):
+    1. Upper divider: Produced by the calendar header (`.calendar-view .calendar-header { margin-bottom: 0 !important; padding-bottom: 0.6rem !important; border-bottom: 1px solid var(--border-color) !important; }`).
+    2. Lower divider: Produced by the bottom border of the weekday elements (`.calendar-view .weekday { border-bottom: 1px solid var(--border-color); }`).
+* **Vertical Centering Geometry:**
+  - Weekday labels (`Sun`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`) must be perfectly vertically and horizontally centered between the upper line and lower line:
+    ```css
+    .calendar-view .weekday {
+      height: 38px;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+    ```
+  - Never apply unbalanced top/bottom padding or margins that displace labels closer to one divider than the other.
+
+### Rule 18: Calendar Header Active Activity Title & Subtitle Architecture
+* **Active Activity Title in Calendar Header:**
+  - In the calendar header (`.calendar-header`), the primary heading (`<h2 className="calendar-title" id="calendar-title">`) displays the name of the currently active/selected activity (e.g., `Workout`, `Gym`).
+  - If no specific activity is selected, it defaults to the first available activity's name, or `All Activities`.
+* **Month and Year as Subtitle:**
+  - The calendar's current month and year (e.g., `October 2026`) is rendered below the activity title as `<span className="calendar-subtitle">`.
+* **Clickable Navigation Trigger:**
+  - Wrapping container `.calendar-title-container` is interactive (`cursor: pointer;`) with a subtle hover opacity transition, allowing users to click either the title or subtitle to open the month/year/activity picker.
+
+### Rule 19: Clickable Date Header & Month/Year/Activity Picker Modal
+* **Clickable Date Header (`#current-date`):**
+  - The date display in the dashboard center column (`#current-date`) is an interactive element styled with:
+    ```css
+    #current-date {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    #current-date:hover {
+      background-color: var(--surface-color);
+      color: var(--primary-color);
+    }
+    ```
+  - Displays a calendar icon (`fa-calendar-days`) alongside the full date string (`October 24, 2026, Saturday`).
+* **Year/Month/Activity Picker Modal (`#year-month-picker-modal`):**
+  - Clicking `#current-date` or `.calendar-title-container` opens `#year-month-picker-modal`.
+  - Backdrop: Frosted overlay (`background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 1000;`).
+  - Modal Card: Centered surface card (`background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; max-width: 460px; width: 90vw;`).
+  - Controls Container (`.year-month-picker`):
+    - Desktop: Horizontal flex row (`display: flex; gap: 0.75rem; align-items: center;`).
+    - Mobile (`< 480px`): Vertical stack (`flex-direction: column; align-items: stretch;`).
+  - Select Elements:
+    - `#year-select`: Dropdown populated with ±5 years from current year.
+    - `#month-select`: Dropdown with all 12 calendar months (`January` to `December`).
+    - `#activity-select`: Dropdown with `All Activities` followed by all user activities.
+    - All select inputs enforce `min-height: 44px;` and `font-size: 16px;` to comply with touch targets and prevent iOS Safari auto-zoom.
+  - Modal Actions:
+    - Primary Button (`#apply-year-month`): `background: var(--primary-color); color: var(--button-text); min-height: 44px; font-weight: 600;`. Applies selected date & activity filter and closes modal.
+    - Secondary Button (`#cancel-year-month`): Translucent outline button (`border: 1px solid var(--border-color); min-height: 44px;`). Closes modal without changes.
+  - Keyboard & Backdrop Accessibility: Pressing `Escape` or clicking the frosted backdrop immediately dismisses the modal.
+
 ---
 
 ## 4. Pre-Commit Design System Checklist
@@ -191,4 +288,8 @@ Before committing any UI or styling changes, verify:
 [ ] 9. Card headers maintain compact spacing (margin-bottom: 0.25rem; padding-bottom: 0.35rem;).
 [ ] 10. Form dividers use z-index badge layering to avoid line bleed-through.
 [ ] 11. Themes gallery displays 3x2 grid with dual-pill capsules and active card green badge/button.
+[ ] 12. Desktop dashboard enforces height: calc(100vh - 90px); overflow: hidden; unless .expanded-active is engaged.
+[ ] 13. Calendar weekdays vertically centered with height: 38px; display: flex; align-items: center; between dividing lines.
+[ ] 14. Calendar header displays active activity name in #calendar-title and month/year in .calendar-subtitle.
+[ ] 15. Date header #current-date and calendar title open #year-month-picker-modal with responsive stacking and 44px touch targets.
 ```
