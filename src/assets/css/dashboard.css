@@ -470,37 +470,37 @@
     margin: 0;
 }
 
-/* Modern minimalistic icon button for show-all */
+/* Centered icon button for show-all */
 .show-all-btn {
-    background: transparent;
-    border: none;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 0.375rem;
-    border-radius: 0.375rem;
-    display: flex;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: calc(var(--radius) / 2);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.7;
-    font-size: 0; /* Hide any text content */
-    line-height: 0; /* Hide any text content */
+    transition: all var(--transition);
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .show-all-btn svg {
-    font-size: initial; /* Reset for SVG */
-    line-height: initial; /* Reset for SVG */
+    display: block;
+    width: 14px;
+    height: 14px;
+    margin: auto;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .show-all-btn:hover {
-    background: var(--bg-primary);
+    background: var(--bg-hover);
     color: var(--text-primary);
-    opacity: 1;
+    border-color: var(--accent-primary);
     transform: translateY(-1px);
-}
-
-.show-all-btn svg {
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Rotate icon when expanded */
@@ -779,25 +779,7 @@
     gap: 0.5rem;
 }
 
-/* Show/Hide button improvements */
-.show-all-btn {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    cursor: pointer;
-    padding: 0.3rem 0.6rem;
-    border-radius: calc(var(--radius) / 2);
-    transition: all var(--transition);
-    font-weight: 500;
-}
 
-.show-all-btn:hover {
-    background: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
-    transform: translateY(-1px);
-}
 
 .section-link {
     background: var(--accent-primary);
@@ -1392,16 +1374,31 @@
 .calendar-nav-btn {
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-weight: 600;
-    padding: 0.5rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     cursor: pointer;
     transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.calendar-nav-btn svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: auto;
 }
 
 .calendar-nav-btn:hover {
     background: var(--bg-hover);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
     transform: translateY(-1px);
 }
 
@@ -1583,17 +1580,31 @@
 .calendar-nav-btn {
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-weight: 600;
-    padding: 0.5rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     cursor: pointer;
     transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.calendar-nav-btn svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: auto;
 }
 
 .calendar-nav-btn:hover {
-    background: var(--accent-primary);
-    color: white;
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 /* Desktop/Laptop - Ensure proper padding and spacing */
@@ -1829,7 +1840,6 @@
     }
     
     /* Make buttons more touch-friendly */
-    .show-all-btn,
     .add-activity-btn,
     .focus-mode-btn {
         padding: 0.75rem 1rem;
@@ -2021,15 +2031,22 @@
     }
     
     .show-all-btn {
-        padding: 0.75rem; /* Larger touch target */
-        font-size: 0.8rem;
-        margin-top: 1rem;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* Calendar navigation buttons */
     .calendar-nav-btn {
-        padding: 0.5rem 0.75rem;
-        font-size: 1rem;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* Reminder and goal items */

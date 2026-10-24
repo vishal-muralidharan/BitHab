@@ -323,7 +323,11 @@ export default function Dashboard() {
     return (
       <section className="calendar-view" id="calendar-view">
         <div className="calendar-header">
-          <button id="prev-month" className="calendar-nav-btn" onClick={prevMonth} aria-label="Previous month">‹</button>
+          <button id="prev-month" className="calendar-nav-btn" onClick={prevMonth} aria-label="Previous month">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
           <div className="calendar-title-container">
             <h2 className="calendar-title" id="calendar-title">{monthName} {year}</h2>
             {selectedActivity && (
@@ -332,7 +336,11 @@ export default function Dashboard() {
               </h3>
             )}
           </div>
-          <button id="next-month" className="calendar-nav-btn" onClick={nextMonth} aria-label="Next month">›</button>
+          <button id="next-month" className="calendar-nav-btn" onClick={nextMonth} aria-label="Next month">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
         <div className="calendar-grid" id="calendar-grid">
           {weekdayHeaders}
