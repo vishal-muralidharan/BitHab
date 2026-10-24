@@ -31,6 +31,10 @@ Firestore Root
     ├── theme: string                       # Active theme ('default', 'ocean', etc.)
     ├── isDarkMode: boolean                 # Dark mode toggle preference
     │
+    ├── /logs/{dateStr}                     # Activity daily log subcollection (legacy/subcollection compatibility)
+    │   ├── activityIds: Array<string>      # Completed activity/subactivity IDs
+    │   └── completed: boolean              # Daily completion flag
+    │
     └── /focusSessions/{sessionId}          # Focus session log documents (subcollection)
         ├── userId: string
         ├── startTime: ISOString
@@ -132,6 +136,19 @@ interface FocusData {
   completedTasks: Record<string, boolean>;  // Map of task name -> completed state
   targetDuration: number;                   // Target session duration in minutes (default 25)
   lastUpdated?: number;                     // Timestamp
+}
+```
+
+### 7. Activity Daily Log Schema (With Map & Subcollection Dual-Compatibility)
+```typescript
+// On root user doc:
+// logs: Record<DateStr, Array<string>>    // Map of "YYYY-MM-DD" to list of logged activity/subactivity IDs
+
+// In subcollection /users/{userId}/logs/{dateStr}:
+interface ActivityDailyLogDoc {
+  activityIds: Array<string>;               // Logged activity or subactivity IDs
+  completed?: boolean;                      // True if day marked completed
+  updatedAt?: string;                       // ISOString
 }
 ```
 
