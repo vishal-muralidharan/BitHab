@@ -186,6 +186,40 @@ interface ActivityDailyLogDoc {
 //    - Matches IDs against subactivity color catalog to render real-time color dots.
 ```
 
+### 8. Calendar Activity Dot Filtering & Subactivity Scoping
+```typescript
+// Selected Activity Filter Architecture:
+// When an activity is selected in Dashboard (via #activity-select in picker modal or clicking activity item):
+// visibleActivityIds: Array<string> | null = selectedActivityId
+//   ? [selectedActivityId, ...(selectedActivity?.subActivities?.map(s => s.id) || [])]
+//   : null;
+
+// Calendar Dot Rendering Filter:
+// const dayLogs = (logs[dateStr] || []).filter(id => !visibleActivityIds || visibleActivityIds.includes(id));
+
+// Dot Matching Logic:
+// 1. Find matching subactivity across activities catalog:
+//    const sub = allSubactivities.find(s => s.id === logId);
+// 2. Render dot with subactivity color (or primary color fallback):
+//    style={{ backgroundColor: sub?.color || 'var(--primary-color)' }}
+// 3. When filtered, users can isolate and inspect month-by-month habit streaks for a single activity.
+```
+
+### 9. Multi-Source Notes Synchronization Pipeline
+```typescript
+// Dual-Storage Synchronization Model in NoteContext.jsx:
+// BitHab supports both modern subcollections and legacy root document notes:
+// 1. Primary Sources:
+//    - Daily Notes: /users/{userId}/notes/{dateStr} (keyed by date string YYYY-MM-DD)
+//    - General Notes: /users/{userId}/generalNotes/{noteId} (auto-ID or timestamp ID)
+// 2. Legacy Fallback Source:
+//    - Root Document Field: /users/{userId}.notes (Array<NoteItem>)
+// 3. Bi-directional Synchronization:
+//    - On user sign-in, NoteContext attaches real-time onSnapshot listeners to subcollections.
+//    - Concurrently reads legacy root doc notes and merges non-conflicting items.
+//    - Prevents data loss during migration while maintaining backward compatibility.
+```
+
 ---
 
 ## 3. Strict Firestore Guardrails
@@ -254,5 +288,7 @@ Before committing any DB-related change, verify:
 [ ] 4. Subcollection queries (e.g. focusSessions) use correct parent user UID paths.
 [ ] 5. State updates from Firestore handle empty or newly created user accounts gracefully.
 [ ] 6. Canonical test users (test@bithab.com, test-user-123) preserved for testing and validation.
+[ ] 7. Calendar activity dot filtering respects visibleActivityIds for parent activity and child subactivities.
+[ ] 8. Dual-source note sync guarantees data integrity across subcollections and legacy root doc notes.
 ```
 
