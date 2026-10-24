@@ -15,29 +15,36 @@
 
 /* Mobile topbar and bottom nav are supported on focus pages */
 
-/* Focus Header - Simple and Clean */
+/* Focus Header - Light Blue Theme with Standard Dimensions (Position, Thickness, Height, Width) */
+.focus-mode .header,
+body.focus-mode .header,
 .focus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 70px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1.5rem;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    z-index: 1001;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: none;
+    height: 90px;
+    padding: 1.5rem;
+    padding-inline: clamp(1.25rem, calc((100vw - 1400px) / 2 + 1.5rem), 5rem);
     box-sizing: border-box;
+    z-index: 1001;
+    background: rgba(227, 242, 253, 0.75) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     transition: background-color var(--transition), 
                 border-color var(--transition),
                 box-shadow var(--transition);
 }
 
-/* Focus Logo - Always Light Theme Logo for light blue background */
+/* Focus Logo - Light Theme Logo on Light Blue Background */
+.focus-mode .header .logo-link,
+.focus-mode .mobile-topbar .logo-link,
 .focus-logo {
     display: flex;
     align-items: center;
@@ -45,80 +52,234 @@
     transition: opacity var(--transition);
 }
 
+.focus-mode .header .logo-link:hover,
+.focus-mode .mobile-topbar .logo-link:hover,
 .focus-logo:hover {
     opacity: 0.8;
 }
 
+.focus-mode .header .logo,
+.focus-mode .mobile-topbar .logo,
 .focus-logo .logo {
     margin: 0;
     display: flex;
     align-items: center;
 }
 
+.focus-mode .header .logo .logo-light,
+.focus-mode .mobile-topbar .logo .logo-light,
+.focus-mode .logo .logo-light,
 .focus-header .logo .logo-light,
 .focus-header .logo-light,
 .focus-header .focus-page-logo,
+body.dark .focus-mode .header .logo .logo-light,
+body.dark .focus-mode .mobile-topbar .logo .logo-light,
 body.dark .focus-header .logo-light,
-body.dark .focus-header .focus-page-logo {
+body.dark .focus-header .focus-page-logo,
+[data-mode="dark"] .focus-mode .header .logo .logo-light,
+[data-mode="dark"] .focus-mode .mobile-topbar .logo .logo-light,
+[data-mode="dark"] .focus-header .logo-light,
+[data-mode="dark"] .focus-header .focus-page-logo {
     display: block !important;
     opacity: 1 !important;
     height: 40px !important;
     width: auto !important;
 }
 
+.focus-mode .header .logo .logo-dark,
+.focus-mode .mobile-topbar .logo .logo-dark,
+.focus-mode .logo .logo-dark,
 .focus-header .logo .logo-dark,
 .focus-header .logo-dark,
-body.dark .focus-header .logo-dark {
+body.dark .focus-mode .header .logo .logo-dark,
+body.dark .focus-mode .mobile-topbar .logo .logo-dark,
+body.dark .focus-header .logo-dark,
+[data-mode="dark"] .focus-mode .header .logo .logo-dark,
+[data-mode="dark"] .focus-mode .mobile-topbar .logo .logo-dark,
+[data-mode="dark"] .focus-header .logo-dark {
     display: none !important;
     opacity: 0 !important;
 }
 
-.focus-logo .logo img,
-.focus-logo .logo-img,
-.focus-logo img {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
+/* Navigation Links in Focus Header */
+.focus-mode .header .header-nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex: 1;
+    justify-content: center;
 }
 
-/* Header Actions for Focus Page - Transparent with Full Black Icons */
+.focus-mode .header .header-nav .nav-item {
+    color: #000000 !important;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all var(--transition);
+}
+
+.focus-mode .header .header-nav .nav-item:hover {
+    background: rgba(255, 255, 255, 0.45) !important;
+    color: #000000 !important;
+}
+
+.focus-mode .header .header-nav .nav-item.active {
+    background: rgba(255, 255, 255, 0.6) !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    border: 1px solid rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* More Dropdown in Focus Header */
+.focus-mode .header .more-dropdown .more-btn {
+    color: #000000 !important;
+    font-weight: 500;
+}
+
+.focus-mode .header .more-dropdown-content {
+    background: rgba(227, 242, 253, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    border-radius: var(--radius);
+}
+
+.focus-mode .header .more-dropdown-content a {
+    color: #000000 !important;
+}
+
+.focus-mode .header .more-dropdown-content a:hover,
+.focus-mode .header .more-dropdown-content a.active {
+    background: rgba(255, 255, 255, 0.5) !important;
+    color: #000000 !important;
+}
+
+/* Action Buttons in Focus Header */
+.focus-mode .header .header-actions,
 .focus-header .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     margin-right: 0;
     flex-shrink: 0;
 }
 
+.focus-mode .header .header-btn,
+.focus-mode .header .theme-toggle-btn,
 .focus-header .deep-work-btn {
-    background: rgba(255, 255, 255, 0.25) !important;
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
-    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.55) !important;
+    border-radius: var(--radius);
     color: #000000 !important;
-    font-size: 1.1rem;
-    padding: 0.5rem;
+    font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    min-width: 44px;
-    min-height: 44px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    min-height: 38px;
+    font-weight: 500;
 }
 
+.focus-mode .header .theme-toggle-btn,
+.focus-header .deep-work-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+}
+
+.focus-mode .header .header-btn:hover,
+.focus-mode .header .theme-toggle-btn:hover,
 .focus-header .deep-work-btn:hover {
-    background: rgba(255, 255, 255, 0.5) !important;
-    border-color: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     color: #000000 !important;
 }
 
+.focus-mode .header .header-btn i,
+.focus-mode .header .theme-toggle-btn i,
 .focus-header .deep-work-btn i {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    color: #000000 !important;
+}
+
+/* Mobile Topbar in Focus Mode */
+.focus-mode .mobile-topbar {
+    background: rgba(227, 242, 253, 0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    height: 72px;
+}
+
+.focus-mode .mobile-topbar .theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.55) !important;
+    color: #000000 !important;
+}
+
+.focus-mode .mobile-topbar .theme-toggle-btn i {
+    color: #000000 !important;
+}
+
+/* Bottom Navigation in Focus Mode */
+.focus-mode .bottom-nav {
+    background: rgba(227, 242, 253, 0.85) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.focus-mode .bottom-nav-item {
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.focus-mode .bottom-nav-item.active,
+.focus-mode .bottom-nav-item:hover {
+    color: #000000 !important;
+}
+
+.focus-mode .bottom-nav-item .bottom-nav-icon {
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.focus-mode .bottom-nav-item.active .bottom-nav-icon,
+.focus-mode .bottom-nav-item:hover .bottom-nav-icon {
+    color: #000000 !important;
+}
+
+.focus-mode .bottom-nav-item.active .bottom-nav-label,
+.focus-mode .bottom-nav-item:hover .bottom-nav-label {
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+.focus-mode .more-bottom-dropdown {
+    background: rgba(227, 242, 253, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.focus-mode .more-dropdown-item {
+    color: #000000 !important;
+}
+
+.focus-mode .more-dropdown-item:hover,
+.focus-mode .more-dropdown-item.active {
+    background: rgba(255, 255, 255, 0.5) !important;
     color: #000000 !important;
 }
 
@@ -2373,11 +2534,18 @@ body.dark .focus-header .logo-dark {
    4. Logo is strictly the light theme logo for high visibility.
    ============================================================ */
 
-/* Force Light Logo */
+/* Force Light Logo in Focus Mode */
+.focus-mode .header .logo-light,
+.focus-mode .mobile-topbar .logo-light,
+.focus-mode .logo-light,
 .focus-header .logo-light,
 .focus-header .focus-page-logo,
+body.dark .focus-mode .header .logo-light,
+body.dark .focus-mode .mobile-topbar .logo-light,
 body.dark .focus-header .logo-light,
 body.dark .focus-header .focus-page-logo,
+[data-mode="dark"] .focus-mode .header .logo-light,
+[data-mode="dark"] .focus-mode .mobile-topbar .logo-light,
 [data-mode="dark"] .focus-header .logo-light,
 [data-mode="dark"] .focus-header .focus-page-logo {
     display: block !important;
@@ -2386,8 +2554,15 @@ body.dark .focus-header .focus-page-logo,
     width: auto !important;
 }
 
+.focus-mode .header .logo-dark,
+.focus-mode .mobile-topbar .logo-dark,
+.focus-mode .logo-dark,
 .focus-header .logo-dark,
+body.dark .focus-mode .header .logo-dark,
+body.dark .focus-mode .mobile-topbar .logo-dark,
 body.dark .focus-header .logo-dark,
+[data-mode="dark"] .focus-mode .header .logo-dark,
+[data-mode="dark"] .focus-mode .mobile-topbar .logo-dark,
 [data-mode="dark"] .focus-header .logo-dark {
     display: none !important;
     opacity: 0 !important;
