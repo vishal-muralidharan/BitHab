@@ -55,7 +55,10 @@ In BitHab, navigation elements adapt based on screen width and route:
 │                                                                  │
 │ Body class: .focus-mode                                          │
 │ - Bypasses Header, BottomNav, and MobileTopbar                   │
-│ - Dedicated top focus header with Back / Analytics / Spa buttons │
+│ - Dedicated top focus header (.focus-header) with Back/Analytics │
+│ - Header height (70px desktop, 72px mobile) and padding          │
+│   (0.75rem 1.5rem) match standard Header to guarantee zero logo  │
+│   displacement across page transitions                           │
 │ - Expands layout to 100vh with no extraneous scroll              │
 └──────────────────────────────────────────────────────────────────┘
 ```
