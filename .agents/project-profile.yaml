@@ -1,0 +1,275 @@
+blueprints:
+  areas:
+  - ui
+  - data
+  - tokens
+  - layout
+  dir: .agents/blueprints
+  enabled: true
+commands:
+  build: npm run build
+  check: npm run lint && npm run test
+  dev: npm run dev
+  install: npm install
+  lint: npm run lint
+  test: npm run test
+design:
+  component_dirs:
+  - src/components/layout
+  enabled: true
+  tokens_file: src/assets/css/style.css
+docs:
+  agents_file: AGENTS.generated.md
+  repo_map: README.md
+  skills_dir: .agents/skills
+git:
+  commit_format: '<type>(<scope>): <subject>'
+  push: never
+  scopes:
+  - name: agents
+    paths:
+    - .agents/**
+    - AGENTS.md
+    purpose: Build Forge pipeline and agent configuration
+  - name: pages
+    paths:
+    - src/pages/**
+    purpose: Page routes and views
+  - name: layout
+    paths:
+    - src/components/layout/**
+    purpose: UI layout components
+  - name: context
+    paths:
+    - src/context/**
+    purpose: React state management
+  - name: api
+    paths:
+    - src/api/**
+    purpose: API client integrations
+naming:
+- example: Dashboard.jsx
+  item: Components
+  style: PascalCase
+project:
+  mode: existing
+  name: bithab
+  platforms:
+  - web
+  summary: Habit tracker and analytics web application built with React, Vite, and
+    Firebase.
+responsive:
+  enabled: false
+schema_version: 2
+stack:
+  auth: Firebase Auth
+  backend: Firebase
+  bundler: Vite
+  database: Firestore
+  framework: React
+  hosting: Netlify
+  language: javascript
+  linter: Oxlint
+  package_manager: npm
+  router: React Router
+  state: React Context
+  styling: css
+  test_runner: Vitest
+structure:
+  layers:
+  - path: src/pages
+    purpose: Page components for routes
+  - path: src/components/layout
+    purpose: Shared UI layout components
+  - path: src/context
+    purpose: Global state contexts
+  - path: src/api
+    purpose: API client functions
+  root_allowed:
+  - index.html
+  - vite.config.js
+  - netlify.toml
+  - firestore.rules
+  - .oxlintrc.json
+  tests: tests-dir
+rules:
+- id: web-no-console
+  area: verify
+  text: Never ship console.log or console.debug calls in production source code.
+  enforced_by: test
+  check:
+    type: forbid
+    pattern: (?<![\w.$])console\.(?:log|debug)\s*\(
+    include:
+    - src/**/*.{js,jsx,ts,tsx,vue,svelte,html}
+    exclude:
+    - '**/*.test.*'
+    - '**/*.spec.*'
+    - src/test/**
+    hint: Remove console.log or console.debug, or use a dedicated logging primitive.
+    examples:
+      bad:
+      - console.log("user data:", user);
+      - console.debug("fetching auth state");
+      good:
+      - console.error("failed to initialize:", err);
+      - console.warn("deprecated property accessed");
+      - logger.log("audit event");
+  pack: web-hazards@1
+- id: web-target-blank-rel
+  area: security
+  text: Links targeting blank must include rel with noopener or noreferrer on the
+    same tag line.
+  enforced_by: test
+  check:
+    type: forbid
+    pattern: ^(?!.*rel=["\x27][^"\x27]*(?:noopener|noreferrer)).*target=["\x27]_blank["\x27]
+    include:
+    - src/**/*.{js,jsx,ts,tsx,vue,svelte,html}
+    hint: Add rel="noopener" or rel="noopener noreferrer" to links with target="_blank".
+    examples:
+      bad:
+      - <a href="https://example.com" target="_blank">External Link</a>
+      - <a target='_blank' href="https://example.com">Documentation</a>
+      good:
+      - <a href="https://example.com" target="_blank" rel="noopener">External Link</a>
+      - <a href="https://example.com" rel="noopener noreferrer" target="_blank">Documentation</a>
+      - <a href="/dashboard" target="_self">Dashboard</a>
+  pack: web-hazards@1
+- id: web-no-raw-eval
+  area: security
+  text: Never use eval() or equivalent dynamic script execution without a listed exception.
+  enforced_by: test
+  check:
+    type: forbid
+    pattern: (?<![\w$])(?:window\.)?eval\s*\(
+    include:
+    - src/**/*.{js,jsx,ts,tsx,vue,svelte,html}
+    hint: Do not use eval(). Parse structured data with JSON.parse or safe dispatch.
+    examples:
+      bad:
+      - eval(untrustedInput);
+      - window.eval("calculate()");
+      good:
+      - JSON.parse(untrustedInput);
+      - calculateValue(payload);
+  pack: web-hazards@1
+- id: web-no-inner-html
+  area: security
+  text: Never assign to innerHTML or use dangerouslySetInnerHTML without a listed
+    exception.
+  enforced_by: test
+  check:
+    type: forbid
+    pattern: (?<![\w$])(?:innerHTML\s*=|dangerouslySetInnerHTML\b)
+    include:
+    - src/**/*.{js,jsx,ts,tsx,vue,svelte,html}
+    hint: Do not inject raw HTML. Use textContent or sanitized framework primitives.
+    examples:
+      bad:
+      - container.innerHTML = renderedSnippet;
+      - '<div dangerouslySetInnerHTML={{ __html: rawHtml }} />'
+      good:
+      - container.textContent = textValue;
+      - <div className="content">{textValue}</div>
+  pack: web-hazards@1
+- id: web-no-committed-env
+  area: security
+  text: Never commit .env files containing local configurations or secrets.
+  enforced_by: test
+  check:
+    type: forbid_file
+    include:
+    - .env
+    - .env.local
+    - .env.*.local
+    - '**/.env'
+    - '**/.env.local'
+    exclude:
+    - .env.example
+    - .env.template
+    - '**/.env.example'
+    - '**/.env.template'
+    hint: Never commit .env files with secrets or local config. Add .env to .gitignore
+      and commit .env.example.
+    examples:
+      bad:
+      - .env
+      - apps/web/.env.local
+      good:
+      - .env.example
+      - apps/web/.env.template
+  pack: web-hazards@1
+- id: a11y-semantic-html
+  area: design
+  text: Use semantic HTML elements instead of generic divs with click handlers.
+  enforced_by: manual
+  pack: a11y-basics@1
+- id: a11y-visible-focus
+  area: design
+  text: Interactive elements must display high-contrast visible focus indicators.
+  enforced_by: manual
+  pack: a11y-basics@1
+- id: a11y-aa-contrast
+  area: design
+  text: Text and interactive controls must meet WCAG AA contrast standards.
+  enforced_by: manual
+  pack: a11y-basics@1
+- id: a11y-icon-button-labels
+  area: design
+  text: Icon-only controls must provide an accessible text label.
+  enforced_by: manual
+  pack: a11y-basics@1
+- id: a11y-img-has-alt
+  area: design
+  text: Image tags must include an alt attribute on the same tag line.
+  enforced_by: test
+  check:
+    type: forbid
+    pattern: <img\b(?![^>]*\balt\s*=)[^>]*>
+    include:
+    - '**/*.html'
+    - '**/*.htm'
+    - src/**/*.{jsx,tsx,vue,svelte,html}
+    hint: Add an alt attribute to the img tag. Use alt="" for decorative images.
+    examples:
+      bad:
+      - <img src="/hero.png">
+      - <img src="avatar.jpg" className="avatar" />
+      good:
+      - <img src="/hero.png" alt="Company logo" />
+      - <img src="decoration.svg" alt="" />
+      - <Image src="/hero.png" />
+  pack: a11y-basics@1
+- id: ui-state-loading-skeleton
+  area: design
+  text: Loading views must use skeleton blocks matching content shape with no layout
+    shift.
+  enforced_by: manual
+  pack: ui-states@1
+- id: ui-state-empty-action
+  area: design
+  text: Empty states must display an icon, 1 or 2 descriptive words, and an action.
+  enforced_by: manual
+  pack: ui-states@1
+- id: ui-state-error-alert
+  area: design
+  text: Error views must display a short message with an icon and role="alert".
+  enforced_by: manual
+  pack: ui-states@1
+quality_gates:
+- Confirm external links open in a new tab without access to window.opener.
+- Confirm environment variables are injected through pipeline secrets rather than
+  committed files.
+- Navigate through the entire interface using only the Tab and Shift+Tab keys.
+- Inspect focus outlines in high contrast mode.
+- Simulate slow network and verify skeleton dimensions match loaded content.
+- Trigger an empty collection and verify the primary creation button is visible.
+- Trigger an API failure and confirm the error banner announces via screen readers.
+rule_packs:
+- id: web-hazards
+  version: 1
+- id: a11y-basics
+  version: 1
+- id: ui-states
+  version: 1

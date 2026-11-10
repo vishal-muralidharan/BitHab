@@ -1,132 +1,56 @@
 ---
 name: repo-search
-description: >-
-  Use this skill to perform read-only discovery and auditing of any feature, component, context, utility,
-  or symbol across the entire BitHab repository (including src/pages/, src/components/, src/context/,
-  src/assets/css/, src/config/, and .agents/skills/). Reports whether the component is present,
-  its exact declaration and usage sites, architectural tier, and presents findings without making any code edits.
+description: Use to find out whether a feature, component, hook, helper, data field, style token or any symbol already exists in the repo, and where it is declared and used. Read-only discovery that reports findings without editing code. Also refreshes the repo map on request. Use it before creating any new file or function, when the user asks "is there already a...", "where is...", "find usages of...", or "refresh the repo map", and whenever audit-and-planning needs a search phase.
+compatibility: Needs file read, file edit, and shell access.
 ---
 
-# Repository Search & Component Discovery
+# Repo search
 
-This skill provides a systematic, **read-only** search and audit procedure across the entire **BitHab** codebase. Given any feature name, React component, context provider, Firestore field, CSS class, or styling token, this skill determines whether it exists in the repository, scans declaration and usage sites across all architectural layers, assesses theme and layout compliance, and presents structured findings.
+Two modes. Search mode is the default. Map mode runs only when asked.
 
----
+## Read first
 
-## 1. Core Directive: Search Only (No Edits or Additions)
+1. `.agents/project-profile.yaml`. If it is missing, run `project-bootstrap`.
+2. The repo map at `docs.repo_map`. Use its layer table to narrow the search before you scan the whole tree.
 
-> **Mandatory Rule:** This skill is strictly **READ-ONLY**.
-> - **Do NOT make any code edits, additions, deletions, or refactors.**
-> - **Do NOT create new application files, tests, or stylesheets.**
-> - Execute a comprehensive search and report verified findings in chat or in a Markdown document.
+## Search mode (read only)
 
----
+Do not edit, add or delete any file in this mode. Report findings in chat. Only the user can ask for a written report file.
 
-## 2. Universal Search Scope Matrix
+1. **Find names and variants.** Search the exact name, PascalCase, camelCase, kebab-case and snake_case forms, plus related CSS classes or data field names.
+2. **Separate declarations from usages.** Find the file that defines the symbol. Then list the files that import or call it.
+3. **Check the layer.** Compare the declaration's folder with `structure.layers`. Say whether it sits in the right layer.
+4. **Check state and storage.** Say whether it reads or writes shared state, storage, or the schema in `data.schema_source`.
+5. **Check conformance.** If `design.enabled`, check that it uses tokens from `design.tokens_file`. If `responsive.enabled`, check touch target size and width handling.
+6. **Report.**
 
-When given a component, symbol, or feature query, search across all five architectural surfaces in BitHab:
+Where to look, in order: the layers in the repo map, then the tests, then the docs and agent files (`README.md`, AGENTS.md, the skills folder).
 
-| Surface / Layer | Search Locations | Target Entity Types |
-| :--- | :--- | :--- |
-| **1. Route Page Views** | `src/pages/` | Top-level route pages (`Dashboard.jsx`, `Activities.jsx`, `Goals.jsx`, `Focus.jsx`, `DeepFocus.jsx`, etc.) |
-| **2. Layout & Shell Components** | `src/components/layout/` | Shell wrappers and navigation (`Header.jsx`, `BottomNav.jsx`, `MobileTopbar.jsx`, `Layout.jsx`) |
-| **3. Global State Contexts** | `src/context/` | State providers (`AuthContext.jsx`, `ActivityContext.jsx`, `GoalContext.jsx`, `ThemeContext.jsx`, etc.) |
-| **4. Vanilla CSS Stylesheets** | `src/assets/css/` | CSS rules, classes, and variables (`style.css`, `themes.css`, `dashboard.css`, `focus.css`, `deep-focus.css`, etc.) |
-| **5. Config & Integrations** | `src/config/firebase.js` | Firebase SDK initialization, auth and firestore instances |
-| **6. Agent Skills & Guidelines** | `.agents/skills/**/SKILL.md`<br>`AGENTS.md`<br>`README.md` | Workflows, coding rules, commit standards, and architectural specifications |
+### Output format
 
----
+Use paths relative to the repo root. Never use absolute paths or machine specific links.
 
-## 3. Systematic Search Procedure
-
-```text
-┌────────────────────────────────────────────────────────┐
-│ Step 1: Identifier & Variation Discovery               │
-│ Search exact names, PascalCase, camelCase & CSS classes│
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ Step 2: Separate Declarations from Usage Call Sites    │
-│ Pinpoint primary file definition vs consuming imports  │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ Step 3: Layer Analysis & Context Data Flow             │
-│ Check state ownership in src/context/ vs page state    │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ Step 4: Scan Stylesheets & Theme Compatibility         │
-│ Check CSS classes in src/assets/css/ and theme vars    │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ Step 5: Format & Deliver Structured Findings           │
-│ Deliver structured discovery summary to the user       │
-└────────────────────────────────────────────────────────┘
+```
+Target: <symbol or feature searched>
+Found: yes | no | partial
+Declaration: <path:line>
+Usage sites: <paths>
+Layer: <layer from the profile> (correct | misplaced)
+State and storage: <what it touches, or none>
+Conformance: <design and layout findings, or not applicable>
+Verdict: reuse | extend | create new, with the reason
 ```
 
-### Step 1: Identifier & Variation Discovery
-Search for the target component or concept using common naming variations:
-* **PascalCase:** `DeepFocus`, `ScheduleActivities`, `GoalContext`, `MobileTopbar`
-* **camelCase:** `useActivities`, `useGoals`, `subActivities`, `toggleActivityLog`
-* **CSS Selectors:** `.calendar-view`, `.deep-work-mode`, `.analytics-bar`, `.subactivity-card`
-* **CSS Custom Properties:** `--primary-color`, `--bg-primary`, `--surface-color`, `--text-primary`
+If nothing is found, say so and list the exact queries you tried.
 
-Use `grep_search` across `src/`, `public/`, and `.agents/skills/`.
+## Map mode (writes one file)
 
-### Step 2: Separate Declarations from Usages
-* **Declaration:** Where the component, context, or style rule is originally defined.
-* **Call Sites:** Where the symbol is imported and mounted, or where the CSS class is applied in JSX.
+Run only when the user asks for a refresh, or when `sync-skills-and-docs` calls for it. In this mode you may write only the file at `docs.repo_map`. Change nothing else.
 
-### Step 3: Layer Analysis & Context Data Flow
-Analyze architectural tier and state flow:
-1. Is it managed in a dedicated context provider (`src/context/`) or as isolated local component state?
-2. Does it persist data to Firestore (`setDoc`, `updateDoc`, `addDoc`)?
-3. Does it consume `useTheme()` or respect dynamic body classes?
-4. Does it handle loading and empty states cleanly?
+1. List the folders that hold files, to a depth of 3, under each source root named in `structure.layers`.
+2. For each layer in the profile, record up to 5 key files.
+3. Add a row for any folder that has files but no layer. Mark its purpose as `TODO` and tell the user to resolve it in the profile.
+4. Set the line "Last full scan" to today's date.
+5. Keep the section "Skills flagged for review" if it exists.
 
----
-
-## 4. Standard Output Template for Findings
-
-```markdown
-### Repository Discovery Report: `<Query Symbol or Feature>`
-
-#### 1. Presence & Status
-* **Status:** Present / Not Present / Partially Implemented
-* **Primary Declaration:** `[<Filename>](file:///path/to/file#L<line>)`
-* **Architectural Layer:** Page View (`src/pages/`) / Context Provider (`src/context/`) / Layout (`src/components/layout/`) / Stylesheet (`src/assets/css/`)
-
-#### 2. Declaration Summary
-* **Export Type:** Default export / Named export
-* **Props / Signature:** `({ ... })`
-* **Key Dependencies:** Contexts, hooks, and stylesheets consumed
-
-#### 3. Call Sites & Usage Locations
-* `[<ConsumerFile1>](file:///path/to/file#L<line>)`: Mounted or consumed here
-
-#### 4. Stylesheet & Theme Compliance
-* **CSS File:** `[<stylesheet.css>](file:///path/to/file)`
-* **CSS Custom Properties:** Consumes `var(--primary-color)`, `var(--bg-primary)`, etc.
-* **Theme Support:** Verified across all 6 themes and dark/light modes
-
-#### 5. Firestore Data Model
-* **Fields Touched:** e.g. `activities`, `subActivities`, `focusSessions`
-* **Payload Safety:** Sanitized against `undefined` values
-
-#### 6. Governing Agent Skills
-* `review-directory-structure`, `maintain-design-system`, `review-db-structure`
-```
-
----
-
-## 5. Anti-Patterns to Avoid
-
-* ❌ **Premature Editing:** Never edit code while executing this skill. It is strictly read-only.
-* ❌ **Single-Directory Blindness:** Searching only `src/pages/` while forgetting stylesheets in `src/assets/css/` or context state in `src/context/`.
-* ❌ **Assuming Absences:** Concluding a component doesn't exist before checking common variations (e.g., `ScheduleActivities` vs `ScheduleContext`, `deep-timer` vs `DeepFocus`).
+The map is a cache. It saves every later task from rescanning the repo. A stale map is worse than none, so refresh it after any structural change.

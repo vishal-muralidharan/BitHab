@@ -1,0 +1,96 @@
+{
+  "analyzers": [
+    "auth",
+    "config",
+    "data",
+    "layout",
+    "tokens",
+    "ui"
+  ],
+  "areas": {
+    "auth": {
+      "package.json": "ad9327a7c6b0e771e8f596c4d07866dab9e434dfa1b43eca71fc6dcd84de4d69",
+      "src/components/layout/BottomNav.jsx": "becb110bb8928674dca408ffdc0deaf9046315efe4d3f5b5daf98086d464e2c9",
+      "src/components/layout/Header.jsx": "c0dad3bdc4598d77cb1737d133a690fc90fbbd13cb7044a2889a075b0542ad3b",
+      "src/context/AuthContext.jsx": "9599d91a0ab7b38a239e2fd44c8ad5c8f13dd0a175f865abb1df1d84d91b5597",
+      "src/pages/Settings.jsx": "f2c3343ba5dd98e0a2f9cc4d5bd8de3338d939657fcb715c272ccd4f80a0f021",
+      "tests/components/BottomNav.test.jsx": "52b90a240f590c28aa83dd173a95f989366da50ba4970188eab4a9382247cbd6",
+      "tests/components/Header.test.jsx": "6db8f3a7124dd744a925098b9b206aa25c840d84c040a7ac7b7bc60887c9fde8",
+      "tests/context/AuthContext.test.jsx": "8565313109e6edcc646c3c6493aa931300d03ba20e865967e5f513eeee69a598",
+      "tests/pages/AuthPages.test.jsx": "03956bbb2e3c55aba0fafb83b03424c2dacdc09bd946de50e15fd0ead8952245",
+      "tests/pages/LegalPages.test.jsx": "d76e9aa935e4bebf0326f6d7f81abad3be1d06ec5ddacb3b0ea0aecf0256107c",
+      "tests/setup.js": "6d5618977b7e183144ca5409ccfe0db1060ef13d1ae8faff4b7db511efed2e2c"
+    },
+    "config": {
+      "config/generate-firebase-config.js": "df6c5cd3031d04c823d130c6336e917a8eff40a886e46dd2cbb0dcd176c9eb42",
+      "netlify/functions/delete-account.js": "4bf4dac40d8ef9101917a25d86c8c07740377bdea8c7420247344517dfc81ef5",
+      "package.json": "ad9327a7c6b0e771e8f596c4d07866dab9e434dfa1b43eca71fc6dcd84de4d69"
+    },
+    "data": {
+      "src/api/user.js": "49bd4036b7882c3b22cdc3880faf03ed39738854b6536b77cea866230155d6a2",
+      "src/context/ActivityContext.jsx": "2ef0ff284e239d40f63113b86f89dc3eb3c25ce0a73ee627f74c14b033c6cb9a",
+      "src/context/GoalContext.jsx": "d3f6e24b5498974ea5c1af4d6a0969c912bd6944c37314860854f5ce37846d69",
+      "src/context/ListContext.jsx": "c01cf9a1a678df11a81cf04a7e4293bb153f9c44dd0bbf82bc023407657fbeca",
+      "src/context/NoteContext.jsx": "11f30f3c84ebccfd6d2e464b7fe1e41c4ec2581ad3e7f792a23191800b634ef0",
+      "src/context/ReminderContext.jsx": "2edf6f8b58f104295e35f00006b25abbacc4d5c69b288359b4869c7d9762af01",
+      "src/context/ScheduleContext.jsx": "6e901c1c38ec50b77a7eea0fe7d0fdee627cbb91242b50ecf5e1c9d10b0db0da",
+      "src/context/ThemeContext.jsx": "9adf037d58360965c60501d88453a0a5833cba8cf776ccfa416188d81faed509",
+      "src/pages/Analytics.jsx": "9d00d8a919017d106aa7804c07b7e8dd5c01b3d9c2e1205289b67ec03b29d9a3",
+      "src/pages/DPDP.jsx": "f54e4ae430299f8de9febaaef1887c44a818afa9e0de372bd5410fcd6c9da20e",
+      "src/pages/DeepFocus.jsx": "a81c24448555ef4dc0a0aba3d23b976107207a57215f074d1ef618f67f81d120",
+      "src/pages/Focus.jsx": "8dc6b61acc756a1826e9a0c4d0902b87b49c00c0214df6658bfd9a68acaccb9b",
+      "src/pages/Goals.jsx": "ae003d9fda1b6dd7e42d7013989359baf24de0a65cdf2d8a1815480fdc6ea55f",
+      "src/pages/Notes.jsx": "66b475fb8eb0269b0f473cb75327b6915660da392d944295e24fe6253aa493a9",
+      "src/pages/Reminders.jsx": "2b72f36f74d311680e0175eadd3b3479a98dca2078155e02d8a4fc0b3f62bf0d",
+      "src/pages/Settings.jsx": "f2c3343ba5dd98e0a2f9cc4d5bd8de3338d939657fcb715c272ccd4f80a0f021",
+      "tests/context/ThemeContext.test.jsx": "ca417c0868d238dd58454f1ae03bc065a977ae941947c1ca2e682fed6880ad41",
+      "tests/pages/Analytics.test.jsx": "43362c3ac6a46a166b60129659f13f2e45f98e4e2ac7fba8da9b080961a393f5"
+    },
+    "layout": {
+      "index.html": "43043ef301306b76c288bcafc8de582e4e309e0ec1c499720126115c7de717a3",
+      "src/assets/css/clock.css": "2dfb91ef5f5cacd156dc2ab093622e9b20755332019ffbd7667d072da1a202fb",
+      "src/assets/css/custom-dialogs.css": "5ffecbfd6415f0fd82d4e3e085e1c124d137986d0eef754928afaa779e5e2bef",
+      "src/assets/css/dashboard.css": "2d13cf5614dc3827643c51d1c4f0c4b41517ec9a60abea2ca9ff0a5780fa1ca3",
+      "src/assets/css/deep-focus.css": "a1411dfac011bbf5a47a6fd843c6172aa0aadd2bb844e011a24be8b2b9c7cadc",
+      "src/assets/css/focus.css": "e047a73553891038ffc3c6a39e3bf4dada20a822a23081e792f5cee89e631e3a",
+      "src/assets/css/legal.css": "9cccc9585fc98fbda5620e64797691458d0f2097535a5b710f832c33b3c6614f",
+      "src/assets/css/lists.css": "385d11059710eb9fd2a6ca99aa0079eaba93151f2f1389df4db0d847a9797507",
+      "src/assets/css/management.css": "b3bf8fd692527160c3fbfff06f8d0f1e305dceeb947a18ae0cc00dacc10d5732",
+      "src/assets/css/notes.css": "354c565ebd3e60af4cd2b272f7ae0fab8f5bdf66f0b1ecaeebe268ed6ca254a1",
+      "src/assets/css/schedule.css": "b713813b169bb97c0576cf613f6598e16a6b382cc2fb56e29e444e25ee87cadb",
+      "src/assets/css/style.css": "dff1039beebf86b6e9a8b8ced7a850e235b0fd2916aa85e5ccaebd717d0053b8",
+      "src/assets/css/themes.css": "8e655cc260e613089823fdee982364d040af3d8206acc37d3f0db6788861424c",
+      "src/components/layout/BottomNav.jsx": "becb110bb8928674dca408ffdc0deaf9046315efe4d3f5b5daf98086d464e2c9",
+      "src/components/layout/Header.jsx": "c0dad3bdc4598d77cb1737d133a690fc90fbbd13cb7044a2889a075b0542ad3b",
+      "src/components/layout/MobileTopbar.jsx": "5a90167d89be2fef7ced8d850b4fe5874c5f94e50381191bd384ee55261ecee0",
+      "tests/components/BottomNav.test.jsx": "52b90a240f590c28aa83dd173a95f989366da50ba4970188eab4a9382247cbd6",
+      "tests/components/Header.test.jsx": "6db8f3a7124dd744a925098b9b206aa25c840d84c040a7ac7b7bc60887c9fde8",
+      "tests/components/MobileTopbar.test.jsx": "b05bc7ba27ddbd4dd30f82b4398cba2484791e7e2f2ea1f5166569228339bdfd"
+    },
+    "tokens": {
+      "src/assets/css/dashboard.css": "2d13cf5614dc3827643c51d1c4f0c4b41517ec9a60abea2ca9ff0a5780fa1ca3",
+      "src/assets/css/style.css": "dff1039beebf86b6e9a8b8ced7a850e235b0fd2916aa85e5ccaebd717d0053b8"
+    },
+    "ui": {
+      "src/components/common/ConfirmModal.jsx": "b684d01c400f770a025e7fca4ba63f77103493eac294258288a474add8e60288",
+      "src/components/layout/BottomNav.jsx": "becb110bb8928674dca408ffdc0deaf9046315efe4d3f5b5daf98086d464e2c9",
+      "src/components/layout/Header.jsx": "c0dad3bdc4598d77cb1737d133a690fc90fbbd13cb7044a2889a075b0542ad3b",
+      "src/components/layout/Layout.jsx": "baf452ae6a79b80f634b22a592d928ef9adb17ec2b0c389abdf6160414df0a9b",
+      "src/components/layout/LegalFooter.jsx": "bf288b5bb1a6f331c6c56458a45aafbf142f35277c186030431e16e44bfa98ed",
+      "src/components/layout/MobileTopbar.jsx": "5a90167d89be2fef7ced8d850b4fe5874c5f94e50381191bd384ee55261ecee0",
+      "src/components/layout/PublicLegalLayout.jsx": "1da54d3b81a13cddb8fcc6c1716c0c298adc41bc6b6696817371084e208ae642",
+      "src/components/layout/TermsAgreementModal.jsx": "c2514317ed9ebc052a3fe0b390e9d9844bf5f572d910139bda2e95b8041bf813",
+      "src/pages/Activities.jsx": "0e70fca27014f661ea5d97a96ee98263bdb32199decec109c99e83c609bfc246",
+      "src/pages/Dashboard.jsx": "736b70c7e18e03d781549856fcf0e7c95911ab7f6abd6be3b865a1882290f00f",
+      "src/pages/Focus.jsx": "8dc6b61acc756a1826e9a0c4d0902b87b49c00c0214df6658bfd9a68acaccb9b",
+      "src/pages/Goals.jsx": "ae003d9fda1b6dd7e42d7013989359baf24de0a65cdf2d8a1815480fdc6ea55f",
+      "src/pages/Lists.jsx": "6aa53204a6bfc4a53a79770d172c412b131de5a028c5f787586d8be7e4cdfd94",
+      "src/pages/Notes.jsx": "66b475fb8eb0269b0f473cb75327b6915660da392d944295e24fe6253aa493a9",
+      "src/pages/Register.jsx": "92853cd941d6d3c8aa5c670471f18bffb058dcfc61e621f4501133758fd8b89e",
+      "src/pages/Reminders.jsx": "2b72f36f74d311680e0175eadd3b3479a98dca2078155e02d8a4fc0b3f62bf0d",
+      "src/pages/Settings.jsx": "f2c3343ba5dd98e0a2f9cc4d5bd8de3338d939657fcb715c272ccd4f80a0f021",
+      "tests/components/TermsAgreementModal.test.jsx": "88b943956042bcbbcb4f32eda2abaee4507f80a73fcc58306bf37baf4776b24b"
+    }
+  },
+  "generator_version": "0.2.0"
+}
