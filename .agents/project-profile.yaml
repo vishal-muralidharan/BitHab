@@ -1,0 +1,94 @@
+blueprints:
+  areas:
+  - ui
+  - data
+  - tokens
+  - layout
+  dir: .agents/blueprints
+  enabled: true
+commands:
+  build: npm run build
+  check: npm run lint && npm run test
+  dev: npm run dev
+  install: npm install
+  lint: npm run lint
+  test: npm run test
+design:
+  component_dirs:
+  - src/components/layout
+  enabled: true
+  tokens_file: src/assets/css/style.css
+docs:
+  agents_file: AGENTS.generated.md
+  repo_map: README.md
+  skills_dir: .agents/skills
+git:
+  commit_format: '<type>(<scope>): <subject>'
+  push: never
+  scopes:
+  - name: agents
+    paths:
+    - .agents/**
+    - AGENTS.md
+    purpose: Build Forge pipeline and agent configuration
+  - name: pages
+    paths:
+    - src/pages/**
+    purpose: Page routes and views
+  - name: layout
+    paths:
+    - src/components/layout/**
+    purpose: UI layout components
+  - name: context
+    paths:
+    - src/context/**
+    purpose: React state management
+  - name: api
+    paths:
+    - src/api/**
+    purpose: API client integrations
+naming:
+- example: Dashboard.jsx
+  item: Components
+  style: PascalCase
+project:
+  mode: existing
+  name: bithab
+  platforms:
+  - web
+  summary: Habit tracker and analytics web application built with React, Vite, and
+    Firebase.
+responsive:
+  enabled: false
+schema_version: 2
+stack:
+  auth: Firebase Auth
+  backend: Firebase
+  bundler: Vite
+  database: Firestore
+  framework: React
+  hosting: Netlify
+  language: javascript
+  linter: Oxlint
+  package_manager: npm
+  router: React Router
+  state: React Context
+  styling: css
+  test_runner: Vitest
+structure:
+  layers:
+  - path: src/pages
+    purpose: Page components for routes
+  - path: src/components/layout
+    purpose: Shared UI layout components
+  - path: src/context
+    purpose: Global state contexts
+  - path: src/api
+    purpose: API client functions
+  root_allowed:
+  - index.html
+  - vite.config.js
+  - netlify.toml
+  - firestore.rules
+  - .oxlintrc.json
+  tests: tests-dir
