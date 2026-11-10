@@ -1,136 +1,108 @@
 ---
 name: targeted-module-testing
-description: >-
-  Use this skill whenever any code change is made to a page, component, context, or stylesheet in BitHab.
-  Ensures that static analysis with oxlint, production builds with vite build, and live browser tests
-  are executed to guarantee zero regressions, zero unhandled exceptions, and clean bundle generation.
+description: Use after any change in a project that has a .agents/project-profile.yaml. Runs the verify, deploy and report stages. Runs lint, test and build commands, checks rule-enforcing tests, evaluates goal acceptance invariants, runs browser checks and a deploy loop only if enabled, and ends every task with a Post-Build Audit. Use it before you say a task is done, after every build, and whenever the user asks to verify, test, check, ship or deploy.
+compatibility: Needs file read, shell, and network access if deploy checks are enabled.
 ---
 
-# Targeted Module Testing & Verification Workflows
+# Verification, deploy and report
 
-This skill defines the testing, static analysis, build verification, and browser testing procedures for the **BitHab** repository.
+Stages 5, 7 and the optional deploy stage of the pipeline. A change is not done until checks pass, goal acceptance invariants are verified, and the report is written.
 
----
+## Read first
 
-## 1. Core Principles
+`.agents/project-profile.yaml`: sections `commands`, `verification` and `capabilities`. Use the commands exactly as written there. Do not substitute your own.
 
-1. **Verify on Every Change:** Even a single-line fix, minor refactor, or styling adjustment must be validated with static analysis (`oxlint`) and production build checks (`vite build`) before moving forward.
-2. **Zero Errors Mandate:** Commits are only permitted when `npm run lint` reports **0 errors** and `npm run build` compiles completely.
-3. **Live Browser Verification:** For user-facing features, route transitions, and interactive controls, use browser testing to verify DOM states, theme toggles, and console stability.
-4. **Clean Workspace Policy:** Never commit ephemeral build artifacts in `dist/` or transient screenshots.
-5. **Zero `sed` Command Policy:** Avoid `sed` commands completely. Never use `sed` to edit files, rewrite configs, alter test files, or inject build-time variables. Source files must only be edited with dedicated tools (`replace_file_content` / `multi_replace_file_content`), environment variables must be handled via native platform tools (`import.meta.env` or Node.js `fs`), and builds must compile directly via `npm run build` (`vite build`).
+## 1. Run the checks
 
----
+| Check | Source | Pass when |
+|---|---|---|
+| Complete check | `commands.check` | exits 0 |
+| Lint | `commands.lint` | 0 errors, and 0 warnings if `verification.zero_warnings` |
+| Tests | `commands.test` | all pass |
+| One test file | `commands.test_single` with `{path}` | passes |
+| Build | `commands.build` | completes |
 
-## 2. When to Use This Skill
+If `commands.check` is empty, run lint, test and build in that order. Empty commands are skipped. Say which ones you skipped.
 
-Activate this skill:
-* Immediately after making any modification to source code (in `src/pages/`, `src/components/`, `src/context/`, `src/assets/css/`, or `src/config/`).
-* When introducing a new page, context provider, modal, or stylesheet.
-* When updating Firestore payload schemas or data listeners.
-* Before staging and committing any changes under the `atomic-commits` skill.
+When blueprints exist (`.agents/blueprints/`), run `python3 .agents/skills/project-blueprints/scripts/blueprint.py verify` after the checks.
 
----
+Fix every failure at its cause. Do not edit a test or loosen a rule just to get a pass.
 
-## 3. BitHab Verification Command Reference
+## 2. Tests
 
-Execute these commands in the terminal for rapid, reliable feedback:
+- Add a test for each new behavior. Update tests when visible copy changes.
+- Assert on roles, labels and test ids. Do not assert on class names or colors.
+- If `design.enforced_by` is set, that test or lint rule enforces the design rules. It must pass. Do not edit it to make a change pass unless the user agrees the rule should change. If the rule should change, change the profile through `sync-skills-and-docs`.
+- Know what your test environment fakes (timers, layout, device APIs). Note any behavior that only a real browser can confirm.
+- Cross-platform path assertions: When tests check CLI console output, file paths, or diffs, normalize path separators (`/` vs `\`) or use POSIX formatting (`Path.as_posix()`). Never assert hardcoded Unix slashes against raw host OS paths.
+- Windows execution: When spawning child processes or npm commands in tests on Windows, pass `shell=(sys.platform == "win32")` for batch scripts (`npm.cmd`), and avoid shell wildcard expansion in npm test script targets.
 
-| Verification Type | Command | Scope & Purpose |
-| :--- | :--- | :--- |
-| **Unit & Integration Tests** | `npm test` | Runs `vitest run` executing 24 test suites across all context providers, layout navigation components, and page views. |
-| **Static Code Analysis** | `npm run lint` | Runs `oxlint` across all files to detect syntax errors, unused variables, React hook dependency bugs, and impure render functions. |
-| **Production Build** | `npm run build` | Compiles client application using `vite build` to guarantee bundle integrity and import resolution. |
-| **Local Dev Server** | `npm run dev` | Launches local Vite development server on `http://localhost:5173/`. |
-| **Production Preview** | `npm run preview` | Previews the compiled `dist/` bundle locally to test production asset loading. |
+## 2b. Goal Acceptance Verification
 
----
+Automated tests exiting with code 0 does not prove that the user's objective was met.
 
-## 4. Canonical Reusable Test User Accounts
+1. Read `.agents/work/CURRENT_GOAL.md`. Confirm that `# Current Goal:` and the acceptance invariants reflect the active task being verified.
+2. Evaluate each acceptance invariant listed under `Acceptance Invariants`:
+   - Inspect data flow, API contract, or rendered component behavior against the expected invariant.
+   - Confirm edge cases (zero states, invalid inputs, error handling) behave as intended.
+3. Record invariant status:
+   - Mark `[x]` for proven invariants.
+   - If an invariant fails, record the observed deviation in `CURRENT_GOAL.md`.
+   - This signal feeds directly into Stage 5a (Goal Loop) in `feature-delivery`.
 
-To avoid polluting the database with throwaway users, **never register a new account** during manual, subagent, or browser testing if an existing canonical test user can be reused. Always use the canonical credentials below.
+## 3. Browser checks (optional)
 
-### Reusable Test User Registry
+Run only if `capabilities.browser_inspection.enabled` is true. Use the linked reference, if any, to run each sentence in `verification.browser_checks` against a build or preview.
 
-| Role / Environment | Email | Password | UID / Notes |
-| :--- | :--- | :--- | :--- |
-| **Primary Browser & Live E2E** | `test@bithab.com` | `Password123!` | Primary persistent test account with seeded activities, goals, synced notes, and theme state. Always check if the browser session is already authenticated with this user before attempting login. |
-| **Secondary Verification Account** | `testuser999@example.com` | `Password123!` | Registered fallback account for multi-user sync checks, dual-tab testing, and auth form validation. |
-| **Vitest & JSDOM Mock User** | `test@bithab.local` | `secret123` | Default mock user returned in [tests/setup.js](file:///Users/VM/Projects%20-%20Curr/BitHab/tests/setup.js) (`uid: 'test-user-123'`). |
-| **Auth Pages Test Mock User** | `user@example.com` | `secret123` | Mock user for [tests/pages/AuthPages.test.jsx](file:///Users/VM/Projects%20-%20Curr/BitHab/tests/pages/AuthPages.test.jsx). |
+If the capability is off, do not skip silently. List the checks under "Not run" in the report so the user can do them by hand.
 
-### Test User Reuse Protocol:
-1. **Never Click "Register" By Default:** When opening `http://localhost:5173/`, if redirected to `/login`, do not register a new user. Fill `test@bithab.com` with `Password123!` and click "Login".
-2. **Session Persistence:** Browser sessions retain authentication in IndexedDB (`firebaseLocalStorageDb`). When running browser subagent tasks, inspect if a session is already active before taking any auth actions.
-3. **Seeded Data Integrity:** `test@bithab.com` contains established data structures across activities, goals, and notes. Tests verifying real-time sync or UI changes should leverage this user to verify realistic application state.
+## 3b. Reference checks
 
----
+Run `python3 .agents/skills/extend-pipeline/scripts/refs.py due --stage verify --paths <changed files>`. Apply each listed reference to the change. Run a bundled script only if the listing says allow_scripts is true. Otherwise list it under 'Not run'. If a reference has mode gate and reports a blocking finding, stop and ask the user. Report findings under 'Third party review' in the Post-Build Audit, with the reference name.
 
-## 5. Verification Workflow Steps
+## 4. Deploy (optional)
 
-### Step 1: Execute Static Analysis (`oxlint`)
-Run the linter to verify code health:
-```bash
-npm run lint
-```
-* **Success Criteria:** Must report `0 errors`.
-* If warnings appear (e.g. unused variables, missing hook dependencies, or impure render calls like `Date.now()` inside component bodies):
-  1. Remove unused imports or variables.
-  2. Wrap event handlers in `useCallback` where appropriate.
-  3. Re-run `npm run lint` until clean.
+Run only if `capabilities.deploy.enabled` is true, and only after step 1 passes. Never deploy a failing build.
 
-### Step 2: Execute Production Build (`vite build`)
-Run the build command to ensure the bundling pipeline succeeds:
-```bash
-npm run build
-```
-* **Success Criteria:** Must complete cleanly (e.g. `✓ built in <X>ms`) and output bundles in `dist/`.
-* If any import path is broken or any JSX element has invalid syntax, Vite will halt with a clear error trace. Resolve the issue immediately.
+1. Run `capabilities.deploy.command` (or `commands.deploy`).
+2. Check success: the command exits 0, and `verify_url` returns HTTP 200 when it is set. For example `curl -s -o /dev/null -w "%{http_code}" <verify_url>`.
+3. On failure, if `on_failure` is `report`: stop. Show the failing output and the likely cause.
+4. On failure, if `on_failure` is `self-heal`: read the failing output. If a linked reference documents a log command, use it. Diagnose the root cause. Fix it in code or project config with your editing tools. Re-run `commands.check`. Deploy again. Stop after `max_attempts` tries (default 3) and report what you tried.
 
-### Step 3: Interactive Browser Validation
-For user-facing UI and interactive controls:
-1. Ensure the dev server is active on `http://localhost:5173/`.
-2. Ensure the browser is logged in using the canonical test account (`test@bithab.com` / `Password123!`).
-3. Inspect the modified page:
-   - Verify layout and styling in both Light mode and Dark mode.
-   - Verify theme toggle functionality in `Header.jsx`.
-   - Verify responsive behavior on desktop and mobile viewports.
-   - Check the browser console to confirm **0 unhandled runtime exceptions**.
+Never change secrets, environment variables, hosting settings or billing during a self-heal loop. Ask the user instead.
 
-### Step 4: Feature-Specific Verification Patterns
+## 5. Post-Build Audit
 
-#### 1. Dashboard Desktop Viewport & Modal Picker Verification
-* **Fixed Viewport Lock:** On desktop viewports (`>= 1024px`), confirm the dashboard page cannot scroll down into dead space (`height: calc(100vh - 90px); overflow: hidden;`). Expanding a card triggers `.expanded-active` and restores vertical scrolling.
-* **Calendar Weekday Centering:** Inspect `.calendar-view .weekday` to confirm weekday headers (`Sun` through `Sat`) are vertically and horizontally centered between the header bottom divider and weekday row divider (`height: 38px; display: flex; align-items: center; justify-content: center;`).
-* **Calendar Header Active Activity Title:** Confirm `#calendar-title` displays the active activity name (or "All Activities") and `.calendar-subtitle` displays the current month and year.
-* **Month/Year/Activity Modal (`#year-month-picker-modal`):**
-  - Click `#current-date` or `.calendar-title-container` to open the modal.
-  - Verify `#year-select` has ±5 years, `#month-select` has 12 months, and `#activity-select` lists all activities.
-  - Test applying changes via `#apply-year-month`: confirm calendar view and activity dot filtering update.
-  - Test cancelling via `#cancel-year-month`, backdrop click, and `Escape` key.
-  - Verify mobile reflow: on `< 480px`, dropdowns stack vertically with 100% width and 44px touch targets.
+End every task with this section when `verification.post_build_report` is true. Fill it from what you actually observed. Do not pad it.
 
-#### 2. Deep Focus Compulsory Fullscreen & Timer Controls Verification
-* **Compulsory Fullscreen Prompt:** Navigate to `/deep-focus` in a windowed browser state; verify `#fullscreen-prompt` backdrop blocks interaction.
-* **Fullscreen Entry:** Click "Enter Fullscreen" (`#enter-fullscreen-btn`); verify HTML5 fullscreen engages and the overlay closes.
-* **Auto-Pause on Exit:** While the timer is active, exit fullscreen (press `Escape`); verify the timer automatically pauses and the `#fullscreen-prompt` modal immediately re-appears.
-* **Traffic-Light Timer Buttons:** Verify START is Green (`#10b981`), PAUSE is Yellow (`#f59e0b`) with dark text, and STOP is Red (`#ef4444`) with white text.
+When all invariants pass, update `.agents/work/CURRENT_GOAL.md`: set `Status: completed`. If part of a series of tasks, mark the current task completed in `Series Queue` and prepare `CURRENT_GOAL.md` to transition to the next task in `feature-delivery`.
 
----
-
-## 6. Testing Quality Checklist
-
-Before considering module verification complete:
-```text
-[ ] 1. npm test executed with all unit and integration tests passing.
-[ ] 2. npm run lint executed and passed with 0 errors.
-[ ] 3. npm run build executed and compiled cleanly without bundling failures.
-[ ] 4. Reusable canonical test user (test@bithab.com) used for all live browser verification.
-[ ] 5. No stray console.error statements or unhandled promise rejections in browser.
-[ ] 6. Clean workspace state verified via git status.
-[ ] 7. Zero sed commands used during testing, building, or file manipulation.
-[ ] 8. Dashboard desktop fixed height lock, weekday centering, and #year-month-picker-modal verified.
-[ ] 9. Deep Focus compulsory fullscreen enforcement and traffic-light timer buttons verified.
-[ ] 10. Ready for atomic commit via atomic-commits skill.
+```markdown
+### Post-Build Audit: Open Questions & Known Issues
+- **Goal Invariants:** <all passed, or which invariants failed with evidence>
+- **Checks:** <what ran and the result. Not run: <what was skipped and why>>
+- **Try it:**
+  1. <manual step 1 to verify behavior>
+  2. <manual step 2 to verify behavior>
+  3. <manual step 3 to verify behavior>
+- **Known Issues:** <edge cases, quirks and limits you found>
+- **Open Questions:** <decisions that need the user>
+- **Rule Gaps:** Did this change work around a missing rule? <none, or missing convention to codify with incident-to-rule>
 ```
 
+Always include 3 to 5 clear manual steps under "Try it" for each changed behavior so the user can test the change.
+
+Look for known issues in these places, depending on the profile:
+
+- Always: behavior that tests cannot prove, and edge cases of the new code.
+- `responsive.enabled`: width limits, virtual keyboard overlap, safe areas and zoom.
+- `design.enabled`: legibility in every theme, focus visibility and icon clarity.
+- `data.storage` is set: storage quota, offline retries, migrations and idempotent writes.
+- Keyboard shortcuts were added: modifiers across operating systems, and capture while typing in inputs.
+- Rule gaps: check whether this task worked around an unwritten convention. If yes, name the convention and suggest running `incident-to-rule`.
+
+Open questions are choices the user should make: trade-offs, label or placement choices, and future schema changes.
+
+## 6. Finish
+
+Do not commit here. Hand off to `atomic-commits`.

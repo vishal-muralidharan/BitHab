@@ -1,135 +1,110 @@
 ---
 name: atomic-commits
-description: >-
-  Use this skill to enforce atomic, function-scoped git commits during development in BitHab.
-  Ensures every change to a file or cohesive group of files contributing to a specific
-  function, step, or sub-module is validated and committed before moving on to the next
-  function, module, or step.
+description: Use whenever you are about to commit code in a project that has a .agents/project-profile.yaml. Enforces small, single purpose commits whose message follows the project's own format, scopes and push policy. Validates the message with a script. Use it after finishing any cohesive unit of work, before starting the next one, and whenever the user says commit, save my work, or wrap up.
+compatibility: Needs file read, shell, git, Python 3, and PyYAML.
 ---
 
-# Atomic & Modular Git Commits
+# Atomic commits
 
-This skill provides step-by-step instructions for committing code changes in small, atomic, function-scoped increments in the **BitHab** repository.
+Stage 5 of the pipeline. One functional unit per commit makes rollbacks, reviews and bisects easy. Mixed commits make all three hard.
 
----
+## Read first
 
-## 1. Core Principle
+`.agents/project-profile.yaml`, section `git`. It sets the message format, allowed types, allowed scopes, the push policy and the staging policy. Do not assume any of them.
 
-> **Rule:** Every functional change to a file or cohesive set of files must be committed before proceeding to the next function, next step, or next module.
+## Principles
 
-Never accumulate changes across multiple unrelated features or layers (e.g., modifying `GoalContext.jsx`, `Notes.jsx`, and `style.css` all in one batch). Keeping commits modular and atomic ensures easy rollbacks, clean review histories, and zero merge conflicts across the React client, contexts, stylesheets, and agent guidelines.
+- **One unit per commit.** A unit is one function, step, module or file group that does one job. Do not batch unrelated changes because they were mentioned in the same prompt.
+- **The plan sets the boundaries, not the prompt.** If the user gave broad phases, decompose them into units first (see `audit-and-planning`) and commit each unit on its own.
+- **Never commit broken code.** The checks in the next section must pass first.
+- **Respect the push policy.** If `git.push` is `never`, never run `git push`, even to be helpful, unless the user's current message tells you to push. If it is `ask`, ask first. If it is `allowed`, push only when the work is done.
 
-### Primacy of Skill-Defined Atomic Increments Over User-Provided Phases
+## Workflow
 
-> **Crucial Rule:** Irrespective of high-level phases or grouped deliverables provided in a user prompt, the execution plan, test verification, and git commits must ALWAYS follow the atomic standards of this skill (`atomic-commits`) and `audit-and-planning`, NOT the user's high-level phase groupings.
-* When a user presents instructions organized in broad phases (e.g. "Phase 1: Update Activities & Schedule", "Phase 2: Fix Goals and Notes"), decompose each phase into granular, atomic steps.
-* Each independent functional unit (context provider, page view, stylesheet adjustment, or layout element) must be developed, validated, and committed on its own before moving to the next.
-* Never batch distinct functional units into a single commit merely because they were mentioned together in the prompt.
+### 1. Find the boundary
 
----
+State the single unit you just finished and list the files that belong to it. Leave out build output, caches, `.DS_Store` and anything in `.gitignore`.
 
-## 2. When to Use This Skill
+### 2. Verify
 
-Activate this skill:
-* When implementing a new feature composed of multiple functions or steps.
-* When fixing bugs across one or more pages or contexts.
-* When refactoring a specific context, page, or stylesheet.
-* When updating Firestore data handling or UI layout classes.
-* After completing any cohesive unit of work and before starting work on the next component or page.
+Run the cheapest commands that cover the change:
 
----
+- `commands.lint` and `commands.build`.
+- `commands.test_single` for each test you touched.
+- If only `commands.check` is set, run it.
 
-## 3. Workflow Steps
+Run the full `commands.check` before the last commit of a task. Fix failures before you stage anything. Apply the same zero warnings standard as `verification.zero_warnings`.
 
-### Step 1: Identify the Functional Boundary
-* Define the single, cohesive unit of work just completed (e.g., adding subactivity editing to `ActivityContext.jsx` and `Activities.jsx`, or aligning `deep-focus.css` timer controls).
-* Identify all files that directly contributed to this functional unit.
-* Ensure no unintended files (build artifacts in `dist/`, `.DS_Store`, temporary files) are included.
+Then run `git diff` and `git status`. Confirm that only intended changes are present.
 
-### Step 2: Pre-Commit Verification
-Before staging files, verify that the changes are sound:
-1. **Run Linter:** Execute `npm run lint` (`oxlint`). Ensure zero errors.
-2. **Run Build:** Execute `npm run build` (`vite build`). Ensure the production bundle builds without errors.
-3. **Review Diff:** Run `git diff` to ensure only intentional modifications are present.
-4. **Check Status:** Run `git status` to see exact modified and untracked files.
-5. **Zero `sed` Verification:** Confirm zero `sed` commands were used—all modifications must be produced via dedicated editing tools or platform-agnostic scripts.
+### 2b. Make each commit stand alone
 
-### Step 3: Granular Staging
-Stage **only** the files relevant to the specific functional increment:
+Every commit must pass the checks by itself, not only the last one. Two habits make that true:
+
+- **Order units by dependency.** Commit the file that is called before the file that calls it. For example, commit a check script before the `package.json` entry that runs it.
+- **Split shared files.** When 1 file serves 2 units (a manifest, a config, an index), stage only the hunks of the current unit with `git add -p`.
+
+After a multi unit task, you can prove it with `git rebase -x "<commands.check>" <base-commit>`. It runs the check on every commit and stops at the first one that fails.
+
+### 3. Stage
+
+- If `git.stage` is `granular`: stage named paths only, with `git add <path> <path>`. Do not use `git add .` or `git add -A`.
+- If `git.stage` is `all`: `git add -A` is allowed after you read `git status`.
+
+### 4. Write the message
+
+Use the format in `git.commit_format`. Use a type from `git.types`.
+
+If `git.scopes` has entries, run the suggest_scope command with `--staged` before choosing a scope, show its top suggestions, and never guess:
+
 ```bash
-git add <path/to/file1> <path/to/file2>
-```
-* Avoid blanket `git add .` unless all changed files strictly belong to that single functional unit.
-
-### Step 4: Craft a Semantic Commit Message (Single Line Only)
-Use the Semantic Commit format on **one line only**:
-```text
-<type>(<scope>): <comprehensive subject in present tense>
+python3 .agents/skills/atomic-commits/scripts/suggest_scope.py --profile .agents/project-profile.yaml --staged
 ```
 
-**Key Constraints:**
-* **Single-Line Only:** Never include multi-line bodies, footers, or line breaks in commit messages.
-* **Present Tense:** Write the subject in present tense (e.g. `add`, `update`, `fix`, `refactor`, `remove`, not `added`, `fixed`, `adding`).
+For unstaged files, pass `--files <files>`:
 
-**Allowed Types:**
-* `feat`: A new feature or function
-* `fix`: A bug fix
-* `test`: Adding or running tests
-* `refactor`: Code change that neither fixes a bug nor adds a feature
-* `style`: Stylesheets, CSS variables, layout adjustments
-* `docs`: Documentation only changes
-* `chore`: Maintenance, dependency updates, tooling
+```bash
+python3 .agents/skills/atomic-commits/scripts/suggest_scope.py --profile .agents/project-profile.yaml --files <files>
+```
 
-**Standard BitHab Scopes:**
-* `activities`: Activities manager, subactivity CRUD, color pickers, modals (`Activities.jsx`, `ActivityContext.jsx`)
-* `schedule`: ScheduleActivities calendar, pattern scheduling, activity logs (`ScheduleActivities.jsx`, `ScheduleContext.jsx`)
-* `goals`: Goal tracking, subgoals accordion, completed accordion, edit modal (`Goals.jsx`, `GoalContext.jsx`)
-* `reminders`: Datetime reminders, status formatting, edit modals, past indicators (`Reminders.jsx`, `ReminderContext.jsx`)
-* `notes`: Daily notes, general notes, inline editing, favorites, date picker (`Notes.jsx`, `NoteContext.jsx`)
-* `lists`: Checklists, todo lists, numbered & bulleted lists, list items (`Lists.jsx`, `ListContext.jsx`)
-* `focus`: 3-column focus room, live digital clock, tasks, motivational quotes (`Focus.jsx`)
-* `deep-focus`: Fullscreen deep work session timer, target duration, progress bar (`DeepFocus.jsx`)
-* `analytics`: Focus analytics, 7-day weekly bar chart, metrics cards (`Analytics.jsx`)
-* `themes`: Theme switcher, preview cards, theme context, dark/light mode (`Themes.jsx`, `ThemeContext.jsx`)
-* `auth`: Login, Register, Google OAuth, password reset, auth redirects (`Login.jsx`, `Register.jsx`, `AuthContext.jsx`)
-* `dashboard`: Home dashboard, calendar view, dots, card navigators (`Dashboard.jsx`)
-* `layout`: Header, BottomNav, MobileTopbar, Layout shell, body classes (`Header.jsx`, `BottomNav.jsx`, `Layout.jsx`)
-* `styles`: Vanilla CSS stylesheets in `src/assets/css/`
-* `db`: Firestore schema handling, payload sanitization, queries
-* `skills`: Agent workflow skills (`.agents/skills/`)
-* `docs`: Architecture documentation (`AGENTS.md`, `README.md`)
+Pick a suggested scope. Show its top suggestions. Never guess. If none fits, do not invent one silently. Use the closest scope, finish the commit, and ask the user for confirmation to add a new scope so `sync-skills-and-docs` can add it to the profile.
 
-**Commit Examples:**
-* `feat(activities): add subactivity color picker and edit modal`
-* `fix(goals): support legacy title and target schema compatibility`
-* `feat(dashboard): restore calendar view dots and daily note editor`
-* `style(focus): align 3-column digital clock and quote layout`
-* `feat(deep-focus): implement countdown timer and completion dialog`
-* `docs(agents): update development pipeline and commit standards`
+If `git.single_line` is true, write the subject line only. No body, no footer.
 
-### Step 5: Execute Commit & Verify Clean State
-1. Commit the staged changes using a single-line message:
-   ```bash
-   git commit -m "<type>(<scope>): <comprehensive subject in present tense>"
-   ```
-2. Verify that the commit was successfully recorded:
-   ```bash
-   git log -n 1 --oneline
-   ```
-3. Check working directory status:
-   ```bash
-   git status
-   ```
+Write the subject in the present tense, in lowercase, with no final period. Keep the line under 72 characters.
 
-### Step 6: Transition to Next Step
-Only after the commit is recorded and the workspace status for this unit is clean, proceed to work on the next function, step, or module.
+Check the message before you commit:
 
----
+```bash
+python3 .agents/skills/atomic-commits/scripts/check_commit_message.py --profile .agents/project-profile.yaml "feat(ui): add button"
+```
 
-## 4. Anti-Patterns to Avoid
+If python3 is not found, use python or py -3.
 
-* ❌ **Batching Unrelated Work:** Committing Goals, Notes, and Focus mode changes in a single commit.
-* ❌ **Multi-Line Commit Messages:** Creating commit messages with multi-line bodies, bullet points, or markdown.
-* ❌ **Unverified Commits:** Committing code before running `npm run lint` and `npm run build`.
-* ❌ **Vague Commit Messages:** Using messages like `updates`, `fix bug`, `wip`, or `changes`.
-* ❌ **Using `sed` for Edits or Builds:** Modifying files, altering test configs, or injecting build variables with shell `sed` commands.
+Fix every error it reports. Warnings are advice. Branch names and pull request titles use the same commit format as `git.commit_format`.
+
+### 5. Commit and confirm
+
+When a branch workflow state is active (`.agents/work/branch-state.json`), run the guard check before committing:
+
+```bash
+python3 .agents/skills/feature-delivery/scripts/branchflow.py guard
+```
+
+If this check fails, do not commit. You are on the default branch while a task branch is active. Switch to the task branch first.
+
+```bash
+git commit -m "<message>"
+git log -n 1 --oneline
+```
+
+Do not push unless the push policy and the user's request allow it.
+
+## Guardrails
+
+1. One unit per commit.
+2. Verification passes before staging, and each commit passes on its own.
+3. The message passes the checker.
+4. No build artifacts in any commit.
+5. No push unless allowed.
+6. Do not bypass the checks to save time.
