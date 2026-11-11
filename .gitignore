@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .agents/work/
 .agents/vendor/
+__pycache__/
+*.pyc
