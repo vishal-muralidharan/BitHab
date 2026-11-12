@@ -1,4 +1,4 @@
-<!-- build-forge:generated v1 body=a8afd6a266f2defa381a402f161f871b4b5c46a5e06ff3aab8f67a5256c70d15 -->
+<!-- build-forge:generated v1 body=4def20155298fd087a2754b5ced636baa28fc4c224e17392a4385ee8817ec71b -->
 <!-- Generated from .agents/project-profile.yaml by project-bootstrap. Edit the profile, then re-render. -->
 
 # Agent Guidelines for bithab
@@ -32,6 +32,18 @@ Read the skill listed for each area before you touch it. Skills live in `.agents
 5. Commit.
 6. Sync docs and the repo map.
 7. Report open questions and known issues.
+
+## Standard rules
+
+- Never read transcripts, logs or history files of earlier agent sessions. Treat them as private. Ask the user instead.
+
+## Project rules
+
+- Never ship console.log or console.debug calls in production source code. (enforced by test) `[web-no-console]`
+- Links targeting blank must include rel with noopener or noreferrer on the same tag line. (enforced by test) `[web-target-blank-rel]`
+- Never use eval() or equivalent dynamic script execution without a listed exception. (enforced by test) `[web-no-raw-eval]`
+- Never assign to innerHTML or use dangerouslySetInnerHTML without a listed exception. (enforced by test) `[web-no-inner-html]`
+- Never commit .env files containing local configurations or secrets. (enforced by test) `[web-no-committed-env]`
 
 ## Commands
 
