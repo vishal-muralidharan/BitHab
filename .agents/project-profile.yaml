@@ -19,9 +19,10 @@ design:
   enabled: true
   tokens_file: src/assets/css/style.css
 docs:
-  agents_file: AGENTS.generated.md
-  repo_map: README.md
+  readme: README.md
+  agents_file: AGENTS.md
   skills_dir: .agents/skills
+  repo_map: .agents/repo-map.md
 git:
   commit_format: '<type>(<scope>): <subject>'
   push: never
@@ -47,6 +48,51 @@ git:
     paths:
     - src/api/**
     purpose: API client integrations
+  - name: config
+    paths:
+    - src/config/**
+    - config/**
+    - vite.config.js
+    purpose: Firebase and build configuration
+  - name: styles
+    paths:
+    - src/assets/css/**
+    purpose: CSS stylesheets and design tokens
+  - name: focus
+    paths:
+    - src/pages/Focus.jsx
+    - src/pages/DeepFocus.jsx
+    purpose: Focus and deep focus timer engines
+  - name: notes
+    paths:
+    - src/pages/Notes.jsx
+    - src/context/NoteContext.jsx
+    purpose: Daily and general note systems
+  - name: goals
+    paths:
+    - src/pages/Goals.jsx
+    - src/context/GoalContext.jsx
+    purpose: Goals and habit tracking
+  - name: reminders
+    paths:
+    - src/pages/Reminders.jsx
+    - src/context/ReminderContext.jsx
+    purpose: Notification and reminder catalog
+  - name: activities
+    paths:
+    - src/pages/Activities.jsx
+    - src/context/ActivityContext.jsx
+    purpose: Scheduled activities catalog
+  - name: dashboard
+    paths:
+    - src/pages/Dashboard.jsx
+    purpose: Main dashboard views
+  - name: legal
+    paths:
+    - src/pages/DPDP.jsx
+    - src/pages/PrivacyPolicy.jsx
+    - src/pages/TermsOfService.jsx
+    purpose: DPDP, Privacy, and Terms legal pages
 naming:
 - example: Dashboard.jsx
   item: Components
@@ -59,7 +105,29 @@ project:
   summary: Habit tracker and analytics web application built with React, Vite, and
     Firebase.
 responsive:
-  enabled: false
+  enabled: true
+  min_width: 320
+  max_width: 2560
+  touch_target_px: 44
+  breakpoints:
+  - from: 320
+    layout: MobileTopbar, fixed BottomNav, single column, 5rem bottom padding
+  - from: 768
+    layout: top Header (90px height), desktop navigation
+  - from: 1024
+    layout: 3-column dashboard baseline stretch, viewport height lock
+data:
+  storage: Google Cloud Firestore in native mode
+  schema_source: firestore.rules
+  invariants:
+  - User data is strictly keyed under /users/{userId}.
+  - Payloads must never contain undefined values (sanitize before write).
+  - All onSnapshot subscriptions must return a cleanup function in useEffect.
+  - Focus session logs are recorded in /users/{userId}/focusSessions.
+  protected:
+  - Firestore collection structure
+  - User root document fields
+  - Focus session schema
 schema_version: 2
 stack:
   auth: Firebase Auth
@@ -257,6 +325,42 @@ rules:
   text: Error views must display a short message with an icon and role="alert".
   enforced_by: manual
   pack: ui-states@1
+- id: zero-sed
+  area: verify
+  text: Never use sed commands for file editing, building, or test hacks.
+  enforced_by: manual
+- id: oxlint-zero-errors
+  area: verify
+  text: Run npm run lint (oxlint); code must produce 0 errors before committing.
+  enforced_by: test
+- id: zero-hex-colors
+  area: design
+  text: Zero hardcoded hex colors outside design tokens; all colors must consume CSS custom properties.
+  enforced_by: manual
+- id: multi-theme-contrast
+  area: design
+  text: All 6 themes must maintain accessible contrast in both light and dark modes.
+  enforced_by: manual
+- id: mobile-bottom-nav-clearance
+  area: responsive
+  text: Mobile page containers must reserve bottom padding (5rem) for fixed BottomNav.
+  enforced_by: manual
+- id: mobile-ios-input-16px
+  area: responsive
+  text: Form inputs must enforce at least 16px font-size on mobile to prevent iOS Safari auto-zoom.
+  enforced_by: manual
+- id: desktop-dashboard-viewport-lock
+  area: responsive
+  text: Desktop dashboard locks height to calc(100vh - 90px) with column baseline stretch.
+  enforced_by: manual
+- id: firestore-no-undefined
+  area: data
+  text: Never write undefined to Firestore; sanitize payloads before writing.
+  enforced_by: manual
+- id: firestore-cleanup-listeners
+  area: data
+  text: All onSnapshot subscriptions must return cleanup functions on unmount.
+  enforced_by: manual
 quality_gates:
 - Confirm external links open in a new tab without access to window.opener.
 - Confirm environment variables are injected through pipeline secrets rather than

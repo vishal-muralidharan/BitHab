@@ -26,4 +26,20 @@ Query codebase design tokens on demand:
 3. Update `README.md` if it lists tokens.
 4. Run `npm run lint && npm run test`.
 <!-- BEGIN CUSTOM: notes -->
+## Reference Blueprint
+For complete design tokens, color variables, and theme definitions, see `src/assets/css/style.css` and `src/assets/css/themes.css`.
+
+## Operational Guidelines
+- **Zero Hardcoded Colors:** All color values must consume CSS custom properties (`var(--primary-color)`, `var(--bg-primary)`, `var(--surface-color)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--border-color)`). Never hardcode raw hex values in JSX styles or CSS rules.
+- **The 6 Curated BitHab Themes:**
+  1. `oceanic-depths`: Cyan and deep blue focus tones.
+  2. `evergreen-forest`: Mint, sage, and emerald greens.
+  3. `cyberpunk-neon`: Vivid violet and neon accents.
+  4. `monochrome-minimalist`: Distraction-free neutral grayscale.
+  5. `sunrise-coral`: Warm coral, peach, and amber hues.
+  6. `cherry-blossom`: Rose, blossom pink, and magenta accents.
+- **Multi-Theme Parity:** Every UI element must maintain accessible contrast across all 6 themes and in both Light (`[data-mode="light"]`) and Dark (`[data-mode="dark"]`) modes.
+- **Instant Zero-Flicker Switching:** Theme and mode toggles apply synchronous DOM attribute updates (`data-theme`, `data-mode`) and `localStorage` writes before background Firestore synchronization.
+- **Body Class Coordination:** Layout rules coordinate with standard body classes (`index-page`, `themes-page`, `focus-mode`, `auth-page`) managed by `src/components/layout/Layout.jsx`.
+- **Deep Focus Ergonomic Controls:** Timer controls use green (`#10b981`) for start, yellow (`#f59e0b`) for pause, and red (`#ef4444`) for stop; compulsory fullscreen modal with auto-pause on exit.
 <!-- END CUSTOM: notes -->

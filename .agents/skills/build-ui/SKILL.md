@@ -2,7 +2,7 @@
 name: build-ui
 description: 'Use this skill whenever you build or change any UI in bithab: screens, components, sheets, charts, copy. Covers shared components, tokens, required states, motion and accessibility.'
 ---
-<!-- build-forge:generated v1 body=580aa1cb555421adb0ed0b97856eec0cb42a79f35dcf5bdfe249a3fcae1d1312 -->
+<!-- build-forge:generated v1 body=03b6e61df8ef2b29b861bf6f3afe035c363844a2b4b167bdc13eeaa2c8f15207 -->
 
 <!-- Generated from .agents/project-profile.yaml by project-bootstrap. Edit the profile, then re-render. -->
 
@@ -35,9 +35,12 @@ Query codebase UI facts on demand:
 - Loading views must use skeleton blocks matching content shape with no layout shift. `[ui-state-loading-skeleton]`
 - Empty states must display an icon, 1 or 2 descriptive words, and an action. `[ui-state-empty-action]`
 - Error views must display a short message with an icon and role="alert". `[ui-state-error-alert]`
+- Zero hardcoded hex colors outside design tokens; all colors must consume CSS custom properties. `[zero-hex-colors]`
+- All 6 themes must maintain accessible contrast in both light and dark modes. `[multi-theme-contrast]`
 
 ## Finish
 
 Run `npm run lint && npm run test`.
+Check the screen at the widths listed in `review-responsive-design`.
 <!-- BEGIN CUSTOM: notes -->
 <!-- END CUSTOM: notes -->
