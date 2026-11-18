@@ -1,4 +1,10 @@
 style: showcase
-description: ''
-homepage: ''
-topics: []
+description: "Personal productivity web app in React 19 and Firebase. Features a 3-column layout, multi-calendar scheduling, hierarchical subactivities, goals with progress tracking, time-based reminders, markdown notes with search, flexible lists, deep focus countdown timers, 6 themes in light and dark modes, and DPDP-compliant JSON data export."
+homepage: ""
+topics:
+  - react
+  - vite
+  - firebase
+  - netlify
+  - vitest
+  - habit-tracker
