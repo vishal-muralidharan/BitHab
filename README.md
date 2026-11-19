@@ -1,19 +1,18 @@
 # BitHab
 
-BitHab is a personal habit and productivity tracking web application with habit analytics, scheduling, and customizable focus sessions.
+Personal habit and productivity tracking web application with interactive calendar scheduling, hierarchical goals, and customizable focus sessions.
+
+![BitHab Dashboard](src/assets/hero.png)
 
 ## Features
 
-- Dashboard: 3-column desktop layout with an interactive calendar, daily notes quick editor, and active goals and reminders.
-- Activities and Scheduling: Hierarchical activities and subactivities with custom color palettes and a monthly schedule planner.
-- Goals Tracking: Main goals and subgoals with progress percentage calculations.
-- Reminders: Time-based reminders with date selection, status tracking, and editing modals.
-- Daily Notes: Markdown-friendly note taking with a favorites filter and search.
-- Flexible Lists: Checklists, task lists, numbered lists, and bulleted lists.
-- Focus and Deep Focus: Digital clock, countdown session timers, fullscreen focus mode, and session analytics.
-- Multi-Theme System: 6 visual themes with support for light and dark modes.
-- Responsive Navigation: Dual navigation with a desktop header and a mobile bottom navigation bar.
-- Settings and Data Rights: Profile settings, DPDP Act 2023 compliant JSON data export, and permanent account deletion.
+- 📅 **3-column dashboard** combines a multi-calendar scheduler, daily notes editor, and active goals in one unified view.
+- 🎯 **Hierarchical goal tracking** breaks ambitions into subgoals with visual progress bars and milestone indicators.
+- ⏰ **Timely reminders** notify you of scheduled events with custom dates, recurring intervals, and instant editing modals.
+- 📝 **Markdown daily notes** provide fast note taking with search and instant tagging for quick retrieval.
+- ⏱️ **Deep focus sessions** offer customizable countdown timers, fullscreen mode, and detailed productivity logs.
+- 🎨 **6 adaptive themes** support light and dark modes with customizable color palettes.
+- 🔒 **DPDP-compliant data rights** guarantee complete data ownership with single-click JSON export and permanent account deletion.
 
 ## Tech Stack
 
@@ -138,3 +137,9 @@ The application deploys to Netlify.
 - Publish directory: `dist`
 - Serverless functions directory: `netlify/functions`
 - Client side routing: configured via `netlify.toml` with redirect rules pointing `/*` to `/index.html` with status 200.
+
+## Author and License
+
+Created by Vishal Muralidharan.
+
+Distributed under the MIT License. Copyright (c) 2025 Vishal Muralidharan.
