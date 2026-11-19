@@ -90,8 +90,9 @@ git:
   - name: legal
     paths:
     - src/pages/DPDP.jsx
-    - src/pages/PrivacyPolicy.jsx
-    - src/pages/TermsOfService.jsx
+    - src/pages/Privacy.jsx
+    - src/pages/Terms.jsx
+    - src/pages/TermsAndConditions.jsx
     purpose: DPDP, Privacy, and Terms legal pages
 naming:
 - example: Dashboard.jsx
@@ -149,10 +150,18 @@ structure:
     purpose: Page components for routes
   - path: src/components/layout
     purpose: Shared UI layout components
+  - path: src/components/common
+    purpose: Shared common UI components
   - path: src/context
     purpose: Global state contexts
   - path: src/api
     purpose: API client functions
+  - path: src/config
+    purpose: Client Firebase initialization
+  - path: src/assets
+    purpose: Static media and icons
+  - path: src/assets/css
+    purpose: Component and global stylesheets
   root_allowed:
   - index.html
   - vite.config.js
