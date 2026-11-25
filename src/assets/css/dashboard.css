@@ -1153,6 +1153,8 @@ body.index-page .content {
     resize: none;
     width: 100%;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .notes-preview:not(.expanded) .home-notes-editor {
