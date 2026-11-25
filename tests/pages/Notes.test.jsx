@@ -117,4 +117,37 @@ describe('Notes Page', () => {
 
     expect(screen.queryByPlaceholderText('Write your note here')).not.toBeInTheDocument();
   });
+
+  it('uses CSS grid class layout without broken inline grid style and renders single compact date control for daily notes', async () => {
+    render(
+      <MemoryRouter initialEntries={['/notes']}>
+        <AuthProvider>
+          <NoteProvider>
+            <Notes />
+          </NoteProvider>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await act(async () => {});
+
+    await act(async () => {
+      screen.getByRole('button', { name: /New Note/i }).click();
+    });
+
+    const notesGrid = document.getElementById('notes-grid');
+    expect(notesGrid).toBeInTheDocument();
+    expect(notesGrid.style.display).toBe('');
+
+    const dateInput = screen.getByLabelText('Note date');
+    expect(dateInput).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.change(dateInput, { target: { value: '2025-09-26' } });
+    });
+
+    expect(screen.getByText('Sep 26, 2025')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Toggle favorite' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete note' })).toBeInTheDocument();
+  });
 });
