@@ -1,5 +1,6 @@
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, act, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { getDoc, onSnapshot } from 'firebase/firestore';
 import Dashboard from '../../src/pages/Dashboard';
 import { AuthProvider } from '../../src/context/AuthContext';
 import { ActivityProvider } from '../../src/context/ActivityContext';
@@ -38,6 +39,11 @@ function renderDashboard() {
 describe('Dashboard Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) });
+    onSnapshot.mockImplementation((_ref, callback) => {
+      callback({ exists: () => true, data: () => ({}) });
+      return vi.fn();
+    });
   });
 
   it('renders dashboard widgets: activities, calendar, daily note editor, goals, reminders', async () => {
@@ -183,5 +189,77 @@ describe('Dashboard Page', () => {
     });
 
     expect(document.getElementById('year-month-picker-modal')).not.toBeInTheDocument();
+  });
+
+  it('hides activities toggle button when no date is selected and <= 3 activities exist, keeping Notes header on Today', async () => {
+    const oneActivity = [
+      {
+        id: 'gym',
+        name: 'Gym',
+        subActivities: [
+          { id: 'chest', name: 'Chest', color: '#22c55e' },
+          { id: 'shoulder', name: 'Shoulder', color: '#3b82f6' }
+        ]
+      }
+    ];
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ activities: oneActivity }) });
+    onSnapshot.mockImplementation((_ref, callback) => {
+      callback({ exists: () => true, data: () => ({ activities: oneActivity }) });
+      return vi.fn();
+    });
+
+    renderDashboard();
+    await act(async () => {});
+
+    // When today is selected by default, toggle button is present to exit inline logging
+    const showAllBtn = screen.getByRole('button', { name: 'Show all activities' });
+    expect(showAllBtn).toBeInTheDocument();
+    expect(screen.getByText(/Notes for Today:/)).toBeInTheDocument();
+
+    // Unselect date by clicking the button
+    await act(async () => {
+      fireEvent.click(showAllBtn);
+    });
+
+    // No date selected & <= 3 activities: toggle button is not needed and should be hidden
+    expect(screen.queryByRole('button', { name: /^(show all activities|show all|collapse)$/i })).not.toBeInTheDocument();
+    expect(document.getElementById('activities-show-all')).not.toBeInTheDocument();
+    // Notes header should still reference Today rather than a blank date
+    expect(screen.getByText(/Notes for Today:/)).toBeInTheDocument();
+  });
+
+  it('shows activities toggle button when no date is selected if more than 3 activities exist', async () => {
+    const fourActivities = [
+      { id: 'a1', name: 'Gym', subActivities: [] },
+      { id: 'a2', name: 'Reading', subActivities: [] },
+      { id: 'a3', name: 'Running', subActivities: [] },
+      { id: 'a4', name: 'Meditation', subActivities: [] }
+    ];
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ activities: fourActivities }) });
+    onSnapshot.mockImplementation((_ref, callback) => {
+      callback({ exists: () => true, data: () => ({ activities: fourActivities }) });
+      return vi.fn();
+    });
+
+    renderDashboard();
+    await act(async () => {});
+
+    // Unselect date by clicking outside calendar
+    await act(async () => {
+      fireEvent.mouseDown(document.body);
+    });
+
+    const expandBtn = screen.getByRole('button', { name: 'Show all' });
+    expect(expandBtn).toBeInTheDocument();
+    const activityList = within(document.getElementById('activity-list'));
+    expect(activityList.getByText('Gym')).toBeInTheDocument();
+    expect(activityList.queryByText('Meditation')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(expandBtn);
+    });
+
+    expect(activityList.getByText('Meditation')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collapse' })).toBeInTheDocument();
   });
 });

@@ -456,7 +456,7 @@ export default function Dashboard() {
   // Currently logged IDs for selectedDateStr
   const currentLoggedIds = new Set(selectedDateStr ? (logs[selectedDateStr] || []) : []);
 
-  const hasExpandedInteraction = activitiesExpanded || goalsExpanded || remindersExpanded;
+  const hasExpandedInteraction = (!selectedDateStr && activitiesExpanded) || goalsExpanded || remindersExpanded;
 
   return (
     <div className={`main-layout ${hasExpandedInteraction ? 'expanded-active' : ''}`}>
@@ -473,23 +473,26 @@ export default function Dashboard() {
         >
           <div className="section-header">
             <h2>Activities</h2>
-            <button 
-              className={`show-all-btn ${activitiesExpanded ? 'expanded' : ''}`} 
-              id="activities-show-all" 
-              title={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (selectedDateStr) {
-                  setSelectedDateStr(null);
-                } else {
-                  setActivitiesExpanded(!activitiesExpanded);
-                }
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-              </svg>
-            </button>
+            {(selectedDateStr || activities.length > 3 || activitiesExpanded) && (
+              <button 
+                className={`show-all-btn ${!selectedDateStr && activitiesExpanded ? 'expanded' : ''}`} 
+                id="activities-show-all" 
+                title={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
+                aria-label={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (selectedDateStr) {
+                    setSelectedDateStr(null);
+                  } else {
+                    setActivitiesExpanded(!activitiesExpanded);
+                  }
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                </svg>
+              </button>
+            )}
           </div>
           <div id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${activitiesExpanded ? 'expanded' : ''}`}>
             {selectedDateStr ? (
@@ -652,7 +655,7 @@ export default function Dashboard() {
           </div>
           <div id="notes-preview" className="notes-preview">
             <div className="notes-date-header">
-              📝 Notes for {formatDateForNotes(selectedDateStr)}:
+              📝 Notes for {formatDateForNotes(effectiveNoteDate)}:
             </div>
             <div className="notes-editor-container home-notes-editor-container">
               <textarea 
