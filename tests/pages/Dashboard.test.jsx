@@ -86,10 +86,10 @@ describe('Dashboard Page', () => {
 
     await act(async () => {});
 
-    // Click notes show-all button
-    const notesShowAll = document.getElementById('notes-show-all');
+    // Click notes heading inside Notes card
+    const notesHeading = screen.getByRole('heading', { level: 2, name: 'Notes' });
     await act(async () => {
-      notesShowAll.click();
+      fireEvent.click(notesHeading);
     });
 
     expect(screen.getByTestId('notes-page')).toBeInTheDocument();
@@ -228,7 +228,7 @@ describe('Dashboard Page', () => {
     expect(screen.getByText(/Notes for Today:/)).toBeInTheDocument();
   });
 
-  it('shows activities toggle button when no date is selected if more than 3 activities exist', async () => {
+  it('shows activities toggle button when no date is selected only when content overflows', async () => {
     const fourActivities = [
       { id: 'a1', name: 'Gym', subActivities: [] },
       { id: 'a2', name: 'Reading', subActivities: [] },
@@ -249,17 +249,96 @@ describe('Dashboard Page', () => {
       fireEvent.mouseDown(document.body);
     });
 
+    // When 4 activities fit without overflowing (scrollHeight <= clientHeight), all 4 show with no button
+    const activityListEl = document.getElementById('activity-list');
+    const activityList = within(activityListEl);
+    expect(activityList.getByText('Gym')).toBeInTheDocument();
+    expect(activityList.getByText('Meditation')).toBeInTheDocument();
+    expect(document.getElementById('activities-show-all')).not.toBeInTheDocument();
+
+    // Simulate vertical overflow inside the activities container
+    Object.defineProperty(activityListEl, 'clientHeight', { value: 120, configurable: true });
+    Object.defineProperty(activityListEl, 'scrollHeight', { value: 220, configurable: true });
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+    });
+
     const expandBtn = screen.getByRole('button', { name: 'Show all' });
     expect(expandBtn).toBeInTheDocument();
-    const activityList = within(document.getElementById('activity-list'));
-    expect(activityList.getByText('Gym')).toBeInTheDocument();
-    expect(activityList.queryByText('Meditation')).not.toBeInTheDocument();
 
     await act(async () => {
       fireEvent.click(expandBtn);
     });
 
-    expect(activityList.getByText('Meditation')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Collapse' })).toBeInTheDocument();
+  });
+
+  it('hides Notes show-all button when note content does not overflow and shows it when overflowing', async () => {
+    renderDashboard();
+    await act(async () => {});
+
+    // Empty note does not overflow -> no button rendered
+    expect(document.getElementById('notes-show-all')).not.toBeInTheDocument();
+
+    // Simulate overflowing note content in the editor textarea
+    const textarea = screen.getByPlaceholderText('Write your note for this day');
+    Object.defineProperty(textarea, 'clientHeight', { value: 120, configurable: true });
+    Object.defineProperty(textarea, 'scrollHeight', { value: 260, configurable: true });
+    await act(async () => {
+      fireEvent.change(textarea, { target: { value: 'Line 1\n'.repeat(20) } });
+    });
+
+    const notesBtn = screen.getByRole('button', { name: 'Show all notes' });
+    expect(notesBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(notesBtn);
+    });
+
+    expect(screen.getByTestId('notes-page')).toBeInTheDocument();
+  });
+
+  it('hides Goals and Reminders collapse buttons when content fits without overflowing and shows them on overflow', async () => {
+    const fiveGoals = [
+      { id: 'g1', name: 'Goal 1', completed: false },
+      { id: 'g2', name: 'Goal 2', completed: false },
+      { id: 'g3', name: 'Goal 3', completed: false },
+      { id: 'g4', name: 'Goal 4', completed: false },
+      { id: 'g5', name: 'Goal 5', completed: false }
+    ];
+    const threeReminders = [
+      { id: 'r1', text: 'Call doctor', date: '2099-01-01', time: '09:00' },
+      { id: 'r2', text: 'Pay bill', date: '2099-01-02', time: '10:00' },
+      { id: 'r3', text: 'Submit report', date: '2099-01-03', time: '11:00' }
+    ];
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ goals: fiveGoals, reminders: threeReminders }) });
+    onSnapshot.mockImplementation((_ref, callback) => {
+      callback({ exists: () => true, data: () => ({ goals: fiveGoals, reminders: threeReminders }) });
+      return vi.fn();
+    });
+
+    renderDashboard();
+    await act(async () => {});
+
+    // Non-overflowing lists show all items without collapse buttons
+    expect(screen.getByText('Goal 5')).toBeInTheDocument();
+    expect(screen.getByText('Submit report')).toBeInTheDocument();
+    expect(document.getElementById('goals-show-all')).not.toBeInTheDocument();
+    expect(document.getElementById('reminders-show-all')).not.toBeInTheDocument();
+
+    // Simulate overflow on both containers
+    const goalListEl = document.getElementById('goal-list');
+    const remindersEl = document.getElementById('reminders-preview');
+    Object.defineProperty(goalListEl, 'clientHeight', { value: 140, configurable: true });
+    Object.defineProperty(goalListEl, 'scrollHeight', { value: 260, configurable: true });
+    Object.defineProperty(remindersEl, 'clientHeight', { value: 140, configurable: true });
+    Object.defineProperty(remindersEl, 'scrollHeight', { value: 260, configurable: true });
+
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+    });
+
+    expect(document.getElementById('goals-show-all')).toBeInTheDocument();
+    expect(document.getElementById('reminders-show-all')).toBeInTheDocument();
   });
 });
