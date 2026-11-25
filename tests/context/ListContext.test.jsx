@@ -11,6 +11,7 @@ function ListConsumer() {
     updateList, 
     deleteList, 
     addListItem, 
+    updateListItem,
     toggleListItem, 
     deleteListItem 
   } = useLists();
@@ -26,12 +27,17 @@ function ListConsumer() {
             <button onClick={() => updateList(list.id, { title: `${list.title} Renamed` })}>Rename List</button>
             <button onClick={() => deleteList(list.id)}>Delete List</button>
             <button onClick={() => addListItem(list.id, 'Apples')}>Add Item</button>
+            <button onClick={() => {
+              addListItem(list.id, 'Bread').catch(() => {});
+              addListItem(list.id, 'Milk').catch(() => {});
+            }}>Add Two Rapidly</button>
 
             <ul data-testid={`items-${list.id}`}>
               {list.items.map(item => (
                 <li key={item.id} data-testid={`item-${item.id}`}>
                   <span>{item.text}</span>
                   <span data-testid={`item-status-${item.id}`}>{item.completed ? 'checked' : 'unchecked'}</span>
+                  <button onClick={() => updateListItem(list.id, item.id, { text: `${item.text} Updated` })}>Edit Item</button>
                   <button onClick={() => toggleListItem(list.id, item.id)}>Toggle Item</button>
                   <button onClick={() => deleteListItem(list.id, item.id)}>Delete Item</button>
                 </li>
@@ -127,5 +133,47 @@ describe('ListContext', () => {
 
     expect(screen.getByTestId('lists-count')).toHaveTextContent('1');
     expect(screen.getByText('Pack Luggage')).toBeInTheDocument();
+  });
+
+  it('preserves rapid sequential additions without stale-closure overwrites and supports item text editing', async () => {
+    let resolveFirstWrite;
+    vi.spyOn(firestore, 'setDoc')
+      .mockImplementationOnce(() => Promise.resolve())
+      .mockImplementationOnce(() => new Promise(resolve => { resolveFirstWrite = resolve; }))
+      .mockImplementation(() => Promise.resolve());
+
+    render(
+      <AuthProvider>
+        <ListProvider>
+          <ListConsumer />
+        </ListProvider>
+      </AuthProvider>
+    );
+
+    await act(async () => {});
+
+    await act(async () => {
+      screen.getByText('Create Checklist').click();
+    });
+
+    await act(async () => {
+      screen.getByText('Add Two Rapidly').click();
+    });
+
+    expect(screen.getByText('Bread')).toBeInTheDocument();
+    expect(screen.getByText('Milk')).toBeInTheDocument();
+
+    if (resolveFirstWrite) {
+      await act(async () => {
+        resolveFirstWrite();
+      });
+    }
+
+    const editBtns = screen.getAllByText('Edit Item');
+    await act(async () => {
+      editBtns[0].click();
+    });
+
+    expect(screen.getByText('Bread Updated')).toBeInTheDocument();
   });
 });
