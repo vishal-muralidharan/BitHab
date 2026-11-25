@@ -5,7 +5,7 @@ Proposed candidates from codebase facts. User confirmation required before addin
 - **ui-no-native-checkbox** (design): Avoid raw HTML native checkbox control; use the themed primitive.
   - Evidence: `Found 5 native checkbox uses outside primitives.`
 - **ui-no-native-pickers** (design): Never use native browser date, time, month, week, datetime-local or color inputs. Use the project's themed picker primitives.
-  - Evidence: `Found 3 native picker uses outside primitives: src/pages/Notes.jsx:144, src/pages/Reminders.jsx:301, src/pages/Reminders.jsx:422`
+  - Evidence: `Found 3 native picker uses outside primitives: src/pages/Notes.jsx:160, src/pages/Reminders.jsx:301, src/pages/Reminders.jsx:422`
 - **ui-no-native-pickers** (design): Never use native browser date, time, month, week, datetime-local or color inputs. Use the project's themed picker primitives.
   - Evidence: `Found 2 native picker uses outside primitives: src/pages/Reminders.jsx:315, src/pages/Reminders.jsx:436`
 - **ui-no-native-pickers** (design): Never use native browser date, time, month, week, datetime-local or color inputs. Use the project's themed picker primitives.

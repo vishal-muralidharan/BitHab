@@ -51,10 +51,8 @@ Extracted responsive breakpoints, navigation shells, and mobile viewport constra
 - `Breakpoint: 769px`: evidence `src/assets/css/management.css:192`
 - `Breakpoint: 768px`: evidence `src/assets/css/management.css:200`
 - `Breakpoint: 768px`: evidence `src/assets/css/management.css:834`
-- `Breakpoint: 1024px`: evidence `src/assets/css/notes.css:158`
-- `Breakpoint: 640px`: evidence `src/assets/css/notes.css:164`
-- `Breakpoint: 768px`: evidence `src/assets/css/notes.css:408`
-- `Breakpoint: 480px`: evidence `src/assets/css/notes.css:448`
+- `Breakpoint: 768px`: evidence `src/assets/css/notes.css:420`
+- `Breakpoint: 480px`: evidence `src/assets/css/notes.css:487`
 - `Breakpoint: 1024px`: evidence `src/assets/css/schedule.css:1075`
 - `Breakpoint: 768px`: evidence `src/assets/css/schedule.css:1081`
 - `Breakpoint: 480px`: evidence `src/assets/css/schedule.css:1142`

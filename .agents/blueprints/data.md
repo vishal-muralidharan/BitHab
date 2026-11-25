@@ -88,7 +88,7 @@ Extracted database schemas, models, schemas, and storage keys.
 - Time serialization signal: `src/pages/Focus.jsx:80` (`lastUpdated: Date.now()`)
 - Time serialization signal: `src/pages/Goals.jsx:92` (`id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,`)
 - Time serialization signal: `src/pages/Goals.jsx:95` (`createdAt: Date.now()`)
-- Time serialization signal: `src/pages/Notes.jsx:17` (`const todayStr = new Date().toISOString().split('T')[0];`)
+- Time serialization signal: `src/pages/Notes.jsx:32` (`const todayStr = new Date().toISOString().split('T')[0];`)
 - Time serialization signal: `src/pages/Reminders.jsx:13` (`return d.toISOString().split('T')[0];`)
 - Time serialization signal: `src/pages/Reminders.jsx:69` (`setDate(tomorrow.toISOString().split('T')[0]);`)
 - Time serialization signal: `src/pages/Reminders.jsx:88` (`const dateValue = targetDate.toISOString().split('T')[0];`)
