@@ -4,22 +4,22 @@ Extracted environment variables, project scripts, and route mappings.
 
 ## Environment variables
 
-- `FIREBASE_API_KEY` (referenced: `config/generate-firebase-config.js:11`)
 - `FIREBASE_API_KEY` (referenced: `.env.example:4`)
+- `FIREBASE_API_KEY` (referenced: `config/generate-firebase-config.js:11`)
 - `FIREBASE_APP_ID` (referenced: `.env.example:5`)
 - `FIREBASE_APP_ID` (referenced: `config/generate-firebase-config.js:16`)
 - `FIREBASE_AUTH_DOMAIN` (referenced: `config/generate-firebase-config.js:12`)
 - `FIREBASE_AUTH_DOMAIN` (referenced: `.env.example:6`)
 - `FIREBASE_MESSAGING_SENDER_ID` (referenced: `.env.example:7`)
 - `FIREBASE_MESSAGING_SENDER_ID` (referenced: `config/generate-firebase-config.js:15`)
-- `FIREBASE_PROJECT_ID` (referenced: `.env.example:8`)
 - `FIREBASE_PROJECT_ID` (referenced: `config/generate-firebase-config.js:13`)
+- `FIREBASE_PROJECT_ID` (referenced: `.env.example:8`)
 - `FIREBASE_SERVICE_ACCOUNT` (referenced: `netlify/functions/delete-account.js:11`)
 - `FIREBASE_SERVICE_ACCOUNT` (referenced: `.env.example:9`)
-- `FIREBASE_SERVICE_ACCOUNT_KEY` (referenced: `netlify/functions/delete-account.js:11`)
 - `FIREBASE_SERVICE_ACCOUNT_KEY` (referenced: `.env.example:10`)
-- `FIREBASE_STORAGE_BUCKET` (referenced: `.env.example:11`)
+- `FIREBASE_SERVICE_ACCOUNT_KEY` (referenced: `netlify/functions/delete-account.js:11`)
 - `FIREBASE_STORAGE_BUCKET` (referenced: `config/generate-firebase-config.js:14`)
+- `FIREBASE_STORAGE_BUCKET` (referenced: `.env.example:11`)
 
 ## Package scripts
 
