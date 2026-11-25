@@ -9,7 +9,7 @@
   ],
   "areas": {
     "auth": {
-      "package.json": "ad9327a7c6b0e771e8f596c4d07866dab9e434dfa1b43eca71fc6dcd84de4d69",
+      "package.json": "ef81c8f4cf67abf3397cbd9b52ef0308066ef67498c221cceb88d6047eadd164",
       "src/components/layout/BottomNav.jsx": "becb110bb8928674dca408ffdc0deaf9046315efe4d3f5b5daf98086d464e2c9",
       "src/components/layout/Header.jsx": "c0dad3bdc4598d77cb1737d133a690fc90fbbd13cb7044a2889a075b0542ad3b",
       "src/context/AuthContext.jsx": "9599d91a0ab7b38a239e2fd44c8ad5c8f13dd0a175f865abb1df1d84d91b5597",
@@ -22,9 +22,10 @@
       "tests/setup.js": "6d5618977b7e183144ca5409ccfe0db1060ef13d1ae8faff4b7db511efed2e2c"
     },
     "config": {
+      ".env.example": "398561b7c2092c4e95fe700f75fc17902de5f97248aa50c6fccde4418c1db75e",
       "config/generate-firebase-config.js": "df6c5cd3031d04c823d130c6336e917a8eff40a886e46dd2cbb0dcd176c9eb42",
       "netlify/functions/delete-account.js": "4bf4dac40d8ef9101917a25d86c8c07740377bdea8c7420247344517dfc81ef5",
-      "package.json": "ad9327a7c6b0e771e8f596c4d07866dab9e434dfa1b43eca71fc6dcd84de4d69"
+      "package.json": "ef81c8f4cf67abf3397cbd9b52ef0308066ef67498c221cceb88d6047eadd164"
     },
     "data": {
       "src/api/user.js": "49bd4036b7882c3b22cdc3880faf03ed39738854b6536b77cea866230155d6a2",
@@ -50,7 +51,7 @@
       "index.html": "43043ef301306b76c288bcafc8de582e4e309e0ec1c499720126115c7de717a3",
       "src/assets/css/clock.css": "2dfb91ef5f5cacd156dc2ab093622e9b20755332019ffbd7667d072da1a202fb",
       "src/assets/css/custom-dialogs.css": "5ffecbfd6415f0fd82d4e3e085e1c124d137986d0eef754928afaa779e5e2bef",
-      "src/assets/css/dashboard.css": "2d13cf5614dc3827643c51d1c4f0c4b41517ec9a60abea2ca9ff0a5780fa1ca3",
+      "src/assets/css/dashboard.css": "8d7cad3a65466018dcefc73775194c565471beb71f94ce2e69f1ddd3c52b2146",
       "src/assets/css/deep-focus.css": "a1411dfac011bbf5a47a6fd843c6172aa0aadd2bb844e011a24be8b2b9c7cadc",
       "src/assets/css/focus.css": "e047a73553891038ffc3c6a39e3bf4dada20a822a23081e792f5cee89e631e3a",
       "src/assets/css/legal.css": "9cccc9585fc98fbda5620e64797691458d0f2097535a5b710f832c33b3c6614f",
@@ -68,7 +69,7 @@
       "tests/components/MobileTopbar.test.jsx": "b05bc7ba27ddbd4dd30f82b4398cba2484791e7e2f2ea1f5166569228339bdfd"
     },
     "tokens": {
-      "src/assets/css/dashboard.css": "2d13cf5614dc3827643c51d1c4f0c4b41517ec9a60abea2ca9ff0a5780fa1ca3",
+      "src/assets/css/dashboard.css": "8d7cad3a65466018dcefc73775194c565471beb71f94ce2e69f1ddd3c52b2146",
       "src/assets/css/style.css": "dff1039beebf86b6e9a8b8ced7a850e235b0fd2916aa85e5ccaebd717d0053b8"
     },
     "ui": {
@@ -81,7 +82,7 @@
       "src/components/layout/PublicLegalLayout.jsx": "1da54d3b81a13cddb8fcc6c1716c0c298adc41bc6b6696817371084e208ae642",
       "src/components/layout/TermsAgreementModal.jsx": "c2514317ed9ebc052a3fe0b390e9d9844bf5f572d910139bda2e95b8041bf813",
       "src/pages/Activities.jsx": "0e70fca27014f661ea5d97a96ee98263bdb32199decec109c99e83c609bfc246",
-      "src/pages/Dashboard.jsx": "736b70c7e18e03d781549856fcf0e7c95911ab7f6abd6be3b865a1882290f00f",
+      "src/pages/Dashboard.jsx": "25d9e0f4b72b34cef2654884ef95922e50fa00ebdd0aca27b97dc81b03c019cb",
       "src/pages/Focus.jsx": "8dc6b61acc756a1826e9a0c4d0902b87b49c00c0214df6658bfd9a68acaccb9b",
       "src/pages/Goals.jsx": "ae003d9fda1b6dd7e42d7013989359baf24de0a65cdf2d8a1815480fdc6ea55f",
       "src/pages/Lists.jsx": "6aa53204a6bfc4a53a79770d172c412b131de5a028c5f787586d8be7e4cdfd94",

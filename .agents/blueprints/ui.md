@@ -40,9 +40,9 @@ Extracted UI components, props contracts, variants, and state primitives.
 | date | none | 3 (src/pages/Notes.jsx:144, src/pages/Reminders.jsx:301, src/pages/Reminders.jsx:422) | violation |
 | time | none | 2 (src/pages/Reminders.jsx:315, src/pages/Reminders.jsx:436) | violation |
 | color | none | 2 (src/pages/Activities.jsx:227, src/pages/Activities.jsx:299) | violation |
-| select | none | 4 (src/pages/Dashboard.jsx:842, src/pages/Dashboard.jsx:860, src/pages/Dashboard.jsx:873) | violation |
+| select | none | 4 (src/pages/Dashboard.jsx:845, src/pages/Dashboard.jsx:863, src/pages/Dashboard.jsx:876) | violation |
 | dialog | none | 0 | gap |
-| textarea | none | 2 (src/pages/Dashboard.jsx:658, src/pages/Notes.jsx:181) | violation |
+| textarea | none | 2 (src/pages/Dashboard.jsx:661, src/pages/Notes.jsx:181) | violation |
 | range | none | 0 | ok |
 | file | none | 0 | ok |
 | checkbox | none | 5 (src/pages/Focus.jsx:244, src/pages/Goals.jsx:146, src/pages/Goals.jsx:189) | violation |
