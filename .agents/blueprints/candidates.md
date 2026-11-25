@@ -11,7 +11,7 @@ Proposed candidates from codebase facts. User confirmation required before addin
 - **ui-no-native-pickers** (design): Never use native browser date, time, month, week, datetime-local or color inputs. Use the project's themed picker primitives.
   - Evidence: `Found 2 native picker uses outside primitives: src/pages/Activities.jsx:227, src/pages/Activities.jsx:299`
 - **ui-no-native-selects** (design): Avoid raw HTML <select>; use the design system Select primitive.
-  - Evidence: `Found 4 native select uses outside primitives: src/pages/Dashboard.jsx:845, src/pages/Dashboard.jsx:863, src/pages/Dashboard.jsx:876`
+  - Evidence: `Found 4 native select uses outside primitives: src/pages/Dashboard.jsx:949, src/pages/Dashboard.jsx:967, src/pages/Dashboard.jsx:980`
 - **ui-no-native-textarea** (design): Avoid raw HTML native textarea control; use the themed primitive.
   - Evidence: `Found 2 native textarea uses outside primitives.`
 - **process-primitive-gap-dialog** (process): Create the primitive first, in its own commit, before using the control.

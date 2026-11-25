@@ -4,12 +4,12 @@ Extracted environment variables, project scripts, and route mappings.
 
 ## Environment variables
 
-- `FIREBASE_API_KEY` (referenced: `config/generate-firebase-config.js:11`)
 - `FIREBASE_API_KEY` (referenced: `.env.example:4`)
+- `FIREBASE_API_KEY` (referenced: `config/generate-firebase-config.js:11`)
 - `FIREBASE_APP_ID` (referenced: `config/generate-firebase-config.js:16`)
 - `FIREBASE_APP_ID` (referenced: `.env.example:5`)
-- `FIREBASE_AUTH_DOMAIN` (referenced: `config/generate-firebase-config.js:12`)
 - `FIREBASE_AUTH_DOMAIN` (referenced: `.env.example:6`)
+- `FIREBASE_AUTH_DOMAIN` (referenced: `config/generate-firebase-config.js:12`)
 - `FIREBASE_MESSAGING_SENDER_ID` (referenced: `config/generate-firebase-config.js:15`)
 - `FIREBASE_MESSAGING_SENDER_ID` (referenced: `.env.example:7`)
 - `FIREBASE_PROJECT_ID` (referenced: `config/generate-firebase-config.js:13`)
