@@ -2,22 +2,22 @@
 .lists-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1.5rem;
 }
 
 .lists-toolbar {
     display: flex;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .toolbar-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
+    padding: 0.65rem 1.25rem;
     border-radius: var(--radius);
     font-size: 0.95rem;
     font-weight: 500;
@@ -25,51 +25,113 @@
     transition: all 0.2s ease;
     background: var(--bg-primary);
     color: var(--text-primary);
-    border: 1px solid var(--bg-primary);
+    border: 1px solid var(--border-color);
 }
 
 .toolbar-btn.primary {
     background: var(--accent-primary);
-    color: white;
+    color: var(--bg-primary);
     border-color: var(--accent-primary);
+    font-weight: 600;
 }
 
-.toolbar-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb, 59, 130, 246), 0.3);
+.toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb, 88, 166, 255), 0.25);
 }
 
 .toolbar-btn i {
-    font-size: 1rem;
+    font-size: 0.95rem;
+}
+
+.lists-error-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--error-color);
+    background: var(--bg-secondary);
+    color: var(--error-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.lists-error-dismiss {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--error-color);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: calc(var(--radius) * 0.5);
+}
+
+.lists-create-form {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.lists-create-title-input {
+    flex: 1;
+    min-width: 220px;
+}
+
+.lists-type-select {
+    padding: 0.625rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.lists-loading {
+    text-align: center;
+    padding: 2.5rem;
+    opacity: 0.7;
 }
 
 /* Lists Grid */
 .lists-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+    gap: 1.25rem;
+    align-items: start;
 }
 
 .list-card {
     background: var(--bg-primary);
     border-radius: var(--radius);
-    padding: 1.5rem;
+    padding: 1.25rem;
     box-shadow: var(--shadow);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    display: inline-flex;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    border: 1px solid var(--border-color);
+    display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.85rem;
     cursor: pointer;
     position: relative;
-    min-width: 280px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .list-card:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     border-color: var(--accent-primary);
-    transform: translateY(-2px);
 }
 
 /* Selected list indicator */
@@ -103,8 +165,117 @@
 .list-card-header-top {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
     width: 100%;
+    min-width: 0;
+}
+
+.list-card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.list-card-icon {
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.list-card-heading {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+}
+
+.list-rename-form {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-rename-input {
+    width: 100%;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--accent-primary);
+    border-radius: calc(var(--radius) * 0.6);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.list-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.rename-list-btn,
+.delete-list-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.35rem 0.45rem;
+    border-radius: calc(var(--radius) * 0.5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.rename-list-btn:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+}
+
+.delete-list-btn:hover {
+    background: var(--bg-hover);
+    color: var(--error-color);
+}
+
+.list-items {
+    width: 100%;
+    min-width: 0;
+}
+
+.list-empty-hint {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin: 0.25rem 0;
+}
+
+.list-items-ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.list-completed-section {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.list-completed-divider {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.45rem;
+}
+
+.list-items-completed {
+    opacity: 0.85;
 }
 
 .list-icon {
@@ -464,17 +635,99 @@
 .list-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem;
+    gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
     background: var(--bg-hover);
-    border-radius: var(--radius);
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
+    border-radius: calc(var(--radius) * 0.75);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid transparent;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .list-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.list-item-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.list-item-checkbox {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin: 2px 0 0;
+    cursor: pointer;
+    accent-color: var(--accent-primary);
+}
+
+.list-item-text {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.list-item-text.completed {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.item-edit-form {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-inline-edit-input {
+    border: 1px solid var(--accent-primary);
+    border-radius: calc(var(--radius) * 0.5);
     background: var(--bg-primary);
-    border-color: var(--accent-primary);
+    padding: 0.25rem 0.5rem;
+}
+
+.list-item-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex-shrink: 0;
+}
+
+.list-item-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
+    border-radius: calc(var(--radius) * 0.5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.75;
+    transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.list-item-action-btn:hover,
+.list-item-action-btn:focus-visible {
+    opacity: 1;
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+}
+
+.list-item-action-btn.delete:hover,
+.list-item-action-btn.delete:focus-visible {
+    color: var(--error-color);
 }
 
 .list-item.dragging {
@@ -598,16 +851,28 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    padding: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    width: 100%;
+}
+
+.add-item-inline-form {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    align-items: center;
 }
 
 .add-item-input {
     flex: 1;
-    padding: 0.75rem;
-    border: 1px solid var(--bg-hover);
-    background: var(--bg-primary);
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
     color: var(--text-primary);
     border-radius: var(--radius);
+    font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s ease;
 }
@@ -617,17 +882,27 @@
 }
 
 .add-item-btn {
-    padding: 0.75rem 1rem;
+    padding: 0.55rem 0.9rem;
     border: none;
     background: var(--accent-primary);
-    color: white;
+    color: var(--bg-primary);
     border-radius: var(--radius);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.add-item-btn:hover {
-    transform: scale(1.05);
+.add-item-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.add-item-btn:hover:not(:disabled) {
+    transform: scale(1.03);
 }
 
 .list-editor-footer {
@@ -674,11 +949,33 @@
 /* Responsive */
 @media (max-width: 768px) {
     .lists-container {
-        padding: 1rem;
+        padding: 1rem 0.75rem 5.5rem;
     }
 
     .lists-grid {
         grid-template-columns: 1fr;
+    }
+
+    .lists-create-title-input,
+    .lists-type-select,
+    .list-rename-input,
+    .item-inline-edit-input,
+    .add-item-input {
+        font-size: 1rem;
+    }
+
+    .toolbar-btn,
+    .rename-list-btn,
+    .delete-list-btn,
+    .list-item-action-btn,
+    .add-item-btn {
+        min-height: 44px;
+    }
+
+    .rename-list-btn,
+    .delete-list-btn,
+    .list-item-action-btn {
+        min-width: 44px;
     }
 
     .list-editor-content {
