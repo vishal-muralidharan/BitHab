@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
@@ -9,23 +9,48 @@ export function useLists() {
   return useContext(ListContext);
 }
 
+function createUniqueId(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function sanitizeLists(rawLists) {
+  if (!Array.isArray(rawLists)) return [];
+  return rawLists
+    .filter(list => list && typeof list === 'object')
+    .map(list => ({
+      id: list.id || createUniqueId('list'),
+      title: list.title || 'Untitled List',
+      type: list.type || 'checklist',
+      createdAt: typeof list.createdAt === 'number' ? list.createdAt : Date.now(),
+      items: Array.isArray(list.items)
+        ? list.items
+            .filter(item => item && typeof item === 'object')
+            .map(item => ({
+              id: item.id || createUniqueId('item'),
+              text: typeof item.text === 'string' ? item.text : String(item.text ?? ''),
+              completed: Boolean(item.completed)
+            }))
+        : []
+    }));
+}
+
 export function ListProvider({ children }) {
   const { currentUser } = useAuth();
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const listsRef = useRef([]);
+  const writeChainRef = useRef(Promise.resolve());
+  const mutationSeqRef = useRef(0);
+  const pendingWritesRef = useRef(0);
+
   const normalizeLists = useCallback((rawLists) => {
-    if (!Array.isArray(rawLists)) return [];
-    return rawLists.map(l => ({
-      ...l,
-      title: l.title || 'Untitled List',
-      type: l.type || 'checklist',
-      items: Array.isArray(l.items) ? l.items : []
-    }));
+    return sanitizeLists(rawLists);
   }, []);
 
   useEffect(() => {
     if (!currentUser) {
+      listsRef.current = [];
       setLists([]);
       setLoading(false);
       return;
@@ -34,30 +59,31 @@ export function ListProvider({ children }) {
     const userDocRef = doc(db, 'users', currentUser.uid);
     let isMounted = true;
 
-    // Initial fetch via getDoc
     async function initialFetch() {
       try {
         const docSnap = await getDoc(userDocRef);
-        if (isMounted && docSnap && docSnap.exists() && docSnap.data().lists) {
-          setLists(normalizeLists(docSnap.data().lists));
+        if (isMounted && pendingWritesRef.current === 0 && docSnap && docSnap.exists() && docSnap.data().lists) {
+          const normalized = normalizeLists(docSnap.data().lists);
+          listsRef.current = normalized;
+          setLists(normalized);
         }
       } catch (error) {
-        console.error("Error loading lists initial fetch:", error);
+        console.error('Error loading lists initial fetch:', error);
       } finally {
         if (isMounted) setLoading(false);
       }
     }
     initialFetch();
 
-    // Real-time onSnapshot subscription
     const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-      if (isMounted && docSnap && docSnap.exists() && docSnap.data().lists) {
+      if (isMounted && pendingWritesRef.current === 0 && docSnap && docSnap.exists() && docSnap.data().lists) {
         const normalized = normalizeLists(docSnap.data().lists);
+        listsRef.current = normalized;
         setLists(prev => JSON.stringify(prev) === JSON.stringify(normalized) ? prev : normalized);
       }
       if (isMounted) setLoading(false);
     }, (error) => {
-      console.error("Error in ListContext onSnapshot listener:", error);
+      console.error('Error in ListContext onSnapshot listener:', error);
       if (isMounted) setLoading(false);
     });
 
@@ -67,79 +93,129 @@ export function ListProvider({ children }) {
     };
   }, [currentUser, normalizeLists]);
 
-  async function saveLists(newLists) {
-    if (!currentUser) return;
-    
-    try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
-      await setDoc(userDocRef, {
-        lists: newLists,
-        lastUpdated: Date.now()
-      }, { merge: true });
-      
-      setLists(newLists);
-    } catch (error) {
-      console.error("Error saving lists:", error);
-      throw error;
-    }
+  function commitListsUpdate(updater) {
+    const prevLists = listsRef.current;
+    const nextLists = sanitizeLists(updater(prevLists));
+    const seq = ++mutationSeqRef.current;
+
+    listsRef.current = nextLists;
+    setLists(nextLists);
+
+    if (!currentUser) return Promise.resolve();
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    pendingWritesRef.current += 1;
+
+    const writePromise = writeChainRef.current
+      .catch(() => {})
+      .then(async () => {
+        await setDoc(userDocRef, {
+          lists: nextLists,
+          lastUpdated: Date.now()
+        }, { merge: true });
+      })
+      .catch((error) => {
+        if (mutationSeqRef.current === seq) {
+          listsRef.current = prevLists;
+          setLists(prevLists);
+        }
+        console.error('Error saving lists:', error);
+        throw error;
+      })
+      .finally(() => {
+        pendingWritesRef.current = Math.max(0, pendingWritesRef.current - 1);
+      });
+
+    writeChainRef.current = writePromise;
+    return writePromise;
+  }
+
+  function saveLists(newLists) {
+    return commitListsUpdate(() => newLists);
   }
 
   function addList(title, type = 'checklist') {
     const newList = {
-      id: `list-${Date.now()}`,
+      id: createUniqueId('list'),
       title,
       type: type || 'checklist',
-      items: [], // Array of { id, text, completed }
+      items: [],
       createdAt: Date.now()
     };
-    
-    return saveLists([...lists, newList]);
+
+    return commitListsUpdate(prev => [...prev, newList]);
   }
 
   function updateList(id, updatedData) {
-    const newLists = lists.map(list => 
-      list.id === id ? { ...list, ...updatedData } : list
+    return commitListsUpdate(prev =>
+      prev.map(list => (list.id === id ? { ...list, ...updatedData } : list))
     );
-    return saveLists(newLists);
   }
 
   function deleteList(id) {
-    const newLists = lists.filter(list => list.id !== id);
-    return saveLists(newLists);
+    return commitListsUpdate(prev => prev.filter(list => list.id !== id));
   }
 
-  // Helper function for list items
   function addListItem(listId, text) {
-    const list = lists.find(l => l.id === listId);
-    if (!list) return Promise.reject("List not found");
-    
+    const listExists = listsRef.current.some(l => l.id === listId);
+    if (!listExists) return Promise.reject(new Error('List not found'));
+
     const newItem = {
-      id: `item-${Date.now()}`,
+      id: createUniqueId('item'),
       text,
       completed: false
     };
-    
-    return updateList(listId, { items: [...list.items, newItem] });
+
+    return commitListsUpdate(prev =>
+      prev.map(l => (l.id === listId ? { ...l, items: [...l.items, newItem] } : l))
+    );
+  }
+
+  function updateListItem(listId, itemId, updates) {
+    const listExists = listsRef.current.some(l => l.id === listId);
+    if (!listExists) return Promise.reject(new Error('List not found'));
+
+    return commitListsUpdate(prev =>
+      prev.map(l => {
+        if (l.id !== listId) return l;
+        return {
+          ...l,
+          items: l.items.map(item => (item.id === itemId ? { ...item, ...updates } : item))
+        };
+      })
+    );
   }
 
   function toggleListItem(listId, itemId) {
-    const list = lists.find(l => l.id === listId);
-    if (!list) return Promise.reject("List not found");
-    
-    const newItems = list.items.map(item => 
-      item.id === itemId ? { ...item, completed: !item.completed } : item
+    const listExists = listsRef.current.some(l => l.id === listId);
+    if (!listExists) return Promise.reject(new Error('List not found'));
+
+    return commitListsUpdate(prev =>
+      prev.map(l => {
+        if (l.id !== listId) return l;
+        return {
+          ...l,
+          items: l.items.map(item =>
+            item.id === itemId ? { ...item, completed: !item.completed } : item
+          )
+        };
+      })
     );
-    
-    return updateList(listId, { items: newItems });
   }
 
   function deleteListItem(listId, itemId) {
-    const list = lists.find(l => l.id === listId);
-    if (!list) return Promise.reject("List not found");
-    
-    const newItems = list.items.filter(item => item.id !== itemId);
-    
-    return updateList(listId, { items: newItems });
+    const listExists = listsRef.current.some(l => l.id === listId);
+    if (!listExists) return Promise.reject(new Error('List not found'));
+
+    return commitListsUpdate(prev =>
+      prev.map(l => {
+        if (l.id !== listId) return l;
+        return {
+          ...l,
+          items: l.items.filter(item => item.id !== itemId)
+        };
+      })
+    );
   }
 
   const value = {
@@ -149,8 +225,10 @@ export function ListProvider({ children }) {
     updateList,
     deleteList,
     addListItem,
+    updateListItem,
     toggleListItem,
-    deleteListItem
+    deleteListItem,
+    saveLists
   };
 
   return (

@@ -1,17 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNotes } from '../context/NoteContext';
+
+/**
+ * Adjusts a note textarea's height to fit its content up to 240px.
+ */
+function resizeNoteTextarea(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${Math.min(Math.max(el.scrollHeight, 76), 240)}px`;
+}
 
 export default function Notes() {
   const { notes, loading, addNote, updateNote, toggleFavorite, deleteNote } = useNotes();
   const [activeType, setActiveType] = useState('daily');
   const [currentFilter, setCurrentFilter] = useState('all');
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const gridRef = useRef(null);
 
   const filteredNotes = notes.filter(note => {
     if (note.type !== activeType) return false;
     if (currentFilter === 'favorites' && !note.favorite) return false;
     return true;
   });
+
+  useEffect(() => {
+    if (!gridRef.current) return;
+    gridRef.current.querySelectorAll('.note-content-input').forEach(resizeNoteTextarea);
+  }, [filteredNotes, activeType, currentFilter]);
 
   const handleAddNewNote = async () => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -22,7 +37,8 @@ export default function Notes() {
     }
   };
 
-  const handleContentChange = (noteId, newContent) => {
+  const handleContentChange = (noteId, newContent, targetEl) => {
+    resizeNoteTextarea(targetEl);
     updateNote(noteId, { content: newContent });
   };
 
@@ -128,24 +144,24 @@ export default function Notes() {
             </p>
           </div>
         ) : (
-          <div id="notes-grid" className="notes-grid" style={{ display: 'grid' }}>
+          <div ref={gridRef} id="notes-grid" className="notes-grid">
             {filteredNotes.map(note => {
               const favIcon = note.favorite ? 'fas fa-star' : 'far fa-star';
 
               return (
                 <div key={note.id} className="note-card" data-note-id={note.id} data-type={note.type}>
                   <div className="note-header">
-                    <div className="note-identifier" style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                    <div className="note-identifier">
                       {note.type === 'daily' ? (
-                        <div className="note-date-display" title="Click to change date" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <i className="fas fa-calendar-day"></i>
-                          <span>{formatDateDisplay(note.date)}</span>
+                        <div className="note-date-display" title="Click to change date">
+                          <i className="fas fa-calendar-day" aria-hidden="true"></i>
+                          <span>{formatDateDisplay(note.date) || 'Select date'}</span>
                           <input 
                             type="date" 
                             className="note-date-input" 
+                            aria-label="Note date"
                             value={note.date || ''}
                             onChange={(e) => handleDateChange(note.id, e.target.value)}
-                            style={{ marginLeft: '6px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 6px', fontSize: '0.85rem' }}
                           />
                         </div>
                       ) : (
@@ -154,27 +170,27 @@ export default function Notes() {
                           className="note-title-input" 
                           value={note.title || ''} 
                           placeholder="Note title"
+                          aria-label="Note title"
                           onChange={(e) => handleTitleChange(note.id, e.target.value)}
-                          style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontWeight: '600', fontSize: '1rem' }}
                         />
                       )}
                     </div>
                     <div className="note-actions">
                       <button 
-                        className="favorite-note-btn" 
+                        className={`favorite-note-btn ${note.favorite ? 'is-favorite' : ''}`}
                         title="Toggle favorite"
+                        aria-label="Toggle favorite"
                         onClick={() => toggleFavorite(note.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: note.favorite ? 'var(--warning-color, #eab308)' : 'var(--text-secondary)' }}
                       >
-                        <i className={favIcon}></i>
+                        <i className={favIcon} aria-hidden="true"></i>
                       </button>
                       <button 
                         className="delete-note-btn" 
                         title="Delete note"
+                        aria-label="Delete note"
                         onClick={() => requestDeleteNote(note)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
                       >
-                        <i className="fas fa-trash"></i>
+                        <i className="fas fa-trash" aria-hidden="true"></i>
                       </button>
                     </div>
                   </div>
@@ -182,7 +198,7 @@ export default function Notes() {
                     className="note-content-input" 
                     placeholder="Write your note here"
                     value={note.content || ''}
-                    onChange={(e) => handleContentChange(note.id, e.target.value)}
+                    onChange={(e) => handleContentChange(note.id, e.target.value, e.target)}
                   />
                 </div>
               );

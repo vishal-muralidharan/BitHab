@@ -575,6 +575,7 @@ body.index-page .content {
 .activity-list.inline-logging-active {
     max-height: none !important;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0.2rem 0.25rem 0.4rem;
     gap: 0.4rem;
     display: flex;
@@ -588,6 +589,7 @@ body.index-page .content {
     flex-direction: column;
     gap: 0.35rem;
     width: 100%;
+    min-width: 0;
 }
 
 .inline-logging-header h3 {
@@ -601,12 +603,14 @@ body.index-page .content {
     flex-direction: column;
     gap: 0.35rem;
     padding-right: 0.25rem;
+    min-width: 0;
 }
 
 .activity-group {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    min-width: 0;
 }
 
 .activity-group-title {
@@ -618,16 +622,23 @@ body.index-page .content {
 
 .pills-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
     gap: 0.4rem;
+    width: 100%;
+    min-width: 0;
 }
 
 .inline-activities-container .pill {
     margin: 0;
     min-height: 44px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
+    overflow-wrap: anywhere;
     font-size: 0.95rem;
     border-width: 2px;
 }
@@ -776,6 +787,7 @@ body.index-page .content {
     margin-bottom: 0.25rem;
     padding-bottom: 0.35rem;
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .section-header h2 {
@@ -856,17 +868,18 @@ body.index-page .content {
     opacity: 0.7;
 }
 
-/* Expanded state - use large height but keep overflow hidden */
+/* Expanded state - keep scrollable within expanded max-height */
 .main-layout .left-column .activity-list.expanded,
 .main-layout .right-column .goal-list.expanded,
-.main-layout .left-column .notes-preview.expanded,
 .main-layout .right-column .reminders-preview.expanded {
     max-height: var(--dashboard-list-expanded); /* Large enough for expanded content */
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .main-layout .left-column .notes-preview.expanded {
     max-height: none;
+    overflow: visible;
 }
 
 .main-layout .right-column .reminders-preview.expanded {
@@ -875,19 +888,20 @@ body.index-page .content {
 
 .main-layout .left-column .activity-list.inline-logging-active {
     max-height: none !important;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 
 .activities-component:has(.activity-list.inline-logging-active) {
     max-height: none;
-    overflow: visible;
+    overflow: hidden;
     cursor: default;
 }
 
 .activities-component.inline-logging-open {
     max-height: none;
-    overflow: visible;
+    overflow: hidden;
     cursor: default;
 }
 
@@ -1139,6 +1153,8 @@ body.index-page .content {
     resize: none;
     width: 100%;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .notes-preview:not(.expanded) .home-notes-editor {
@@ -2055,9 +2071,11 @@ body.index-page .content {
 }
 /* Mobile responsive adjustments for expansion */
 @media (max-width: 768px) {
-    .activity-list.inline-logging-active {
-        max-height: none;
+    .main-layout .left-column .activity-list,
+    .main-layout .left-column .activity-list.inline-logging-active {
+        max-height: none !important;
         overflow: visible;
+        flex: initial;
         padding: 0.5rem 0.25rem 1rem;
     }
     
@@ -2067,7 +2085,7 @@ body.index-page .content {
     }
     
     .pills-container {
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
         gap: 0.5rem;
     }
 
@@ -2082,11 +2100,12 @@ body.index-page .content {
         overflow: visible;
     }
     
-    .left-column .activity-list.expanded,
-    .right-column .goal-list.expanded,
-    .left-column .notes-preview.expanded,
-    .right-column .reminders-preview.expanded {
+    .main-layout .left-column .activity-list.expanded,
+    .main-layout .right-column .goal-list.expanded,
+    .main-layout .left-column .notes-preview.expanded,
+    .main-layout .right-column .reminders-preview.expanded {
         max-height: none;
+        overflow: visible;
     }
     
     .activities-component.expanding,

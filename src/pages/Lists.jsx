@@ -1,40 +1,106 @@
 import { useState } from 'react';
 import { useLists } from '../context/ListContext';
+import ConfirmModal from '../components/common/ConfirmModal';
 
 export default function Lists() {
-  const { lists, loading, addList, deleteList, addListItem, toggleListItem, deleteListItem } = useLists();
-  
+  const {
+    lists,
+    loading,
+    addList,
+    updateList,
+    deleteList,
+    addListItem,
+    updateListItem,
+    toggleListItem,
+    deleteListItem
+  } = useLists();
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
   const [newListType, setNewListType] = useState('checklist');
   const [newItemTexts, setNewItemTexts] = useState({});
   const [selectedListId, setSelectedListId] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [editingListId, setEditingListId] = useState(null);
+  const [editingListTitle, setEditingListTitle] = useState('');
+  const [editingItem, setEditingItem] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const runAction = async (fn, fallbackMessage) => {
+    setErrorMsg('');
+    try {
+      await fn();
+    } catch {
+      setErrorMsg(fallbackMessage);
+    }
+  };
+
+  const handleToggleAddForm = () => {
+    setShowAddForm(prev => {
+      if (prev) {
+        setNewListTitle('');
+        setNewListType('checklist');
+      }
+      return !prev;
+    });
+  };
 
   const handleAddList = (e) => {
     e.preventDefault();
-    if (newListTitle.trim()) {
-      addList(newListTitle.trim(), newListType);
-      setNewListTitle('');
-      setShowAddForm(false);
-    }
+    const trimmed = newListTitle.trim();
+    if (!trimmed) return;
+    setNewListTitle('');
+    setNewListType('checklist');
+    setShowAddForm(false);
+    runAction(() => addList(trimmed, newListType), 'Could not create list. Please try again.');
+  };
+
+  const startRenameList = (list) => {
+    setEditingListId(list.id);
+    setEditingListTitle(list.title);
+  };
+
+  const commitRenameList = (list) => {
+    const trimmed = editingListTitle.trim();
+    setEditingListId(null);
+    if (!trimmed || trimmed === list.title) return;
+    runAction(() => updateList(list.id, { title: trimmed }), 'Could not rename list. Please try again.');
   };
 
   const handleAddItem = (e, listId) => {
     e.preventDefault();
     const text = newItemTexts[listId];
-    if (text && text.trim()) {
-      addListItem(listId, text.trim());
-      setNewItemTexts({ ...newItemTexts, [listId]: '' });
-    }
+    if (!text || !text.trim()) return;
+    const trimmed = text.trim();
+    setNewItemTexts(prev => ({ ...prev, [listId]: '' }));
+    runAction(() => addListItem(listId, trimmed), 'Could not add item. Please try again.');
+  };
+
+  const startEditItem = (listId, item) => {
+    setEditingItem({ listId, itemId: item.id, text: item.text });
+  };
+
+  const commitEditItem = (originalItem) => {
+    if (!editingItem) return;
+    const { listId, itemId, text } = editingItem;
+    const trimmed = text.trim();
+    setEditingItem(null);
+    if (!trimmed || trimmed === originalItem.text) return;
+    runAction(
+      () => updateListItem(listId, itemId, { text: trimmed }),
+      'Could not update item. Please try again.'
+    );
   };
 
   const requestDeleteList = (list) => {
     setConfirmDialog({
+      listId: list.id,
       message: `Are you sure you want to delete "${list.title}"?`,
-      onConfirm: async () => {
-        await deleteList(list.id);
+      onConfirm: () => {
+        const targetId = list.id;
         setConfirmDialog(null);
+        setSelectedListId(prev => (prev === targetId ? null : prev));
+        runAction(() => deleteList(targetId), 'Could not delete list. Please try again.');
       }
     });
   };
@@ -50,6 +116,88 @@ export default function Lists() {
     }
   };
 
+  const renderListItem = (list, item, displayIndex) => {
+    const isCheckable = list.type !== 'numbered' && list.type !== 'bulleted';
+    const isEditingThisItem = editingItem?.listId === list.id && editingItem?.itemId === item.id;
+
+    return (
+      <li
+        key={item.id}
+        className={`list-item ${item.completed ? 'completed' : ''}`}
+      >
+        {list.type === 'numbered' ? (
+          <span className="item-number">{displayIndex + 1}.</span>
+        ) : list.type === 'bulleted' ? (
+          <span className="item-bullet" aria-hidden="true">•</span>
+        ) : null}
+
+        {isEditingThisItem ? (
+          <form
+            className="item-edit-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              commitEditItem(item);
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <input
+              type="text"
+              className="item-text-input item-inline-edit-input"
+              aria-label="Edit item text"
+              value={editingItem.text}
+              onChange={(e) => setEditingItem(prev => (prev ? { ...prev, text: e.target.value } : null))}
+              onBlur={() => commitEditItem(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.stopPropagation();
+                  setEditingItem(null);
+                }
+              }}
+              autoFocus
+            />
+          </form>
+        ) : isCheckable ? (
+          <label className="list-item-label" onClick={e => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              className="list-item-checkbox"
+              checked={Boolean(item.completed)}
+              onChange={() => runAction(() => toggleListItem(list.id, item.id), 'Could not update item. Please try again.')}
+            />
+            <span className={`list-item-text ${item.completed ? 'completed' : ''}`}>
+              {item.text}
+            </span>
+          </label>
+        ) : (
+          <span className="list-item-text" onClick={e => e.stopPropagation()}>
+            {item.text}
+          </span>
+        )}
+
+        <div className="list-item-controls" onClick={e => e.stopPropagation()}>
+          <button
+            type="button"
+            className="list-item-action-btn"
+            onClick={() => startEditItem(list.id, item)}
+            aria-label="Edit item"
+            title="Edit item"
+          >
+            <i className="fas fa-pen" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            className="list-item-action-btn delete"
+            onClick={() => runAction(() => deleteListItem(list.id, item.id), 'Could not delete item. Please try again.')}
+            aria-label="Delete item"
+            title="Delete item"
+          >
+            <i className="fas fa-times" aria-hidden="true"></i>
+          </button>
+        </div>
+      </li>
+    );
+  };
+
   return (
     <>
       <div className="lists-container">
@@ -59,31 +207,54 @@ export default function Lists() {
         </div>
 
         <div className="lists-toolbar">
-          <button 
+          <button
+            type="button"
             id="add-list-btn"
-            onClick={() => setShowAddForm(!showAddForm)} 
+            onClick={handleToggleAddForm}
             className="toolbar-btn primary"
           >
-            <i className={`fas fa-${showAddForm ? 'times' : 'plus'}`}></i>
+            <i className={`fas fa-${showAddForm ? 'times' : 'plus'}`} aria-hidden="true"></i>
             <span>{showAddForm ? 'Cancel' : 'New List'}</span>
           </button>
         </div>
 
+        {errorMsg && (
+          <div className="lists-error-alert" role="alert">
+            <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
+            <span>{errorMsg}</span>
+            <button
+              type="button"
+              className="lists-error-dismiss"
+              aria-label="Dismiss error"
+              onClick={() => setErrorMsg('')}
+            >
+              <i className="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+        )}
+
         {showAddForm && (
-          <form onSubmit={handleAddList} className="add-item-form" style={{ marginBottom: '2rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <input 
-              type="text" 
-              className="add-input"
-              placeholder="List Title..." 
+          <form
+            onSubmit={handleAddList}
+            className="add-item-form lists-create-form"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') handleToggleAddForm();
+            }}
+          >
+            <input
+              type="text"
+              className="add-input lists-create-title-input"
+              placeholder="List Title..."
+              aria-label="List title"
               value={newListTitle}
               onChange={(e) => setNewListTitle(e.target.value)}
               autoFocus
-              style={{ flex: 1, minWidth: '220px' }}
             />
             <select
+              className="lists-type-select"
+              aria-label="List type"
               value={newListType}
               onChange={(e) => setNewListType(e.target.value)}
-              style={{ padding: '0.625rem 1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
             >
               <option value="checklist">Checklist</option>
               <option value="todo">Todo List</option>
@@ -97,10 +268,10 @@ export default function Lists() {
         )}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', opacity: 0.7 }}>Loading lists...</div>
+          <div className="lists-loading">Loading lists...</div>
         ) : lists.length === 0 ? (
           <div className="lists-empty-state">
-            <i className="fas fa-list"></i>
+            <i className="fas fa-list" aria-hidden="true"></i>
             <h3>No lists yet</h3>
             <p>Create your first list to get started</p>
           </div>
@@ -108,93 +279,112 @@ export default function Lists() {
           <div id="lists-grid" className="lists-grid">
             {lists.map(list => {
               const isSelected = selectedListId === list.id;
+              const isCheckable = list.type !== 'numbered' && list.type !== 'bulleted';
+              const activeItems = isCheckable ? list.items.filter(i => !i.completed) : list.items;
+              const completedItems = isCheckable ? list.items.filter(i => i.completed) : [];
+              const draftText = newItemTexts[list.id] || '';
 
               return (
-                <div 
-                  key={list.id} 
+                <div
+                  key={list.id}
                   className={`list-card ${isSelected ? 'selected' : ''}`}
                   onClick={() => setSelectedListId(isSelected ? null : list.id)}
                 >
-                  <div className="list-card-header-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                      <i className={`fas ${getListIcon(list.type)}`} style={{ color: 'var(--accent-primary)' }}></i>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{list.title}</h3>
+                  <div className="list-card-header-top">
+                    <div className="list-card-title-group">
+                      <i className={`fas ${getListIcon(list.type)} list-card-icon`} aria-hidden="true"></i>
+                      {editingListId === list.id ? (
+                        <form
+                          className="list-rename-form"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            commitRenameList(list);
+                          }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <input
+                            type="text"
+                            className="list-rename-input"
+                            aria-label="Edit list title"
+                            value={editingListTitle}
+                            onChange={(e) => setEditingListTitle(e.target.value)}
+                            onBlur={() => commitRenameList(list)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') {
+                                e.stopPropagation();
+                                setEditingListId(null);
+                              }
+                            }}
+                            autoFocus
+                          />
+                        </form>
+                      ) : (
+                        <h3 className="list-card-heading">{list.title}</h3>
+                      )}
                     </div>
                     <div className="list-card-actions" onClick={e => e.stopPropagation()}>
-                      <button 
+                      <button
+                        type="button"
+                        className="rename-list-btn"
+                        onClick={() => startRenameList(list)}
+                        aria-label="Rename list"
+                        title="Rename list"
+                      >
+                        <i className="fas fa-pen" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
                         className="delete-list-btn"
                         onClick={() => requestDeleteList(list)}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
                         aria-label="Delete list"
+                        title="Delete list"
                       >
-                        <i className="fas fa-trash"></i>
+                        <i className="fas fa-trash" aria-hidden="true"></i>
                       </button>
                     </div>
                   </div>
 
-                  <div className="list-items" style={{ width: '100%', marginTop: '0.5rem' }}>
+                  <div className="list-items">
                     {list.items.length === 0 ? (
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontStyle: 'italic', margin: '0.5rem 0' }}>Empty list</p>
+                      <p className="list-empty-hint">Empty list</p>
                     ) : (
-                      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {list.items.map((item, idx) => (
-                          <li key={item.id} className="list-item" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {list.type === 'numbered' ? (
-                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', width: '18px' }}>{idx + 1}.</span>
-                            ) : list.type === 'bulleted' ? (
-                              <span style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', lineHeight: '1', width: '18px' }}>•</span>
-                            ) : (
-                              <input 
-                                type="checkbox"
-                                checked={item.completed}
-                                onChange={() => toggleListItem(list.id, item.id)}
-                                onClick={e => e.stopPropagation()}
-                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                              />
-                            )}
-                            <span 
-                              style={{ 
-                                flex: 1, 
-                                textDecoration: item.completed ? 'line-through' : 'none',
-                                color: item.completed ? 'var(--text-secondary)' : 'var(--text-primary)',
-                                fontSize: '0.95rem'
-                              }}
-                            >
-                              {item.text}
-                            </span>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteListItem(list.id, item.id);
-                              }}
-                              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: 0.5, padding: '2px 4px' }}
-                              aria-label="Delete item"
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
+                      <>
+                        {activeItems.length > 0 && (
+                          <ul className="list-items-ul">
+                            {activeItems.map((item, idx) => renderListItem(list, item, idx))}
+                          </ul>
+                        )}
+                        {completedItems.length > 0 && (
+                          <div className="list-completed-section">
+                            <div className="list-completed-divider">
+                              Completed ({completedItems.length})
+                            </div>
+                            <ul className="list-items-ul list-items-completed">
+                              {completedItems.map((item, idx) => renderListItem(list, item, idx))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
-                  <div className="add-item-row" style={{ marginTop: 'auto', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', width: '100%' }} onClick={e => e.stopPropagation()}>
-                    <form onSubmit={(e) => handleAddItem(e, list.id)} style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                      <input 
-                        type="text" 
+                  <div className="add-item-row" onClick={e => e.stopPropagation()}>
+                    <form className="add-item-inline-form" onSubmit={(e) => handleAddItem(e, list.id)}>
+                      <input
+                        type="text"
                         className="add-item-input"
                         placeholder="Add an item..."
-                        value={newItemTexts[list.id] || ''}
-                        onChange={(e) => setNewItemTexts({ ...newItemTexts, [list.id]: e.target.value })}
-                        style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.9rem' }}
+                        aria-label={`Add an item to ${list.title}`}
+                        value={draftText}
+                        onChange={(e) => setNewItemTexts(prev => ({ ...prev, [list.id]: e.target.value }))}
                       />
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         className="add-item-btn"
-                        style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: 'var(--radius)', padding: '0 0.875rem', cursor: 'pointer' }}
                         aria-label="Add item"
+                        disabled={!draftText.trim()}
                       >
-                        <i className="fas fa-plus"></i>
+                        <i className="fas fa-plus" aria-hidden="true"></i>
                       </button>
                     </form>
                   </div>
@@ -205,18 +395,16 @@ export default function Lists() {
         )}
       </div>
 
-      {/* Confirmation Modal */}
-      {confirmDialog && (
-        <div id="confirmation-modal" className="modal">
-          <div className="modal-content">
-            <p id="confirmation-message">{confirmDialog.message}</p>
-            <div className="confirmation-buttons">
-              <button id="confirm-yes" className="btn-confirm" onClick={confirmDialog.onConfirm}>Yes</button>
-              <button id="confirm-no" className="btn-cancel" onClick={() => setConfirmDialog(null)}>No</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={Boolean(confirmDialog)}
+        title="Delete List"
+        message={confirmDialog?.message || ''}
+        confirmLabel="Yes"
+        cancelLabel="No"
+        isDanger
+        onConfirm={confirmDialog?.onConfirm || (() => {})}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </>
   );
 }

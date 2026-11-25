@@ -6,6 +6,13 @@ import { useNotes } from '../context/NoteContext';
 import { useReminders } from '../context/ReminderContext';
 import { useSchedule } from '../context/ScheduleContext';
 
+/**
+ * Returns true when an element's content vertically overflows its visible box.
+ */
+function isElementOverflowing(el) {
+  return Boolean(el && el.scrollHeight > el.clientHeight + 1);
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { activities, loading: activitiesLoading } = useActivities();
@@ -25,6 +32,21 @@ export default function Dashboard() {
   const [activitiesExpanded, setActivitiesExpanded] = useState(false);
   const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [remindersExpanded, setRemindersExpanded] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return window.matchMedia('(max-width: 768px)').matches;
+  });
+  const [overflowState, setOverflowState] = useState({
+    activities: false,
+    notes: false,
+    goals: false,
+    reminders: false
+  });
+
+  const activityListRef = useRef(null);
+  const notesEditorRef = useRef(null);
+  const goalListRef = useRef(null);
+  const remindersListRef = useRef(null);
 
   // Year/Month/Activity modal state
   const [showYearMonthPicker, setShowYearMonthPicker] = useState(false);
@@ -426,12 +448,14 @@ export default function Dashboard() {
   };
 
   // Activities to show
-  const activitiesToShow = activitiesExpanded ? activities : activities.slice(0, 3);
+  const activitiesToShow = activitiesExpanded || !isMobileViewport ? activities : activities.slice(0, 3);
 
   // Goals to show
   const activeGoals = goals.filter(g => !g.completed);
   const completedGoals = goals.filter(g => g.completed);
-  const goalsToShow = goalsExpanded ? [...activeGoals, ...completedGoals] : activeGoals.slice(0, 4);
+  const goalsToShow = goalsExpanded
+    ? [...activeGoals, ...completedGoals]
+    : (isMobileViewport ? activeGoals.slice(0, 4) : activeGoals);
 
   // Reminders to show
   const sortedReminders = [...reminders].sort((a, b) => {
@@ -446,17 +470,91 @@ export default function Dashboard() {
   let remindersToShow;
   if (remindersExpanded) {
     remindersToShow = sortedReminders;
-  } else {
+  } else if (isMobileViewport) {
     remindersToShow = futureReminders.slice(0, 2);
     if (remindersToShow.length < 2 && pastReminders.length > 0) {
       remindersToShow.push(...pastReminders.slice(0, 2 - remindersToShow.length));
     }
+  } else {
+    remindersToShow = [...futureReminders, ...pastReminders];
   }
+
+  // Track mobile breakpoint so card lists only truncate when unbounded on small screens
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handleChange = (e) => setIsMobileViewport(e.matches);
+
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', handleChange);
+      return () => mq.removeEventListener('change', handleChange);
+    }
+    if (typeof mq.addListener === 'function') {
+      mq.addListener(handleChange);
+      return () => mq.removeListener(handleChange);
+    }
+    return undefined;
+  }, []);
+
+  // Measure actual content overflow so collapse/expand buttons only render when needed
+  useEffect(() => {
+    let cancelled = false;
+    const measureOverflow = () => {
+      if (cancelled) return;
+      const next = {
+        activities: !selectedDateStr && !isMobileViewport && isElementOverflowing(activityListRef.current),
+        notes: isElementOverflowing(notesEditorRef.current),
+        goals: !isMobileViewport && isElementOverflowing(goalListRef.current),
+        reminders: !isMobileViewport && isElementOverflowing(remindersListRef.current)
+      };
+      setOverflowState(prev => (
+        prev.activities === next.activities &&
+        prev.notes === next.notes &&
+        prev.goals === next.goals &&
+        prev.reminders === next.reminders
+      ) ? prev : next);
+    };
+
+    queueMicrotask(measureOverflow);
+    window.addEventListener('resize', measureOverflow);
+
+    let observer;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(measureOverflow);
+      [activityListRef.current, notesEditorRef.current, goalListRef.current, remindersListRef.current]
+        .filter(Boolean)
+        .forEach(el => observer.observe(el));
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('resize', measureOverflow);
+      if (observer) observer.disconnect();
+    };
+  }, [
+    activities,
+    goals,
+    reminders,
+    noteDraft,
+    selectedDateStr,
+    activitiesExpanded,
+    goalsExpanded,
+    remindersExpanded,
+    isMobileViewport,
+    activitiesLoading,
+    goalsLoading,
+    remindersLoading
+  ]);
+
+  const showActivitiesBtn = Boolean(selectedDateStr) || activitiesExpanded || (isMobileViewport ? activities.length > 3 : overflowState.activities);
+  const showNotesBtn = overflowState.notes;
+  const showGoalsBtn = goalsExpanded || completedGoals.length > 0 || (isMobileViewport ? activeGoals.length > 4 : overflowState.goals);
+  const showRemindersBtn = remindersExpanded || (isMobileViewport ? sortedReminders.length > 2 : overflowState.reminders);
 
   // Currently logged IDs for selectedDateStr
   const currentLoggedIds = new Set(selectedDateStr ? (logs[selectedDateStr] || []) : []);
 
-  const hasExpandedInteraction = activitiesExpanded || goalsExpanded || remindersExpanded;
+  const hasExpandedInteraction = (!selectedDateStr && activitiesExpanded) || goalsExpanded || remindersExpanded;
 
   return (
     <div className={`main-layout ${hasExpandedInteraction ? 'expanded-active' : ''}`}>
@@ -473,25 +571,28 @@ export default function Dashboard() {
         >
           <div className="section-header">
             <h2>Activities</h2>
-            <button 
-              className={`show-all-btn ${activitiesExpanded ? 'expanded' : ''}`} 
-              id="activities-show-all" 
-              title={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (selectedDateStr) {
-                  setSelectedDateStr(null);
-                } else {
-                  setActivitiesExpanded(!activitiesExpanded);
-                }
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-              </svg>
-            </button>
+            {showActivitiesBtn && (
+              <button 
+                className={`show-all-btn ${!selectedDateStr && activitiesExpanded ? 'expanded' : ''}`} 
+                id="activities-show-all" 
+                title={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
+                aria-label={selectedDateStr ? "Show all activities" : (activitiesExpanded ? 'Collapse' : 'Show all')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (selectedDateStr) {
+                    setSelectedDateStr(null);
+                  } else {
+                    setActivitiesExpanded(!activitiesExpanded);
+                  }
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                </svg>
+              </button>
+            )}
           </div>
-          <div id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${activitiesExpanded ? 'expanded' : ''}`}>
+          <div ref={activityListRef} id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${activitiesExpanded ? 'expanded' : ''}`}>
             {selectedDateStr ? (
               activitiesLoading ? (
                 <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading activities...</p>
@@ -636,26 +737,30 @@ export default function Dashboard() {
         >
           <div className="section-header">
             <h2>Notes</h2>
-            <button 
-              className="show-all-btn" 
-              id="notes-show-all" 
-              title="Show all notes"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/notes');
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
-              </svg>
-            </button>
+            {showNotesBtn && (
+              <button 
+                className="show-all-btn" 
+                id="notes-show-all" 
+                title="Show all notes"
+                aria-label="Show all notes"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/notes');
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
+                </svg>
+              </button>
+            )}
           </div>
           <div id="notes-preview" className="notes-preview">
             <div className="notes-date-header">
-              📝 Notes for {formatDateForNotes(selectedDateStr)}:
+              📝 Notes for {formatDateForNotes(effectiveNoteDate)}:
             </div>
             <div className="notes-editor-container home-notes-editor-container">
               <textarea 
+                ref={notesEditorRef}
                 className="notes-editor home-notes-editor"
                 placeholder="Write your note for this day"
                 value={noteDraft}
@@ -701,23 +806,24 @@ export default function Dashboard() {
         >
           <div className="section-header">
             <h2>Goals</h2>
-            {(activeGoals.length > 4 || completedGoals.length > 0) && (
+            {showGoalsBtn && (
               <button 
                 className={`show-all-btn ${goalsExpanded ? 'expanded' : ''}`}
                 id="goals-show-all" 
                 title={goalsExpanded ? 'Collapse' : 'Show all'}
+                aria-label={goalsExpanded ? 'Collapse' : 'Show all'}
                 onClick={(e) => {
                   e.stopPropagation();
                   setGoalsExpanded(!goalsExpanded);
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
                 </svg>
               </button>
             )}
           </div>
-          <ul id="goal-list" className={`goal-list ${goalsExpanded ? 'expanded' : ''}`}>
+          <ul ref={goalListRef} id="goal-list" className={`goal-list ${goalsExpanded ? 'expanded' : ''}`}>
             {goalsLoading ? (
               <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading goals...</p>
             ) : activeGoals.length === 0 && completedGoals.length === 0 ? (
@@ -756,23 +862,24 @@ export default function Dashboard() {
         >
           <div className="section-header">
             <h2>Reminders</h2>
-            {sortedReminders.length > 2 && (
+            {showRemindersBtn && (
               <button 
                 className={`show-all-btn ${remindersExpanded ? 'expanded' : ''}`}
                 id="reminders-show-all" 
                 title={remindersExpanded ? 'Collapse' : 'Show all'}
+                aria-label={remindersExpanded ? 'Collapse' : 'Show all'}
                 onClick={(e) => {
                   e.stopPropagation();
                   setRemindersExpanded(!remindersExpanded);
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M8 10L4 6h8l-4 4z" fill="currentColor"/>
                 </svg>
               </button>
             )}
           </div>
-          <div id="reminders-preview" className={`reminders-preview ${remindersExpanded ? 'expanded' : ''}`}>
+          <div ref={remindersListRef} id="reminders-preview" className={`reminders-preview ${remindersExpanded ? 'expanded' : ''}`}>
             {remindersLoading ? (
               <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading reminders...</p>
             ) : remindersToShow.length === 0 ? (
