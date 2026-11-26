@@ -592,10 +592,40 @@ body.index-page .content {
     min-width: 0;
 }
 
+.inline-logging-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
 .inline-logging-header h3 {
     margin: 0;
     font-size: 0.95rem;
     color: var(--text-primary);
+}
+
+.inline-logging-expand-btn {
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+    border: 1px solid var(--border-color);
+    border-radius: calc(var(--radius) / 2);
+    padding: 0.25rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all var(--transition);
+}
+
+.inline-logging-expand-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.inline-logging-expand-btn:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 .inline-activities-container {
@@ -622,24 +652,25 @@ body.index-page .content {
 
 .pills-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
-    gap: 0.4rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(115px, 100%), 1fr));
+    gap: 0.35rem;
     width: 100%;
     min-width: 0;
 }
 
 .inline-activities-container .pill {
     margin: 0;
-    min-height: 44px;
+    min-height: 36px;
     min-width: 0;
     max-width: 100%;
+    padding: 0.28rem 0.65rem;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     overflow-wrap: anywhere;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     border-width: 2px;
 }
 
@@ -890,8 +921,38 @@ body.index-page .content {
     max-height: none !important;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
 }
 
+.main-layout .left-column .activity-list.inline-logging-active.expanded {
+    max-height: none !important;
+    overflow: visible;
+}
+
+.main-layout .left-column .activities-component.inline-logging-open {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    cursor: default;
+}
+
+.main-layout .left-column .activities-component.inline-logging-open.expanded {
+    flex: 0 0 auto;
+    overflow: visible;
+}
+
+.main-layout .left-column .notes-component.compact-for-logging,
+.main-layout .left-column:has(.activities-component.inline-logging-open) .notes-component {
+    flex: 1 1 0;
+    min-height: 140px;
+}
+
+.main-layout .left-column .notes-component.compact-for-logging .home-notes-editor,
+.main-layout .left-column:has(.activities-component.inline-logging-open) .home-notes-editor {
+    min-height: 56px;
+}
 
 .activities-component:has(.activity-list.inline-logging-active) {
     max-height: none;
@@ -2091,6 +2152,8 @@ body.index-page .content {
 
     .inline-activities-container .pill {
         min-width: 0;
+        min-height: 44px;
+        padding: 0.45rem 0.75rem;
         font-size: 0.9rem;
     }
     
