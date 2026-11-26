@@ -30,6 +30,7 @@ export default function Dashboard() {
 
   const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [activitiesExpanded, setActivitiesExpanded] = useState(false);
+  const [inlineLoggingExpanded, setInlineLoggingExpanded] = useState(false);
   const [goalsExpanded, setGoalsExpanded] = useState(false);
   const [remindersExpanded, setRemindersExpanded] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() => {
@@ -38,6 +39,7 @@ export default function Dashboard() {
   });
   const [overflowState, setOverflowState] = useState({
     activities: false,
+    inlineActivities: false,
     notes: false,
     goals: false,
     reminders: false
@@ -141,8 +143,8 @@ export default function Dashboard() {
         return;
       }
 
-      // If clicked on an activity pill, allow toggling the log
-      if (e.target.closest('.pill, .subactivity-pill, .pills-container')) {
+      // If clicked on an activity pill, group filter title, or inline expand button, keep logging open
+      if (e.target.closest('.pill, .subactivity-pill, .pills-container, .activity-group-title, .inline-logging-expand-btn')) {
         return;
       }
 
@@ -153,6 +155,7 @@ export default function Dashboard() {
 
       // Otherwise, unselect date, undo logging state, and show all activities
       setSelectedDateStr(null);
+      setInlineLoggingExpanded(false);
     };
 
     document.addEventListener('mousedown', handleOutsideClick);
@@ -503,12 +506,14 @@ export default function Dashboard() {
       if (cancelled) return;
       const next = {
         activities: !selectedDateStr && !isMobileViewport && isElementOverflowing(activityListRef.current),
+        inlineActivities: Boolean(selectedDateStr) && !isMobileViewport && (inlineLoggingExpanded || isElementOverflowing(activityListRef.current)),
         notes: isElementOverflowing(notesEditorRef.current),
         goals: !isMobileViewport && isElementOverflowing(goalListRef.current),
         reminders: !isMobileViewport && isElementOverflowing(remindersListRef.current)
       };
       setOverflowState(prev => (
         prev.activities === next.activities &&
+        prev.inlineActivities === next.inlineActivities &&
         prev.notes === next.notes &&
         prev.goals === next.goals &&
         prev.reminders === next.reminders
@@ -538,6 +543,7 @@ export default function Dashboard() {
     noteDraft,
     selectedDateStr,
     activitiesExpanded,
+    inlineLoggingExpanded,
     goalsExpanded,
     remindersExpanded,
     isMobileViewport,
@@ -554,7 +560,8 @@ export default function Dashboard() {
   // Currently logged IDs for selectedDateStr
   const currentLoggedIds = new Set(selectedDateStr ? (logs[selectedDateStr] || []) : []);
 
-  const hasExpandedInteraction = (!selectedDateStr && activitiesExpanded) || goalsExpanded || remindersExpanded;
+  const isInlineExpanded = Boolean(selectedDateStr) && inlineLoggingExpanded;
+  const hasExpandedInteraction = (!selectedDateStr && activitiesExpanded) || isInlineExpanded || goalsExpanded || remindersExpanded;
 
   return (
     <div className={`main-layout ${hasExpandedInteraction ? 'expanded-active' : ''}`}>
@@ -562,7 +569,7 @@ export default function Dashboard() {
       <div className="left-column">
         {/* Activities Component */}
         <div 
-          className={`activities-component ${selectedDateStr ? 'inline-logging-open' : ''}`} 
+          className={`activities-component ${selectedDateStr ? 'inline-logging-open' : ''} ${isInlineExpanded ? 'expanded' : ''}`} 
           onClick={(e) => {
             if (e.target.closest('.show-all-btn, .activity-item, .pill, .activity-group-title, .inline-logging-interface, button')) return;
             navigate('/activities');
@@ -581,6 +588,7 @@ export default function Dashboard() {
                   e.stopPropagation();
                   if (selectedDateStr) {
                     setSelectedDateStr(null);
+                    setInlineLoggingExpanded(false);
                   } else {
                     setActivitiesExpanded(!activitiesExpanded);
                   }
@@ -592,7 +600,7 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-          <div ref={activityListRef} id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${activitiesExpanded ? 'expanded' : ''}`}>
+          <div ref={activityListRef} id="activity-list" className={`activity-list ${selectedDateStr ? 'inline-logging-active' : ''} ${(selectedDateStr ? isInlineExpanded : activitiesExpanded) ? 'expanded' : ''}`}>
             {selectedDateStr ? (
               activitiesLoading ? (
                 <p style={{ padding: '0 1rem', opacity: 0.7 }}>Loading activities...</p>
@@ -600,6 +608,19 @@ export default function Dashboard() {
                 <div className="inline-logging-interface">
                   <div className="inline-logging-header">
                     <h3>{formatDateForInline(selectedDateStr)}</h3>
+                    {overflowState.inlineActivities && (
+                      <button
+                        type="button"
+                        className="inline-logging-expand-btn"
+                        aria-label={isInlineExpanded ? 'Collapse events' : 'Show all events'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInlineLoggingExpanded(prev => !prev);
+                        }}
+                      >
+                        {isInlineExpanded ? 'Collapse' : 'Show all events'}
+                      </button>
+                    )}
                   </div>
                   <div className="inline-activities-container">
                     {activities.length === 0 ? (
@@ -728,7 +749,7 @@ export default function Dashboard() {
 
         {/* Notes Component */}
         <div 
-          className="notes-component"
+          className={`notes-component ${selectedDateStr ? 'compact-for-logging' : ''}`}
           onClick={(e) => {
             if (e.target.closest('.show-all-btn, .notes-editor, textarea, button')) return;
             navigate('/notes');

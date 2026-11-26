@@ -341,4 +341,89 @@ describe('Dashboard Page', () => {
     expect(document.getElementById('goals-show-all')).toBeInTheDocument();
     expect(document.getElementById('reminders-show-all')).toBeInTheDocument();
   });
+
+  it('compacts notes during inline logging and expands all events on overflow without closing selected date', async () => {
+    const manyActivities = [
+      {
+        id: 'gym',
+        name: 'Gym',
+        subActivities: [
+          { id: 'chest', name: 'Chest', color: '#22c55e' },
+          { id: 'shoulder', name: 'Shoulder', color: '#3b82f6' },
+          { id: 'back', name: 'Back', color: '#f97316' },
+          { id: 'bicep', name: 'Bicep', color: '#a855f7' },
+          { id: 'tricep', name: 'Tricep', color: '#ec4899' },
+          { id: 'leg', name: 'Leg', color: '#0ea5e9' },
+          { id: 'core', name: 'Core', color: '#eab308' },
+          { id: 'circuit', name: 'Circuit', color: '#9ca3af' },
+          { id: 'cardio', name: 'Cardio', color: '#ef4444' }
+        ]
+      },
+      { id: 'bike', name: 'Bike', subActivities: [] }
+    ];
+    getDoc.mockResolvedValue({ exists: () => true, data: () => ({ activities: manyActivities }) });
+    onSnapshot.mockImplementation((_ref, callback) => {
+      callback({ exists: () => true, data: () => ({ activities: manyActivities }) });
+      return vi.fn();
+    });
+
+    renderDashboard();
+    await act(async () => {});
+
+    const notesCard = document.querySelector('.notes-component');
+    const activitiesCard = document.querySelector('.activities-component');
+    const activityListEl = document.getElementById('activity-list');
+
+    expect(activitiesCard).toHaveClass('inline-logging-open');
+    expect(notesCard).toHaveClass('compact-for-logging');
+    expect(screen.getByText('Bike')).toBeInTheDocument();
+    expect(screen.getByText('Cardio')).toBeInTheDocument();
+
+    // No extra Show all events button when content fits without overflowing
+    expect(screen.queryByRole('button', { name: /show all events|collapse events/i })).not.toBeInTheDocument();
+
+    // Clicking a group title filters calendar without closing inline logging
+    const gymGroupTitle = within(activityListEl).getByText('Gym');
+    await act(async () => {
+      fireEvent.mouseDown(gymGroupTitle);
+      fireEvent.click(gymGroupTitle);
+    });
+    expect(activitiesCard).toHaveClass('inline-logging-open');
+
+    // Simulate vertical overflow when even more events exceed the box
+    Object.defineProperty(activityListEl, 'clientHeight', { value: 180, configurable: true });
+    Object.defineProperty(activityListEl, 'scrollHeight', { value: 360, configurable: true });
+    await act(async () => {
+      window.dispatchEvent(new Event('resize'));
+    });
+
+    const expandEventsBtn = screen.getByRole('button', { name: 'Show all events' });
+    expect(expandEventsBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.mouseDown(expandEventsBtn);
+      fireEvent.click(expandEventsBtn);
+    });
+
+    // Stays in inline logging while expanding the card and main layout
+    expect(activitiesCard).toHaveClass('inline-logging-open');
+    expect(activitiesCard).toHaveClass('expanded');
+    expect(activityListEl).toHaveClass('expanded');
+    expect(document.querySelector('.main-layout')).toHaveClass('expanded-active');
+
+    const collapseEventsBtn = screen.getByRole('button', { name: 'Collapse events' });
+    await act(async () => {
+      fireEvent.mouseDown(collapseEventsBtn);
+      fireEvent.click(collapseEventsBtn);
+    });
+    expect(activitiesCard).toHaveClass('inline-logging-open');
+    expect(document.querySelector('.main-layout')).not.toHaveClass('expanded-active');
+
+    // Exiting inline logging removes compact-for-logging on Notes
+    await act(async () => {
+      fireEvent.mouseDown(document.body);
+    });
+    expect(activitiesCard).not.toHaveClass('inline-logging-open');
+    expect(notesCard).not.toHaveClass('compact-for-logging');
+  });
 });
