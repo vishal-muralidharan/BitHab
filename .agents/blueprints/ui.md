@@ -53,9 +53,9 @@ Extracted UI components, props contracts, variants, and state primitives.
 - Primitive: `Modal` (`src/components/common/ConfirmModal.jsx:1`)
 - Primitive: `Modal` (`src/components/layout/TermsAgreementModal.jsx:1`)
 - Primitive: `Modal` (`tests/components/TermsAgreementModal.test.jsx:1`)
-- Primitive: `role='alert'` (`src/pages/Lists.jsx:222`)
+- Primitive: `role='alert'` (`src/pages/Lists.jsx:169`)
 - Primitive: `role='alert'` (`src/pages/Settings.jsx:302`)
-- Primitive: `role='alert'` (`tests/pages/Lists.test.jsx:198`)
+- Primitive: `role='alert'` (`tests/pages/Lists.test.jsx:233`)
 
 ## Low level widgets
 

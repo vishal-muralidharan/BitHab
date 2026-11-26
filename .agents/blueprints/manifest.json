@@ -55,7 +55,7 @@
       "src/assets/css/deep-focus.css": "a1411dfac011bbf5a47a6fd843c6172aa0aadd2bb844e011a24be8b2b9c7cadc",
       "src/assets/css/focus.css": "e047a73553891038ffc3c6a39e3bf4dada20a822a23081e792f5cee89e631e3a",
       "src/assets/css/legal.css": "9cccc9585fc98fbda5620e64797691458d0f2097535a5b710f832c33b3c6614f",
-      "src/assets/css/lists.css": "00ce60c32fd825cb7237c43eea7c92f270a83ade90c871992be64c1ee04ad355",
+      "src/assets/css/lists.css": "9d9c24d01c79cf6b3b010637a64e58080934047b8559b3558dc37e8fd45a2525",
       "src/assets/css/management.css": "b3bf8fd692527160c3fbfff06f8d0f1e305dceeb947a18ae0cc00dacc10d5732",
       "src/assets/css/notes.css": "d5d19c807edc06d16ead835383bffd6c5226cc56105c8079cccd2ad4224697f2",
       "src/assets/css/schedule.css": "b713813b169bb97c0576cf613f6598e16a6b382cc2fb56e29e444e25ee87cadb",
@@ -85,13 +85,13 @@
       "src/pages/Dashboard.jsx": "9dce17448b4c30c2e3b4ce76abc2fd9acc22c996e5507556700d2065a086a75e",
       "src/pages/Focus.jsx": "8dc6b61acc756a1826e9a0c4d0902b87b49c00c0214df6658bfd9a68acaccb9b",
       "src/pages/Goals.jsx": "ae003d9fda1b6dd7e42d7013989359baf24de0a65cdf2d8a1815480fdc6ea55f",
-      "src/pages/Lists.jsx": "41cfcdcf244f09d908c40bc61e30f19e166530b2f89f11ce8de48b70f5933191",
+      "src/pages/Lists.jsx": "76347a82182af94d8b06003b4d03a74afd9d3913a83db8642e1ee475ba4573b2",
       "src/pages/Notes.jsx": "4374227c85cbed0fce62c4f0a96336b554e609bf924ab8463dd62db65ecfdf17",
       "src/pages/Register.jsx": "92853cd941d6d3c8aa5c670471f18bffb058dcfc61e621f4501133758fd8b89e",
       "src/pages/Reminders.jsx": "2b72f36f74d311680e0175eadd3b3479a98dca2078155e02d8a4fc0b3f62bf0d",
       "src/pages/Settings.jsx": "f2c3343ba5dd98e0a2f9cc4d5bd8de3338d939657fcb715c272ccd4f80a0f021",
       "tests/components/TermsAgreementModal.test.jsx": "88b943956042bcbbcb4f32eda2abaee4507f80a73fcc58306bf37baf4776b24b",
-      "tests/pages/Lists.test.jsx": "0696a7e2529c8caf24b5b64e3e2149e1d592bd5fdc7c6b1d9378643ccc1390c3"
+      "tests/pages/Lists.test.jsx": "20bfa2546e107d36c06d595b66d126de83948cb01ca4a61e82d2192834342f9c"
     }
   },
   "generator_version": "0.2.0"
