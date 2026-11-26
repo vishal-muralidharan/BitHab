@@ -47,7 +47,7 @@ Extracted responsive breakpoints, navigation shells, and mobile viewport constra
 - `Breakpoint: 768px`: evidence `src/assets/css/focus.css:2457`
 - `Breakpoint: 768px`: evidence `src/assets/css/focus.css:2514`
 - `Breakpoint: 768px`: evidence `src/assets/css/legal.css:180`
-- `Breakpoint: 768px`: evidence `src/assets/css/lists.css:950`
+- `Breakpoint: 768px`: evidence `src/assets/css/lists.css:1023`
 - `Breakpoint: 769px`: evidence `src/assets/css/management.css:192`
 - `Breakpoint: 768px`: evidence `src/assets/css/management.css:200`
 - `Breakpoint: 768px`: evidence `src/assets/css/management.css:834`

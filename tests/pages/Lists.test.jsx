@@ -10,7 +10,7 @@ describe('Lists Page', () => {
     vi.clearAllMocks();
   });
 
-  it('renders lists header, shows empty state, and creates a new checklist', async () => {
+  it('renders lists header, shows empty state, and creates a new checklist card showing heading and summary', async () => {
     render(
       <MemoryRouter initialEntries={['/lists']}>
         <AuthProvider>
@@ -39,10 +39,10 @@ describe('Lists Page', () => {
     });
 
     expect(screen.getByText('Travel Packing')).toBeInTheDocument();
-    expect(screen.getByText('Empty list')).toBeInTheDocument();
+    expect(screen.getByText('Checklist · Empty list')).toBeInTheDocument();
   });
 
-  it('adds items, checks off items, and deletes items within a list', async () => {
+  it('opens list editor popup on click to add, check off, edit, switch types, and delete items', async () => {
     render(
       <MemoryRouter initialEntries={['/lists']}>
         <AuthProvider>
@@ -64,7 +64,31 @@ describe('Lists Page', () => {
       screen.getByRole('button', { name: 'Create' }).click();
     });
 
-    // Add item
+    // Modal should not be open yet; card shows only heading + summary
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Add an item...')).not.toBeInTheDocument();
+
+    // Click heading card to open popup
+    await act(async () => {
+      screen.getByRole('button', { name: /Open Camping Gear/i }).click();
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Switch type inside popup
+    const numberedBtn = screen.getByRole('button', { name: 'Numbered' });
+    await act(async () => {
+      numberedBtn.click();
+    });
+    expect(numberedBtn).toHaveAttribute('aria-pressed', 'true');
+
+    // Switch back to Checklist
+    const checklistBtn = screen.getByRole('button', { name: 'Checklist' });
+    await act(async () => {
+      checklistBtn.click();
+    });
+    expect(checklistBtn).toHaveAttribute('aria-pressed', 'true');
+
+    // Add item inside popup
     const addItemInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.change(addItemInput, { target: { value: 'Tent poles' } });
     await act(async () => {
@@ -89,9 +113,15 @@ describe('Lists Page', () => {
     });
 
     expect(screen.queryByText('Tent poles')).not.toBeInTheDocument();
+
+    // Close popup with Done
+    await act(async () => {
+      screen.getByRole('button', { name: 'Done' }).click();
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('deletes an entire list with confirmation', async () => {
+  it('deletes an entire list with confirmation from the card', async () => {
     render(
       <MemoryRouter initialEntries={['/lists']}>
         <AuthProvider>
@@ -130,7 +160,7 @@ describe('Lists Page', () => {
     expect(screen.queryByText('Books to Buy')).not.toBeInTheDocument();
   });
 
-  it('supports inline list title rename, inline item editing, completed separation, and accessible error alert', async () => {
+  it('supports editing title and items inside popup, separated completed items, Escape close, and error alert', async () => {
     const firestore = await import('firebase/firestore');
 
     render(
@@ -154,10 +184,15 @@ describe('Lists Page', () => {
       screen.getByRole('button', { name: 'Create' }).click();
     });
 
-    // Rename list inline
+    // Items are not inline in the narrow card grid
+    expect(screen.queryByLabelText('Edit list title')).not.toBeInTheDocument();
+
+    // Open popup
     await act(async () => {
-      screen.getByRole('button', { name: 'Rename list' }).click();
+      screen.getByRole('button', { name: /Open Sprint Tasks/i }).click();
     });
+
+    // Rename list in popup title input
     const renameInput = screen.getByLabelText('Edit list title');
     fireEvent.change(renameInput, { target: { value: 'Sprint Tasks v2' } });
     await act(async () => {
@@ -165,7 +200,7 @@ describe('Lists Page', () => {
     });
     expect(screen.getByText('Sprint Tasks v2')).toBeInTheDocument();
 
-    // Add two items rapidly
+    // Add two items inside popup
     const addItemInput = screen.getByPlaceholderText('Add an item...');
     fireEvent.change(addItemInput, { target: { value: 'First task' } });
     await act(async () => {
@@ -176,7 +211,7 @@ describe('Lists Page', () => {
       fireEvent.submit(addItemInput.closest('form'));
     });
 
-    // Edit first item inline
+    // Edit first item inline inside popup
     const editButtons = screen.getAllByRole('button', { name: 'Edit item' });
     await act(async () => {
       editButtons[0].click();
@@ -203,5 +238,12 @@ describe('Lists Page', () => {
     });
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.queryByText('Failing task')).not.toBeInTheDocument();
+
+    // Escape closes the editor popup
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Escape' });
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Checklist · 1 left · 1 done')).toBeInTheDocument();
   });
 });
