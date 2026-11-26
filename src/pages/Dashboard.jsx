@@ -19,7 +19,7 @@ export default function Dashboard() {
   const { goals, loading: goalsLoading, toggleGoal } = useGoals();
   const { notes, addNote, updateNote } = useNotes();
   const { reminders, loading: remindersLoading } = useReminders();
-  const { logs, toggleActivityLog } = useSchedule();
+  const { schedules, logs, skipped, toggleActivityLog } = useSchedule();
 
   // Today reference
   const today = new Date();
@@ -303,31 +303,63 @@ export default function Dashboard() {
   // Activity dots helper for a date (supports filtering by selected activity)
   const getDotsForDate = (dateStr) => {
     const loggedIds = new Set(logs[dateStr] || []);
-    if (loggedIds.size === 0) return null;
+    const scheduledIds = new Set(schedules[dateStr] || []);
+    const skippedIds = new Set(skipped[dateStr] || []);
+    if (loggedIds.size === 0 && scheduledIds.size === 0) return null;
 
-    const colors = [];
+    const dots = [];
     const activitiesToConsider = selectedActivityId
       ? activities.filter(a => a.id === selectedActivityId)
       : activities;
 
     activitiesToConsider.forEach(activity => {
       if (activity.subActivities && activity.subActivities.length > 0) {
+        let anySubLogged = false;
         activity.subActivities.forEach(sub => {
+          const color = sub.color || 'var(--accent-primary)';
           if (loggedIds.has(sub.id)) {
-            colors.push(sub.color || '#3B82F6');
+            anySubLogged = true;
+            dots.push({ color, variant: 'logged' });
+          } else if (scheduledIds.has(sub.id) && !skippedIds.has(sub.id)) {
+            dots.push({ color, variant: dateStr < todayStr ? 'missed' : 'scheduled' });
           }
         });
+
+        if (
+          scheduledIds.has(activity.id) &&
+          !skippedIds.has(activity.id) &&
+          !loggedIds.has(activity.id) &&
+          !anySubLogged
+        ) {
+          dots.push({
+            color: 'var(--accent-primary)',
+            variant: dateStr < todayStr ? 'missed' : 'scheduled'
+          });
+        }
       } else if (loggedIds.has(activity.id)) {
-        colors.push('var(--accent-primary)');
+        dots.push({ color: 'var(--accent-primary)', variant: 'logged' });
+      } else if (scheduledIds.has(activity.id) && !skippedIds.has(activity.id)) {
+        dots.push({
+          color: 'var(--accent-primary)',
+          variant: dateStr < todayStr ? 'missed' : 'scheduled'
+        });
       }
     });
 
-    if (colors.length === 0) return null;
+    if (dots.length === 0) return null;
 
     return (
       <div className="calendar-dots">
-        {colors.slice(0, 4).map((color, idx) => (
-          <span key={idx} className="calendar-dot" style={{ backgroundColor: color }}></span>
+        {dots.slice(0, 4).map((dot, idx) => (
+          <span
+            key={idx}
+            className={`calendar-dot ${dot.variant === 'logged' ? '' : `${dot.variant}-dot`}`}
+            style={
+              dot.variant === 'logged'
+                ? { backgroundColor: dot.color }
+                : (dot.variant === 'scheduled' ? { borderColor: dot.color } : undefined)
+            }
+          ></span>
         ))}
       </div>
     );
@@ -557,8 +589,10 @@ export default function Dashboard() {
   const showGoalsBtn = goalsExpanded || completedGoals.length > 0 || (isMobileViewport ? activeGoals.length > 4 : overflowState.goals);
   const showRemindersBtn = remindersExpanded || (isMobileViewport ? sortedReminders.length > 2 : overflowState.reminders);
 
-  // Currently logged IDs for selectedDateStr
+  // Currently logged and scheduled IDs for selectedDateStr
   const currentLoggedIds = new Set(selectedDateStr ? (logs[selectedDateStr] || []) : []);
+  const currentScheduledIds = new Set(selectedDateStr ? (schedules[selectedDateStr] || []) : []);
+  const currentSkippedIds = new Set(selectedDateStr ? (skipped[selectedDateStr] || []) : []);
 
   const isInlineExpanded = Boolean(selectedDateStr) && inlineLoggingExpanded;
   const hasExpandedInteraction = (!selectedDateStr && activitiesExpanded) || isInlineExpanded || goalsExpanded || remindersExpanded;
@@ -628,7 +662,8 @@ export default function Dashboard() {
                     ) : (
                       activities.map(activity => {
                         const hasSubs = activity.subActivities && activity.subActivities.length > 0;
-                        
+                        const isParentScheduled = currentScheduledIds.has(activity.id) && !currentSkippedIds.has(activity.id);
+
                         if (hasSubs) {
                           return (
                             <div key={activity.id} className="activity-group">
@@ -642,20 +677,28 @@ export default function Dashboard() {
                                 title={selectedActivityId === activity.id ? "Click to clear calendar filter" : "Click to filter calendar for this activity"}
                               >
                                 <span>{activity.name}</span>
-                                {selectedActivityId === activity.id && (
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'normal' }}>filtered</span>
-                                )}
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                                  {isParentScheduled && (
+                                    <span className="scheduled-pill-badge">Scheduled</span>
+                                  )}
+                                  {selectedActivityId === activity.id && (
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'normal' }}>filtered</span>
+                                  )}
+                                </span>
                               </h4>
                               <div className="pills-container">
                                 {activity.subActivities.map(sub => {
                                   const isSelected = currentLoggedIds.has(sub.id);
-                                  const color = sub.color || '#3B82F6';
+                                  const isSubScheduled = currentScheduledIds.has(sub.id) && !currentSkippedIds.has(sub.id);
+                                  const color = sub.color || 'var(--accent-primary)';
                                   return (
                                     <div
                                       key={sub.id}
-                                      className={`pill ${isSelected ? 'selected' : ''}`}
+                                      className={`pill ${isSelected ? 'selected' : ''} ${!isSelected && isSubScheduled ? 'scheduled-pending' : ''}`}
                                       data-id={sub.id}
                                       data-date={selectedDateStr}
+                                      data-scheduled={isSubScheduled ? 'true' : undefined}
+                                      title={isSubScheduled ? 'Scheduled for this date' : undefined}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         toggleActivityLog(sub.id, selectedDateStr);
@@ -683,9 +726,11 @@ export default function Dashboard() {
                             <div className="pills-container">
                               <div
                                 key={activity.id}
-                                className={`pill ${isSelected ? 'selected' : ''}`}
+                                className={`pill ${isSelected ? 'selected' : ''} ${!isSelected && isParentScheduled ? 'scheduled-pending' : ''}`}
                                 data-id={activity.id}
                                 data-date={selectedDateStr}
+                                data-scheduled={isParentScheduled ? 'true' : undefined}
+                                title={isParentScheduled ? 'Scheduled for this date' : undefined}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   toggleActivityLog(activity.id, selectedDateStr);
@@ -693,7 +738,7 @@ export default function Dashboard() {
                                 style={{
                                   cursor: 'pointer',
                                   borderColor: isSelected ? color : 'var(--border-color)',
-                                  backgroundColor: isSelected ? 'var(--primary-color-alpha)' : 'var(--bg-primary)',
+                                  backgroundColor: isSelected ? 'rgba(var(--accent-primary-rgb, 88, 166, 255), 0.14)' : 'var(--bg-primary)',
                                   color: isSelected ? color : 'var(--text-primary)'
                                 }}
                               >
