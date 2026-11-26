@@ -426,4 +426,61 @@ describe('Dashboard Page', () => {
     expect(activitiesCard).not.toHaveClass('inline-logging-open');
     expect(notesCard).not.toHaveClass('compact-for-logging');
   });
+
+  it('displays scheduled indicators in inline logging and calendar cells for scheduled activities', async () => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+
+    const activities = [
+      {
+        id: 'gym',
+        name: 'Gym',
+        subActivities: [{ id: 'chest', name: 'Chest', color: '#22c55e' }]
+      },
+      { id: 'bike', name: 'Bike', subActivities: [] }
+    ];
+
+    getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        activities,
+        schedules: {
+          [todayStr]: ['gym', 'bike'],
+          [tomorrowStr]: ['bike']
+        },
+        logs: {},
+        scheduleSkipped: {}
+      })
+    });
+    onSnapshot.mockImplementation((_ref, callback) => {
+      callback({
+        exists: () => true,
+        data: () => ({
+          activities,
+          schedules: {
+            [todayStr]: ['gym', 'bike'],
+            [tomorrowStr]: ['bike']
+          },
+          logs: {},
+          scheduleSkipped: {}
+        })
+      });
+      return vi.fn();
+    });
+
+    renderDashboard();
+    await act(async () => {});
+
+    // Inline logging shows Scheduled badge on Gym and scheduled indicator on Bike pill
+    const activityListEl = document.getElementById('activity-list');
+    expect(within(activityListEl).getByText('Scheduled')).toBeInTheDocument();
+    const bikePill = within(activityListEl).getByText('Bike');
+    expect(bikePill).toHaveAttribute('data-scheduled', 'true');
+    expect(bikePill).toHaveClass('scheduled-pending');
+
+    // Calendar shows scheduled-dot ring on scheduled unlogged dates
+    expect(document.querySelectorAll('.calendar-dot.scheduled-dot').length).toBeGreaterThan(0);
+  });
 });

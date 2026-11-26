@@ -8,19 +8,19 @@ Extracted responsive breakpoints, navigation shells, and mobile viewport constra
 - `Breakpoint: 480px`: evidence `src/assets/css/clock.css:297`
 - `Breakpoint: 768px`: evidence `src/assets/css/clock.css:370`
 - `Breakpoint: 640px`: evidence `src/assets/css/custom-dialogs.css:138`
-- `Breakpoint: 1200px`: evidence `src/assets/css/dashboard.css:1294`
-- `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:1317`
-- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:1339`
-- `Breakpoint: 1201px`: evidence `src/assets/css/dashboard.css:1755`
-- `Breakpoint: 1200px`: evidence `src/assets/css/dashboard.css:1772`
-- `Breakpoint: 1200px`: evidence `src/assets/css/dashboard.css:1855`
-- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:1870`
-- `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:1922`
-- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:2003`
-- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:2134`
-- `Breakpoint: 375px`: evidence `src/assets/css/dashboard.css:2235`
-- `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:2451`
-- `Breakpoint: 450px`: evidence `src/assets/css/dashboard.css:2458`
+- `Breakpoint: 1200px`: evidence `src/assets/css/dashboard.css:1309`
+- `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:1332`
+- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:1354`
+- `Breakpoint: 1201px`: evidence `src/assets/css/dashboard.css:1784`
+- `Breakpoint: 1200px`: evidence `src/assets/css/dashboard.css:1801`
+- `Breakpoint: 1200px`: evidence `src/assets/css/dashboard.css:1884`
+- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:1899`
+- `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:1951`
+- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:2032`
+- `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:2163`
+- `Breakpoint: 375px`: evidence `src/assets/css/dashboard.css:2264`
+- `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:2480`
+- `Breakpoint: 450px`: evidence `src/assets/css/dashboard.css:2487`
 - `Breakpoint: 1024px`: evidence `src/assets/css/dashboard.css:26`
 - `Breakpoint: 1100px`: evidence `src/assets/css/dashboard.css:401`
 - `Breakpoint: 768px`: evidence `src/assets/css/dashboard.css:411`
@@ -53,9 +53,9 @@ Extracted responsive breakpoints, navigation shells, and mobile viewport constra
 - `Breakpoint: 768px`: evidence `src/assets/css/management.css:834`
 - `Breakpoint: 768px`: evidence `src/assets/css/notes.css:420`
 - `Breakpoint: 480px`: evidence `src/assets/css/notes.css:487`
-- `Breakpoint: 1024px`: evidence `src/assets/css/schedule.css:1075`
-- `Breakpoint: 768px`: evidence `src/assets/css/schedule.css:1081`
-- `Breakpoint: 480px`: evidence `src/assets/css/schedule.css:1142`
+- `Breakpoint: 1024px`: evidence `src/assets/css/schedule.css:755`
+- `Breakpoint: 768px`: evidence `src/assets/css/schedule.css:761`
+- `Breakpoint: 480px`: evidence `src/assets/css/schedule.css:806`
 - `Breakpoint: 480px`: evidence `src/assets/css/style.css:1043`
 - `Breakpoint: 1025px`: evidence `src/assets/css/style.css:1172`
 - `Breakpoint: 1024px`: evidence `src/assets/css/style.css:1183`
@@ -85,6 +85,7 @@ Extracted responsive breakpoints, navigation shells, and mobile viewport constra
 - Safe area insets constraint: `src/assets/css/deep-focus.css:13` (`padding-top: env(safe-area-inset-top, 0px);`)
 - Safe area insets constraint: `src/assets/css/deep-focus.css:14` (`padding-bottom: env(safe-area-inset-bottom, 0px);`)
 - Safe area insets constraint: `src/assets/css/deep-focus.css:374` (`padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 80px) env`)
+- Safe area insets constraint: `src/assets/css/schedule.css:763` (`padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));`)
 - Safe area insets constraint: `src/assets/css/style.css:1127` (`padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));`)
 - Safe area insets constraint: `src/assets/css/style.css:1211` (`padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px)`)
 - Safe area insets constraint: `src/assets/css/style.css:1212` (`min-height: calc(100vh - 72px - (var(--bottom-nav-height) + env(safe-area-inset-`)
