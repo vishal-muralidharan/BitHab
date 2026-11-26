@@ -100,6 +100,8 @@ export async function exportUserData() {
     goals: rootData.goals || [],
     reminders: rootData.reminders || [],
     schedules: rootData.schedules || {},
+    schedule_skipped: rootData.scheduleSkipped || {},
+    schedule_patterns: rootData.schedulePatterns || {},
     logs: {
       calendar_logs: rootData.logs || {},
       daily_log_documents: logsSubcollection
